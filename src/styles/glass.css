@@ -1,0 +1,799 @@
+:where(
+  .glass-panel,
+  .glass-card,
+  .glass-bar,
+  .ios-sheet,
+  .source-panel,
+  .workflow-rail,
+  .floating-navigation__surface,
+  .app-context-bar,
+  .glass-modal__surface,
+  .glass-tooltip
+) {
+  --glass-opacity: var(--glass-opacity-regular);
+  --glass-blur: var(--glass-blur-medium);
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  background: rgb(var(--glass-rgb) / var(--glass-opacity));
+  background-clip: padding-box;
+  box-shadow: var(--shadow-inner), var(--shadow-level-1);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur))
+    saturate(var(--glass-saturation));
+}
+
+:where(
+  .glass-panel,
+  .glass-card,
+  .glass-bar,
+  .ios-sheet,
+  .source-panel,
+  .workflow-rail,
+  .floating-navigation__surface,
+  .app-context-bar,
+  .glass-modal__surface,
+  .glass-tooltip
+)::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    145deg,
+    var(--glass-highlight),
+    transparent 28% 70%,
+    var(--glass-edge-cool)
+  );
+  content: '';
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+:where(
+    .glass-panel,
+    .glass-card,
+    .glass-bar,
+    .ios-sheet,
+    .source-panel,
+    .workflow-rail,
+    .floating-navigation__surface,
+    .app-context-bar,
+    .glass-modal__surface,
+    .glass-tooltip
+  )
+  > * {
+  position: relative;
+  z-index: 2;
+}
+
+.glass-panel,
+.ios-sheet,
+.source-panel,
+.app-context-bar {
+  --glass-opacity: var(--glass-opacity-strong);
+  border-radius: var(--radius-panel);
+}
+
+.glass-card,
+.card {
+  --glass-opacity: var(--glass-opacity-strong);
+  border-radius: var(--radius-card);
+}
+
+.glass-panel[data-tone='clear'],
+.glass-card[data-tone='clear'] {
+  --glass-opacity: var(--glass-opacity-subtle);
+}
+
+.glass-panel[data-tone='solid'],
+.glass-card[data-tone='solid'] {
+  border-color: var(--separator-soft);
+  background: var(--surface-solid);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.glass-panel[data-elevation='base'],
+.glass-card[data-elevation='base'] {
+  box-shadow: var(--shadow-inner), var(--shadow-level-1);
+}
+
+.glass-panel[data-elevation='raised'],
+.glass-card[data-elevation='raised'] {
+  box-shadow: var(--shadow-inner), var(--shadow-level-2);
+}
+
+.glass-panel[data-elevation='floating'],
+.glass-card[data-elevation='floating'] {
+  box-shadow: var(--shadow-inner), var(--shadow-level-3);
+}
+
+/*
+ * Do not stack expensive blur layers. Inset cards retain the translucent
+ * material color but are composited as ordinary solid surfaces.
+ */
+:where(.glass-panel, .glass-card, .source-panel, .glass-modal__surface)
+  :where(.glass-panel, .glass-card, .card, .ios-sheet) {
+  border-color: var(--separator-soft);
+  background: var(--surface-inset);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/*
+ * Buttons (design system: components.md §1).
+ * Primary = accent fill; secondary = plain surface with a strong line;
+ * quiet = accent text link; danger = secondary with danger text.
+ * Small radius, 44px tall (40px compact on fine pointers).
+ */
+.glass-button,
+.button-primary,
+.button-secondary,
+.button-ghost {
+  display: inline-flex;
+  min-height: var(--touch-target);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-small);
+  padding: 0 var(--space-5);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  box-shadow: none;
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  transition:
+    color var(--duration-fast) var(--ease-glass),
+    background-color var(--duration-fast) var(--ease-glass),
+    border-color var(--duration-fast) var(--ease-glass),
+    box-shadow var(--duration-fast) var(--ease-glass),
+    opacity var(--duration-fast) var(--ease-glass),
+    transform var(--duration-fast) var(--ease-press);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.glass-button[data-size='compact'] {
+  min-height: calc(var(--touch-target) - var(--space-1));
+  padding: 0 var(--space-4);
+}
+
+.glass-button[data-variant='primary'],
+.button-primary {
+  border-color: transparent;
+  color: var(--accent-on-fill);
+  background: var(--accent-fill);
+  box-shadow: var(--shadow-button);
+}
+
+.glass-button[data-variant='secondary'],
+.button-secondary {
+  border-color: var(--separator-strong);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+}
+
+.glass-button[data-variant='quiet'],
+.button-ghost {
+  border-color: transparent;
+  padding-inline: var(--space-3);
+  color: var(--accent);
+  background: transparent;
+  box-shadow: none;
+}
+
+.glass-button[data-variant='danger'] {
+  border-color: var(--separator-strong);
+  color: var(--status-danger-text);
+  background: var(--surface-raised);
+}
+
+.glass-button[data-variant='icon'] {
+  width: var(--touch-target);
+  flex: 0 0 var(--touch-target);
+  border-color: transparent;
+  border-radius: var(--radius-pill);
+  padding: 0;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.glass-button[data-variant='icon'][data-size='compact'] {
+  width: calc(var(--touch-target) - var(--space-1));
+  flex-basis: calc(var(--touch-target) - var(--space-1));
+}
+
+/* Touch screens keep the full 44px target, even for compact buttons. */
+@media (pointer: coarse) {
+  .glass-button[data-size='compact'] {
+    min-height: var(--touch-target);
+  }
+
+  .glass-button[data-variant='icon'][data-size='compact'] {
+    width: var(--touch-target);
+    flex-basis: var(--touch-target);
+  }
+}
+
+.glass-button:disabled,
+.button-primary:disabled,
+.button-secondary:disabled,
+.button-ghost:disabled {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.46;
+  transform: none;
+}
+
+/*
+ * Inputs (components.md §10): 44px, medium radius, plain surface, strong
+ * line. Focus = accent border plus the focus ring.
+ */
+.glass-input,
+.glass-select,
+.field-select,
+.field-input,
+.ios-field {
+  width: 100%;
+  min-height: var(--touch-target);
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  padding: 0.62rem var(--space-3);
+  font-size: max(1rem, 16px);
+  line-height: 1.25;
+  box-shadow: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-glass),
+    background-color var(--duration-fast) var(--ease-glass),
+    box-shadow var(--duration-fast) var(--ease-glass);
+}
+
+.glass-select,
+.field-select {
+  padding-right: var(--space-8);
+  /* One look on every platform: no native control chrome, our chevron. */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667386' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 16px;
+}
+
+/* Number fields: no browser spinners; people type the value. */
+.glass-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.glass-input[type='number']::-webkit-inner-spin-button,
+.glass-input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.glass-input::placeholder,
+.field-input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+.glass-input:focus,
+.glass-select:focus,
+.field-select:focus,
+.field-input:focus,
+.ios-field:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+.glass-input:disabled,
+.glass-select:disabled,
+.field-select:disabled,
+.field-input:disabled {
+  cursor: not-allowed;
+  color: var(--text-tertiary);
+  background: var(--surface-muted);
+}
+
+.glass-input[aria-invalid='true'],
+.glass-select[aria-invalid='true'],
+.field-select[aria-invalid='true'],
+.field-input[aria-invalid='true'] {
+  border-color: var(--status-danger-text);
+  box-shadow: var(--ring-danger);
+}
+
+/*
+ * Segmented control (components.md §7): pill track on a sunken surface,
+ * the active option is a raised pill.
+ */
+.glass-segmented-control,
+.segmented-control {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-1);
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  padding: var(--space-1);
+}
+
+.glass-segmented-control > button,
+.segmented-control > button {
+  min-height: calc(var(--touch-target) - var(--space-2));
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  background: transparent;
+  padding: 0 var(--space-4);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  transition:
+    color var(--duration-fast) var(--ease-glass),
+    background-color var(--duration-fast) var(--ease-glass),
+    box-shadow var(--duration-fast) var(--ease-glass),
+    transform var(--duration-fast) var(--ease-press);
+}
+
+@media (pointer: coarse) {
+  .glass-segmented-control > button,
+  .segmented-control > button {
+    min-height: var(--touch-target);
+  }
+}
+
+.glass-segmented-control > button[aria-pressed='true'],
+.glass-segmented-control > button[aria-selected='true'],
+.segmented-control > button[aria-pressed='true'],
+.segmented-control > button[aria-selected='true'] {
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-control);
+}
+
+/*
+ * Badges and status chips (components.md §8): pill, caption 600, status
+ * surface with status text, optional dot. The label always carries the
+ * meaning; colour only reinforces it.
+ */
+.status-badge,
+.source-context {
+  --badge-text: var(--status-neutral-text);
+  --badge-surface: var(--status-neutral-surface);
+  --badge-border: var(--status-neutral-border);
+  display: inline-flex;
+  min-height: var(--space-6);
+  max-width: 100%;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--badge-border);
+  border-radius: var(--radius-pill);
+  color: var(--badge-text);
+  background: var(--badge-surface);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.status-badge[data-tone='info'] {
+  --badge-text: var(--status-info-text);
+  --badge-surface: var(--status-info-surface);
+  --badge-border: var(--status-info-border);
+}
+
+.status-badge[data-tone='success'] {
+  --badge-text: var(--status-success-text);
+  --badge-surface: var(--status-success-surface);
+  --badge-border: var(--status-success-border);
+}
+
+.status-badge[data-tone='warning'] {
+  --badge-text: var(--status-warning-text);
+  --badge-surface: var(--status-warning-surface);
+  --badge-border: var(--status-warning-border);
+}
+
+.status-badge[data-tone='danger'] {
+  --badge-text: var(--status-danger-text);
+  --badge-surface: var(--status-danger-surface);
+  --badge-border: var(--status-danger-border);
+}
+
+.status-badge__dot,
+.source-context::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: '';
+}
+
+/* Tooltips: medium radius, raised shadow, quick fade (components.md §13). */
+.tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.glass-tooltip {
+  --glass-opacity: var(--glass-opacity-modal);
+  --glass-blur: var(--glass-blur-small);
+  position: absolute;
+  z-index: var(--z-tooltip);
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2rem));
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-inner), var(--shadow-level-2);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(3px) scale(0.98);
+  transition:
+    opacity var(--duration-standard) var(--ease-glass),
+    transform var(--duration-standard) var(--ease-glass);
+}
+
+.tooltip-anchor:focus-within > .glass-tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tooltip-anchor[data-placement='top'] > .glass-tooltip {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translate(-50%, 3px) scale(0.98);
+}
+
+.tooltip-anchor[data-placement='bottom'] > .glass-tooltip {
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translate(-50%, -3px) scale(0.98);
+}
+
+.tooltip-anchor[data-placement='left'] > .glass-tooltip {
+  top: 50%;
+  right: calc(100% + 6px);
+  transform: translate(3px, -50%) scale(0.98);
+}
+
+.tooltip-anchor[data-placement='right'] > .glass-tooltip {
+  top: 50%;
+  left: calc(100% + 6px);
+  transform: translate(-3px, -50%) scale(0.98);
+}
+
+.tooltip-anchor:focus-within[data-placement='top'] > .glass-tooltip,
+.tooltip-anchor:focus-within[data-placement='bottom'] > .glass-tooltip {
+  transform: translate(-50%, 0) scale(1);
+}
+
+.tooltip-anchor:focus-within[data-placement='left'] > .glass-tooltip,
+.tooltip-anchor:focus-within[data-placement='right'] > .glass-tooltip {
+  transform: translate(0, -50%) scale(1);
+}
+
+/*
+ * Modal (components.md §13): largest radius, top elevation, dim backdrop
+ * with a light blur; enters with fade + scale 0.97 → 1.
+ */
+.glass-modal {
+  /* Tailwind's base resets margins; a modal dialog centres with margin: auto. */
+  margin: auto;
+  width: min(40rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: min(48rem, calc(100dvh - 2rem));
+  overflow: visible;
+  border: 0;
+  padding: 0;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.glass-modal::backdrop {
+  background: var(--scrim);
+  backdrop-filter: blur(var(--backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+}
+
+.glass-modal__surface {
+  --glass-opacity: var(--glass-opacity-modal);
+  --glass-blur: var(--glass-blur-large);
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  overflow: hidden;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-inner), var(--shadow-level-3);
+}
+
+/* The header, with the close button, stays put; only the body scrolls. */
+.glass-modal__header {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--separator-soft);
+  padding: var(--space-5) var(--space-6);
+}
+
+.glass-modal__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-title);
+}
+
+.glass-modal__header p {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.glass-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-6);
+}
+
+.glass-modal[open] {
+  animation: glass-modal-enter var(--duration-panel) var(--ease-glass);
+}
+
+@keyframes glass-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .glass-button:not(:disabled):hover,
+  .button-primary:not(:disabled):hover,
+  .button-secondary:not(:disabled):hover,
+  .button-ghost:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+
+  .glass-button:not(:disabled):hover,
+  .button-secondary:not(:disabled):hover {
+    border-color: color-mix(
+      in srgb,
+      var(--accent) 40%,
+      var(--separator-strong)
+    );
+  }
+
+  .glass-button[data-variant='primary']:not(:disabled):hover,
+  .button-primary:not(:disabled):hover {
+    border-color: transparent;
+    background: var(--accent-fill-hover);
+  }
+
+  .glass-button[data-variant='quiet']:not(:disabled):hover,
+  .button-ghost:not(:disabled):hover {
+    border-color: transparent;
+    color: var(--accent-hover);
+    background: var(--accent-soft);
+    transform: none;
+  }
+
+  .glass-button[data-variant='danger']:not(:disabled):hover {
+    border-color: var(--status-danger-border);
+    background: var(--status-danger-surface);
+  }
+
+  .glass-button[data-variant='icon']:not(:disabled):hover {
+    border-color: transparent;
+    color: var(--text-primary);
+    background: var(--surface-muted);
+    transform: none;
+  }
+
+  .glass-input:not(:disabled):not(:focus):hover,
+  .glass-select:not(:disabled):not(:focus):hover,
+  .field-select:not(:disabled):not(:focus):hover,
+  .field-input:not(:disabled):not(:focus):hover {
+    border-color: color-mix(
+      in srgb,
+      var(--accent) 40%,
+      var(--separator-strong)
+    );
+  }
+
+  .glass-segmented-control > button:not(:disabled):hover,
+  .segmented-control > button:not(:disabled):hover {
+    color: var(--text-primary);
+  }
+
+  .tooltip-anchor:hover > .glass-tooltip {
+    opacity: 1;
+  }
+
+  .tooltip-anchor:hover[data-placement='top'] > .glass-tooltip,
+  .tooltip-anchor:hover[data-placement='bottom'] > .glass-tooltip {
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  .tooltip-anchor:hover[data-placement='left'] > .glass-tooltip,
+  .tooltip-anchor:hover[data-placement='right'] > .glass-tooltip {
+    transform: translate(0, -50%) scale(1);
+  }
+}
+
+.glass-button:not(:disabled):active,
+.button-primary:not(:disabled):active,
+.button-secondary:not(:disabled):active,
+.button-ghost:not(:disabled):active,
+.glass-segmented-control > button:not(:disabled):active,
+.segmented-control > button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.glass-button[data-variant='primary']:not(:disabled):active,
+.button-primary:not(:disabled):active {
+  background: var(--accent-pressed);
+}
+
+:where(
+  button,
+  summary,
+  a,
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex='-1'])
+):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Headings are focused from code to announce page changes to screen readers;
+   they are not interactive, so they never show a focus ring. */
+[tabindex='-1']:focus {
+  outline: none;
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :where(
+    .glass-panel,
+    .glass-card,
+    .glass-bar,
+    .ios-sheet,
+    .source-panel,
+    .workflow-rail,
+    .floating-navigation__surface,
+    .app-context-bar,
+    .glass-modal__surface,
+    .glass-tooltip
+  ) {
+    background: var(--surface-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :where(
+    .glass-panel,
+    .glass-card,
+    .glass-bar,
+    .ios-sheet,
+    .source-panel,
+    .workflow-rail,
+    .floating-navigation__surface,
+    .app-context-bar,
+    .glass-modal__surface,
+    .glass-tooltip
+  ) {
+    --glass-opacity: 0.96;
+    background: var(--surface-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-modal::backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --separator: color-mix(in srgb, currentColor 34%, transparent);
+    --separator-soft: color-mix(in srgb, currentColor 22%, transparent);
+    --separator-strong: color-mix(in srgb, currentColor 46%, transparent);
+    --glass-border: color-mix(in srgb, currentColor 28%, transparent);
+  }
+
+  :where(
+    .glass-panel,
+    .glass-card,
+    .glass-bar,
+    .ios-sheet,
+    .source-panel,
+    .workflow-rail,
+    .floating-navigation__surface,
+    .app-context-bar,
+    .glass-modal__surface,
+    .glass-tooltip
+  ) {
+    --glass-opacity: 0.96;
+    background: var(--surface-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  :where(
+    .glass-panel,
+    .glass-card,
+    .glass-bar,
+    .ios-sheet,
+    .source-panel,
+    .workflow-rail,
+    .floating-navigation__surface,
+    .app-context-bar,
+    .glass-modal__surface,
+    .glass-tooltip,
+    .glass-button,
+    .glass-input,
+    .glass-select,
+    .status-badge
+  ) {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  :where(
+    .glass-panel,
+    .glass-card,
+    .glass-bar,
+    .ios-sheet,
+    .source-panel,
+    .workflow-rail,
+    .floating-navigation__surface,
+    .app-context-bar,
+    .glass-modal__surface,
+    .glass-tooltip
+  )::before {
+    display: none;
+  }
+
+  /* Inputs swap the outline for a box-shadow ring; forced colours drop
+     shadows, so restore a system outline there. */
+  :is(
+    .glass-input,
+    .glass-select,
+    .field-select,
+    .field-input,
+    .ios-field
+  ):focus {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

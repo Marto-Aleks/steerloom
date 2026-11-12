@@ -1,0 +1,26 @@
+# Steerloom · steerloom.app
+# Everything public may be read, including by AI assistants that answer
+# "what is Steerloom?" for people. The app itself needs a sign-in.
+User-agent: *
+Allow: /
+Disallow: /api/
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://steerloom.app/sitemap.xml

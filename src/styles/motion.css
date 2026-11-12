@@ -1,0 +1,280 @@
+/*
+ * Shared motion for the redesign. Components opt in with a class and an
+ * optional `--sl-delay` custom property for staggering, e.g.
+ *   <div className="sl-rise" style={{ '--sl-delay': '120ms' }}>
+ * Every animation is disabled under prefers-reduced-motion.
+ */
+.sl-rise {
+  animation: sl-rise 700ms var(--ease-glass) both;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+@keyframes sl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.sl-grow-y {
+  transform-origin: bottom;
+  animation: sl-grow-y 900ms var(--ease-glass) both;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+@keyframes sl-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+.sl-grow-x {
+  transform-origin: left;
+  animation: sl-grow-x 1000ms var(--ease-glass) both;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+@keyframes sl-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* SVG paths that draw themselves; set pathLength="1" on the path. */
+.sl-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: sl-draw 1600ms ease forwards;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+@keyframes sl-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* A live indicator dot. */
+.sl-pulse {
+  animation: sl-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sl-pulse {
+  50% {
+    box-shadow: 0 0 0 6px rgb(14 143 126 / 0%);
+  }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(14 143 126 / 45%);
+  }
+}
+
+/* A glowing packet travelling along a horizontal connector (position: relative). */
+.sl-packet {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--brand-cyan);
+  box-shadow: 0 0 12px var(--brand-cyan);
+  animation: sl-travel 2.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+@keyframes sl-travel {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  to {
+    left: calc(100% - 9px);
+    opacity: 0;
+  }
+}
+
+.sl-float {
+  animation: sl-float 5s ease-in-out infinite;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+@keyframes sl-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-rise,
+  .sl-grow-y,
+  .sl-grow-x,
+  .sl-draw,
+  .sl-pulse,
+  .sl-packet,
+  .sl-float {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/*
+ * Inside the signed-in app most screens are Quiet: numbers, cards and charts
+ * appear at once, exactly as for reduced-motion users. Functional motion
+ * stays (AI chat slide, loading spinners, the AI "thinking" dot, hover and
+ * press feedback). The briefing (`.report`) is the one Focused screen and
+ * follows the rules below instead.
+ */
+.workspace-container
+  :is(
+    .sl-rise,
+    .sl-grow-y,
+    .sl-grow-x,
+    .sl-draw,
+    .sl-pulse,
+    .sl-float,
+    .screen,
+    .screen-stack,
+    .forecast__track,
+    .forecast__runner,
+    .forecast__dot,
+    .measure-tile__text,
+    .spot-icon--pop
+  ):not(.report *) {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  stroke-dashoffset: 0 !important;
+}
+
+.workspace-container .sl-packet {
+  display: none;
+}
+
+/*
+ * Briefing (Focused volume). Timings come from the motion tokens; the
+ * stagger steps are set in features/analysis/motion.ts (60ms apart).
+ *  - The hero enters first, then the stage board, signals, forecast and
+ *    metrics follow (rise 16px + fade, --duration-panel, ease-out).
+ *  - Signal top borders draw left to right once the card has landed.
+ *  - The forecast's 85% marker travels from Today and settles with one ring
+ *    pulse; the confidence counts up once per session (motion.ts).
+ *  - No ambient motion; nothing runs longer than 500ms.
+ */
+.report {
+  --briefing-enter: var(--duration-panel);
+  --briefing-draw-delay: 160ms;
+  --briefing-pulse: 500ms;
+}
+
+.report .sl-rise {
+  animation: briefing-rise var(--briefing-enter) var(--ease-glass) both;
+  animation-delay: var(--sl-delay, 0ms);
+}
+
+.report .sl-grow-x,
+.report .sl-grow-y {
+  animation-duration: var(--briefing-enter);
+}
+
+.report .sl-draw {
+  animation: sl-draw var(--briefing-enter) var(--ease-glass) both;
+  animation-delay: calc(var(--sl-delay, 0ms) + var(--briefing-draw-delay));
+}
+
+.report :is(.sl-pulse, .sl-float, .sl-packet) {
+  animation: none;
+}
+
+.report .sl-packet {
+  display: none;
+}
+
+@keyframes briefing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* Status top border draws in after its card has risen. */
+.report .signal-card.sl-rise::before,
+.report .hero-signal.sl-rise::before {
+  animation: briefing-draw var(--briefing-enter) var(--ease-glass) both;
+  animation-delay: calc(var(--sl-delay, 0ms) + var(--briefing-draw-delay));
+}
+
+@keyframes briefing-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Forecast: the track fills, other markers fade in, the 85% marker travels
+   from Today and lands with one ring pulse. */
+.report .forecast__track {
+  animation: sl-grow-x var(--briefing-enter) var(--ease-glass) both;
+  animation-delay: 120ms;
+}
+
+.report .forecast__runner {
+  animation: briefing-fade var(--duration-standard) var(--ease-glass) both;
+  animation-delay: calc(200ms + var(--forecast-delay, 0ms));
+}
+
+.report .forecast__runner[data-level='p85'] {
+  animation: briefing-travel var(--briefing-enter) var(--ease-glass) both;
+  animation-delay: 160ms;
+}
+
+.report .forecast__runner[data-level='p85'] .forecast__dot::after {
+  animation: briefing-ring var(--briefing-pulse) var(--ease-glass) both;
+  animation-delay: calc(160ms + var(--briefing-enter));
+}
+
+@keyframes briefing-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes briefing-travel {
+  from {
+    transform: translateX(0);
+  }
+}
+
+@keyframes briefing-ring {
+  from {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--focus-ring);
+  }
+  to {
+    opacity: 0;
+    box-shadow: 0 0 0 12px var(--focus-ring);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report .sl-rise,
+  .report .sl-grow-x,
+  .report .sl-grow-y,
+  .report .sl-draw,
+  .report .signal-card::before,
+  .report .hero-signal::before,
+  .report .forecast__track,
+  .report .forecast__runner,
+  .report .forecast__dot::after {
+    animation: none !important;
+  }
+
+  .report .forecast__dot::after {
+    opacity: 0;
+  }
+}

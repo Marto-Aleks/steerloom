@@ -1,0 +1,119 @@
+/* Steerloom design tokens
+   Values were derived from the landing page screenshots.
+   If the codebase already defines tokens, the codebase wins — update this file to match. */
+
+:root {
+  /* ---------- Ink (text) ---------- */
+  --ink-900: #141b2d;   /* headings, key numbers */
+  --ink-700: #2f3a50;   /* strong body, active labels */
+  --ink-600: #4b5568;   /* body text */
+  --ink-500: #64708a;   /* meta, captions, inactive tabs */
+  --ink-300: #a9b2c3;   /* disabled, placeholder */
+
+  /* ---------- Surfaces ---------- */
+  --bg-base: #eef2f7;
+  --bg-tint-blue: #dce8f8;
+  --bg-tint-lavender: #ece7fa;
+  --bg-tint-mint: #e6f1f2;
+  --surface: rgba(255, 255, 255, 0.86);      /* cards on gradient */
+  --surface-solid: #ffffff;
+  --surface-sunken: #f5f7fb;                 /* inner wells, table headers */
+  --line: #e3e8f0;                           /* dividers, borders */
+  --line-strong: #cfd7e3;
+
+  /* ---------- Dark section (Loud volume only) ---------- */
+  --dark-bg: #0f172a;
+  --dark-surface: #18223a;
+  --dark-ink: #f1f5fb;
+  --dark-ink-muted: #9aa6bd;
+
+  /* ---------- Brand / action ---------- */
+  --blue-700: #1e4fb0;  /* pressed */
+  --blue-600: #2a62d4;  /* primary button, active state, links */
+  --blue-500: #3b7bea;  /* chips, chart primary */
+  --blue-300: #8fb3ef;  /* active outline, focus ring */
+  --blue-100: #dbe7fb;  /* selected background, forecast track */
+  --blue-50:  #eef4fe;
+
+  /* ---------- Status (meaning only, never decoration) ---------- */
+  --risk-600: #c2412d;     /* At risk */
+  --risk-100: #fbe6e1;
+  --warn-600: #c46a24;     /* Bottleneck, aging */
+  --warn-400: #e19a3b;
+  --warn-100: #fcefdc;
+  --ok-600: #2f8f66;       /* On track, done */
+  --ok-100: #dff3ea;
+  --info-600: var(--blue-600); /* Rework / informational */
+
+  /* ---------- Gradients ---------- */
+  --gradient-page: linear-gradient(135deg, var(--bg-base) 0%, #f2f4f9 45%, var(--bg-tint-blue) 100%);
+  --gradient-card: linear-gradient(160deg, rgba(230,241,242,.7) 0%, #ffffff 45%, rgba(236,231,250,.8) 100%);
+  --gradient-cta: radial-gradient(60% 80% at 20% 50%, rgba(189,224,232,.7), transparent 70%),
+                  radial-gradient(50% 70% at 85% 60%, rgba(200,186,245,.7), transparent 70%),
+                  #f7f8fc;
+  --gradient-chip-blue: linear-gradient(180deg, #4fa3e8 0%, #2a62d4 100%);
+  --gradient-chip-warn: linear-gradient(180deg, #d0843a 0%, #b9452f 100%);
+
+  /* ---------- Typography ---------- */
+  /* Display = the heavy grotesk used for landing headings. Replace with the real family name. */
+  --font-display: "Steerloom Display", "Inter Display", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-hero: clamp(2.75rem, 6vw, 5.5rem);   /* landing H1 */
+  --text-h1: clamp(2rem, 3.6vw, 3.25rem);     /* section / page titles */
+  --text-h2: 1.75rem;
+  --text-h3: 1.25rem;                         /* card titles */
+  --text-metric-xl: clamp(2.5rem, 4vw, 3.5rem);
+  --text-metric: 2rem;
+  --text-lead: 1.25rem;
+  --text-body: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+
+  --tracking-display: -0.035em;
+  --tracking-heading: -0.02em;
+  --leading-tight: 1.05;
+  --leading-heading: 1.2;
+  --leading-body: 1.6;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-24: 96px; --space-32: 128px;
+  --section-gap-loud: clamp(96px, 12vw, 160px);
+  --section-gap-app: 48px;
+  --content-max: 1200px;
+  --prose-max: 680px;
+
+  /* ---------- Radii ---------- */
+  --radius-xl: 28px;    /* showcase panels, CTA card */
+  --radius-lg: 20px;    /* cards, bento tiles */
+  --radius-md: 14px;    /* inputs, signal cards inner, menus */
+  --radius-sm: 10px;    /* buttons, chips */
+  --radius-pill: 999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-sm: 0 1px 2px rgba(20,27,45,.05), 0 1px 1px rgba(20,27,45,.03);
+  --shadow-md: 0 4px 12px rgba(20,27,45,.06), 0 1px 3px rgba(20,27,45,.05);
+  --shadow-lg: 0 24px 48px -12px rgba(20,27,45,.12), 0 8px 16px -8px rgba(20,27,45,.08);
+  --shadow-button: 0 6px 16px -4px rgba(42,98,212,.45);
+  --ring-focus: 0 0 0 3px rgba(143,179,239,.6);
+  --ring-active: 0 0 0 3px var(--blue-300);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 150ms;   /* hover, press, toggle */
+  --dur-ui: 250ms;      /* menus, tooltips, tab underline */
+  --dur-panel: 500ms;   /* panel/page transitions */
+  --dur-story: 700ms;   /* landing storytelling beats */
+  --stagger: 60ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro: 0ms; --dur-ui: 120ms; --dur-panel: 160ms; --dur-story: 200ms; --stagger: 0ms;
+  }
+}

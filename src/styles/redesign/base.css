@@ -1,0 +1,5 @@
+/* Redesign base: display typography shared by every surface. */
+:where(h1, h2, .page-title, .section-title, .display) {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}

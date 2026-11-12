@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Build and test output
+dist/
+dist-server/
+coverage/
+*.tsbuildinfo
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Imported data (the bundled synthetic sample remains tracked)
+*.csv
+!src/data/synthetic-flow.csv
+exports/
+tmp/
+temp/
+
+# Runtime and debug files
+.flowlens/
+.eval/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.wrangler/
+.vite/
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Codex/Sites transient output
+output/
+outputs/
+work/
+
+# Agent worktrees
+.claude/worktrees/
+
+# Rendered videos stay local
+*.mp4
+*.webm
+# …except the landing page's own video files, which the site serves
+!public/video/*.mp4
+!public/video/*.webm
+
+dist-local/

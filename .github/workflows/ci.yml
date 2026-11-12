@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      # Builds the browser app, the production server and the public local
+      # package; the package step fails on terms from the denylist secret,
+      # where one is set (forks and pull requests from them have none).
+      - run: npm run build:hosted
+        env:
+          STEERLOOM_PACKAGE_DENYLIST: ${{ secrets.STEERLOOM_PACKAGE_DENYLIST }}

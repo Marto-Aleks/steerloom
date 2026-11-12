@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About Steerloom · what it is, in plain words</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/brands/steerloom-favicon.svg"
+    />
+    <meta
+      name="description"
+      content="Steerloom reads your Jira, Trello or Azure DevOps board and writes the briefing a delivery lead needs: what is stuck, why, what to raise today, and when the work will actually finish. Read-only."
+    />
+    <link rel="canonical" href="https://steerloom.app/about.html" />
+    <style>
+      :root {
+        color-scheme: light;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        color: #16253c;
+        background: #f7fbfd;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 5rem;
+      }
+      a {
+        color: #075db9;
+      }
+      a:focus-visible {
+        outline: 3px solid #0b75d1;
+        outline-offset: 3px;
+      }
+      h1,
+      h2 {
+        line-height: 1.25;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        margin: 1rem 0 0.4rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+        margin: 2rem 0 0.5rem;
+      }
+      .lead {
+        font-size: 1.15rem;
+        color: #3b4a63;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 0.4rem 1.25rem;
+      }
+      dt {
+        font-weight: 600;
+      }
+      dd {
+        margin: 0;
+      }
+      .nav {
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="nav"><a href="/">Steerloom</a> · About</p>
+      <h1>What Steerloom is</h1>
+      <p class="lead">
+        Steerloom reads your team's Jira, Trello or Azure DevOps board and
+        writes the briefing a delivery lead needs: what is stuck, why, what to
+        raise today, and when the current work will actually finish. It is
+        read-only, and it explains every number in plain words.
+      </p>
+
+      <h2>Who it is for</h2>
+      <p>
+        Delivery leads, engineering managers, agile coaches and project
+        managers: the people who get asked "when will it be done?" and have to
+        answer from a board that was not built to tell them.
+      </p>
+
+      <h2>What you get</h2>
+      <dl>
+        <dt>A headline</dt>
+        <dd>
+          How many active items have taken longer than usual, oldest first.
+          "Usual" is your team's own history (the 85th percentile of recently
+          finished items), never an industry number.
+        </dd>
+        <dt>Decisions for today</dt>
+        <dd>
+          Work piling up in one stage, items that came back into the flow, fewer
+          items finishing than before. One row per signal, with the items.
+        </dd>
+        <dt>A finish forecast</dt>
+        <dd>
+          When the current work could be done at 50, 70, 85 and 95% confidence,
+          from 10,000 replays of your own recent throughput.
+        </dd>
+        <dt>The trend</dt>
+        <dd>
+          Throughput, cycle time and the usual limit, each against the previous
+          period, with the items behind every number.
+        </dd>
+        <dt>How it's calculated</dt>
+        <dd>
+          Behind every number: what it means, how it was read off your items,
+          which items set it, and what was left out and why.
+        </dd>
+        <dt>Steerloom AI</dt>
+        <dd>
+          With your own key (Anthropic, OpenAI, Gemini, Grok or a company
+          gateway) it reads the tickets to say why work is stuck and who it
+          waits on, and drafts talking points. It reads; it never writes to your
+          board.
+        </dd>
+      </dl>
+
+      <h2>What it is not</h2>
+      <p>
+        Not another metrics dashboard. Tools such as ActionableAgile, LinearB or
+        Swarmia show charts of cycle time, aging work and forecasts. Steerloom
+        starts from the decision: what to raise today, why, and the evidence a
+        team can check. It works from the board alone, with no git or IDE
+        telemetry, and it never changes anything in your tracker.
+      </p>
+
+      <h2>Where your data lives</h2>
+      <p>
+        On <a href="https://steerloom.app">steerloom.app</a>, board history is
+        read into memory for your session and not stored. The installed local
+        version keeps everything on your computer and reaches company Jira
+        servers behind a VPN that the hosted version cannot. Details in the
+        <a href="/privacy.html">privacy notice</a>.
+      </p>
+
+      <h2>Try it</h2>
+      <p>
+        <a href="/?hosted=1&amp;demo=1">Open the live demo</a> on a fictional
+        board, no account needed. Or
+        <a href="/?hosted=1&amp;page=signup">create a workspace</a> and connect
+        your own board in a few minutes.
+      </p>
+      <p class="nav">
+        <a href="/privacy.html">Privacy notice</a> ·
+        <a href="/terms.html">Terms</a>
+      </p>
+    </main>
+  </body>
+</html>

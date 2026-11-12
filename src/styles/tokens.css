@@ -1,0 +1,399 @@
+:root {
+  color-scheme: light;
+  font-family:
+    'Inter Variable',
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  /* Typography */
+  --font-sans:
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    ui-sans-serif, system-ui, sans-serif;
+  /* Display face for headings, verdicts and key numbers. */
+  --font-display:
+    'Sora Variable', 'Inter Variable', -apple-system, BlinkMacSystemFont,
+    ui-sans-serif, system-ui, sans-serif;
+  --font-weight-regular: 430;
+  --font-weight-medium: 560;
+  --font-weight-semibold: 650;
+  --font-weight-bold: 740;
+  --text-caption: 0.75rem;
+  --text-small: 0.8125rem;
+  --text-body: 0.9375rem;
+  --text-title: clamp(1.5rem, 2.4vw, 2rem);
+  --text-display: clamp(2.35rem, 5vw, 4.25rem);
+  --leading-tight: 1.04;
+  --leading-body: 1.6;
+  --tracking-display: -0.03em;
+  --tracking-title: -0.025em;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* Shape */
+  --radius-small: 10px;
+  --radius-control: 14px;
+  --radius-card: 28px;
+  --radius-panel: 32px;
+  --radius-shell: 36px;
+  --radius-pill: 999px;
+  --touch-target: 44px;
+
+  /* Semantic color */
+  --surface-canvas: #eef3f8;
+  --surface-canvas-deep: #dfe8f3;
+  --surface-solid: #f9fbfd;
+  --surface-raised: #ffffff;
+  --surface-inset: rgb(244 248 252 / 84%);
+  --surface-muted: rgb(230 237 245 / 72%);
+  --surface-selected: rgb(218 237 255 / 86%);
+  --text-primary: #172131;
+  --text-secondary: #526071;
+  --text-tertiary: #667386;
+  --text-inverse: #ffffff;
+  --separator: rgb(27 40 58 / 14%);
+  --separator-soft: rgb(27 40 58 / 9%);
+  /* Control borders (inputs, secondary buttons): the system's line-strong. */
+  --separator-strong: rgb(27 40 58 / 24%);
+  --scrim: rgb(9 17 29 / 34%);
+
+  --accent: #086ad8;
+  --accent-hover: #0559ba;
+  --accent-fill: #0867ce;
+  --accent-fill-hover: #075bb8;
+  --accent-pressed: var(--accent-fill-hover);
+  --accent-soft: rgb(8 106 216 / 11%);
+  --accent-on-fill: #ffffff;
+  --brand: #087a75;
+  --brand-strong: #075f5b;
+  --brand-soft: rgb(8 122 117 / 11%);
+  /* Steerloom mark (src/components/SteerloomMark.tsx): resting tickets in
+     ink, the moved ticket and its trail on the cyan → blue → violet gradient. */
+  --brand-mark-ink: var(--text-primary);
+  --brand-mark-start: #19c3d6;
+  --brand-mark-middle: #3b82ff;
+  --brand-mark-end: #8b6cff;
+  /* Loomy, the dot from the film (src/components/Loomy.tsx). Her colours are
+     the film's and stay the same in both themes. */
+  --loomy-body-light: #8dbbff;
+  --loomy-body: #4f8ff0;
+  --loomy-body-deep: #2f6fe0;
+  --loomy-body-shade: #2254bf;
+  --loomy-bounce: #6ea6ff;
+  --loomy-eye: #0b1020;
+  --loomy-eye-light: #263050;
+  --loomy-eye-deep: #000000;
+  --loomy-smile: #0d1a3a;
+  --loomy-shine: #ffffff;
+  --loomy-blush: #f08a9a;
+  --loomy-drop: #cfe6ff;
+  --loomy-drop-edge: #7fb2f5;
+  --focus-ring: rgb(8 106 216 / 38%);
+  /* Focus ring as a box-shadow (inputs keep their border and add this).
+     Built from --focus-ring, so it follows the theme without a dark copy. */
+  --ring-focus: 0 0 0 3px var(--focus-ring);
+  --ring-danger: 0 0 0 3px var(--status-danger-surface);
+
+  /* Redesign accents: luminous blue → cyan → teal, violet for limits (P85). */
+  --brand-navy: #0b1b33;
+  --brand-cyan: #0fa3b8;
+  --brand-violet: #6d4ee6;
+  --gradient-brand: linear-gradient(135deg, #0a6ad8 0%, #0fa3b8 100%);
+  --gradient-data: linear-gradient(180deg, #19c3d6 0%, #0a6ad8 100%);
+  --gradient-risk: linear-gradient(90deg, #b86e00 0%, #c4423c 100%);
+  --glow-brand: 0 12px 32px rgb(10 106 216 / 30%);
+
+  --status-neutral-text: #536172;
+  --status-neutral-surface: rgb(72 88 107 / 10%);
+  --status-neutral-border: rgb(72 88 107 / 16%);
+  --status-info-text: #075cb9;
+  --status-info-surface: rgb(8 106 216 / 10%);
+  --status-info-border: rgb(8 106 216 / 19%);
+  --status-success-text: #176f43;
+  --status-success-surface: rgb(23 111 67 / 10%);
+  --status-success-border: rgb(23 111 67 / 18%);
+  --status-warning-text: #805300;
+  --status-warning-surface: rgb(168 103 0 / 11%);
+  --status-warning-border: rgb(168 103 0 / 21%);
+  --status-danger-text: #a52a21;
+  --status-danger-surface: rgb(180 35 24 / 10%);
+  --status-danger-border: rgb(180 35 24 / 20%);
+
+  /* Adaptive glass */
+  --glass-rgb: 255 255 255;
+  --glass-opacity-subtle: 0.42;
+  --glass-opacity-regular: 0.6;
+  --glass-opacity-strong: 0.78;
+  --glass-opacity-modal: 0.88;
+  --glass-blur-small: 12px;
+  --glass-blur-medium: 22px;
+  --glass-blur-large: 30px;
+  --glass-saturation: 165%;
+  --glass-border: rgb(255 255 255 / 66%);
+  --glass-border-quiet: rgb(255 255 255 / 44%);
+  --glass-highlight: rgb(255 255 255 / 90%);
+  --glass-edge-cool: rgb(120 196 255 / 26%);
+  --glass-inner-shade: rgb(30 47 68 / 6%);
+
+  /* Elevation */
+  --shadow-level-1: 0 1px 2px rgb(26 39 56 / 5%), 0 8px 24px rgb(26 39 56 / 7%);
+  --shadow-level-2:
+    0 2px 5px rgb(26 39 56 / 7%), 0 18px 52px rgb(26 39 56 / 11%);
+  --shadow-level-3:
+    0 8px 18px rgb(17 28 44 / 10%), 0 30px 88px rgb(17 28 44 / 16%);
+  --shadow-inner:
+    inset 0 1px 0 rgb(255 255 255 / 74%),
+    inset 0 -1px 0 var(--glass-inner-shade);
+  /* Primary button lift, tinted with the accent fill. */
+  --shadow-button: 0 6px 16px -4px rgb(8 103 206 / 42%);
+  /* Smallest step: active segment, selected pill. */
+  --shadow-control: 0 1px 2px rgb(26 39 56 / 8%), 0 1px 1px rgb(26 39 56 / 4%);
+  /* Modal backdrop blur. */
+  --backdrop-blur: 4px;
+
+  /* Motion */
+  --duration-fast: 140ms;
+  --duration-standard: 240ms;
+  --duration-panel: 360ms;
+  --ease-glass: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  /* One spinner turn (loading states). */
+  --duration-spin: 700ms;
+
+  /* Data visualization */
+  --chart-grid: rgb(49 67 89 / 14%);
+  --chart-label: #596779;
+  --chart-primary: #086ad8;
+  --chart-primary-strong: #0758b5;
+  --chart-secondary: #4c9ee8;
+  --chart-average: #687588;
+  --chart-alert: #c53b31;
+  --chart-alert-text: #a52a21;
+  --chart-tooltip: #f9fbfd;
+  --chart-teal: #14867d;
+  --chart-orange: #bd681c;
+  --chart-purple: #7259c8;
+
+  /* Ambient canvas */
+  --ambient-a: rgb(43 168 255 / 16%);
+  --ambient-b: rgb(35 201 177 / 14%);
+  --ambient-c: rgb(154 108 255 / 11%);
+
+  /* Layers */
+  --z-navigation: 30;
+  --z-modal: 80;
+  --z-tooltip: 100;
+
+  /* Compatibility aliases while feature screens migrate. */
+  --canvas: var(--surface-canvas);
+  --surface: var(--surface-raised);
+  --surface-glass: rgb(var(--glass-rgb) / var(--glass-opacity-regular));
+  --label: var(--text-primary);
+  --label-secondary: var(--text-secondary);
+  --label-tertiary: var(--text-tertiary);
+  --system-blue: var(--accent-fill);
+  --system-blue-pressed: var(--accent-fill-hover);
+  --focus: var(--accent);
+  --danger: var(--status-danger-text);
+  --danger-ink: var(--status-danger-text);
+  --warning: var(--status-warning-text);
+  --success: var(--status-success-text);
+  --chart-blue: var(--chart-primary);
+  --ease-ios: var(--ease-glass);
+  --shadow-card: var(--shadow-level-1);
+  --shadow-float: var(--shadow-level-2), var(--shadow-inner);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-canvas: #090f18;
+  --surface-canvas-deep: #121b2a;
+  --surface-solid: #151e2c;
+  --surface-raised: #1a2433;
+  --surface-inset: rgb(7 12 20 / 48%);
+  --surface-muted: rgb(255 255 255 / 7%);
+  --surface-selected: rgb(45 116 181 / 32%);
+  --text-primary: #f4f7fb;
+  --text-secondary: #bdc7d4;
+  --text-tertiary: #9da9b9;
+  --text-inverse: #111a27;
+  --separator: rgb(255 255 255 / 14%);
+  --separator-soft: rgb(255 255 255 / 9%);
+  --separator-strong: rgb(255 255 255 / 22%);
+  --scrim: rgb(0 0 0 / 58%);
+
+  --accent: #78baff;
+  --accent-hover: #a2ceff;
+  --accent-fill: #0b67c9;
+  --accent-fill-hover: #0a5ab3;
+  --accent-pressed: var(--accent-fill-hover);
+  --accent-soft: rgb(120 186 255 / 14%);
+  --accent-on-fill: #ffffff;
+  --brand: #68d1c4;
+  --brand-strong: #8ce1d6;
+  --brand-soft: rgb(104 209 196 / 14%);
+  --brand-mark-ink: var(--text-primary);
+  --brand-mark-start: #3fe0ea;
+  --brand-mark-middle: #6b9dff;
+  --brand-mark-end: #a993ff;
+  --focus-ring: rgb(120 186 255 / 48%);
+
+  --status-neutral-text: #c3ccd8;
+  --status-neutral-surface: rgb(200 211 225 / 10%);
+  --status-neutral-border: rgb(200 211 225 / 16%);
+  --status-info-text: #8cc5ff;
+  --status-info-surface: rgb(120 186 255 / 13%);
+  --status-info-border: rgb(120 186 255 / 22%);
+  --status-success-text: #83dda6;
+  --status-success-surface: rgb(83 207 132 / 12%);
+  --status-success-border: rgb(83 207 132 / 21%);
+  --status-warning-text: #ffd080;
+  --status-warning-surface: rgb(255 184 73 / 12%);
+  --status-warning-border: rgb(255 184 73 / 22%);
+  --status-danger-text: #ffaaa1;
+  --status-danger-surface: rgb(255 123 110 / 12%);
+  --status-danger-border: rgb(255 123 110 / 23%);
+
+  --glass-rgb: 21 29 43;
+  --glass-opacity-subtle: 0.52;
+  --glass-opacity-regular: 0.66;
+  --glass-opacity-strong: 0.8;
+  --glass-opacity-modal: 0.91;
+  --glass-border: rgb(255 255 255 / 16%);
+  --glass-border-quiet: rgb(255 255 255 / 10%);
+  --glass-highlight: rgb(255 255 255 / 22%);
+  --glass-edge-cool: rgb(96 177 255 / 28%);
+  --glass-inner-shade: rgb(0 0 0 / 24%);
+
+  --shadow-level-1: 0 8px 28px rgb(0 0 0 / 28%);
+  --shadow-level-2: 0 20px 56px rgb(0 0 0 / 38%);
+  --shadow-level-3: 0 34px 92px rgb(0 0 0 / 52%);
+  --shadow-button: 0 6px 16px -4px rgb(0 0 0 / 50%);
+  --shadow-control: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-inner:
+    inset 0 1px 0 rgb(255 255 255 / 15%),
+    inset 0 -1px 0 var(--glass-inner-shade);
+
+  --chart-grid: rgb(255 255 255 / 12%);
+  --chart-label: #aeb9c7;
+  --chart-primary: #78baff;
+  --chart-primary-strong: #a2ceff;
+  --chart-secondary: #479de5;
+  --chart-average: #a0aab7;
+  --chart-alert: #ff8d80;
+  --chart-alert-text: #ffaaa1;
+  --chart-tooltip: #182231;
+  --chart-teal: #65d4c7;
+  --chart-orange: #ffad68;
+  --chart-purple: #b8a4ff;
+
+  --ambient-a: rgb(31 118 205 / 20%);
+  --ambient-b: rgb(23 139 126 / 17%);
+  --ambient-c: rgb(104 73 190 / 16%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --surface-canvas: #090f18;
+    --surface-canvas-deep: #121b2a;
+    --surface-solid: #151e2c;
+    --surface-raised: #1a2433;
+    --surface-inset: rgb(7 12 20 / 48%);
+    --surface-muted: rgb(255 255 255 / 7%);
+    --surface-selected: rgb(45 116 181 / 32%);
+    --text-primary: #f4f7fb;
+    --text-secondary: #bdc7d4;
+    --text-tertiary: #9da9b9;
+    --text-inverse: #111a27;
+    --separator: rgb(255 255 255 / 14%);
+    --separator-soft: rgb(255 255 255 / 9%);
+    --separator-strong: rgb(255 255 255 / 22%);
+    --scrim: rgb(0 0 0 / 58%);
+
+    --accent: #78baff;
+    --accent-hover: #a2ceff;
+    --accent-fill: #0b67c9;
+    --accent-fill-hover: #0a5ab3;
+    --accent-pressed: var(--accent-fill-hover);
+    --accent-soft: rgb(120 186 255 / 14%);
+    --accent-on-fill: #ffffff;
+    --brand: #68d1c4;
+    --brand-strong: #8ce1d6;
+    --brand-soft: rgb(104 209 196 / 14%);
+    --brand-mark-ink: var(--text-primary);
+    --brand-mark-start: #3fe0ea;
+    --brand-mark-middle: #6b9dff;
+    --brand-mark-end: #a993ff;
+    --focus-ring: rgb(120 186 255 / 48%);
+
+    --status-neutral-text: #c3ccd8;
+    --status-neutral-surface: rgb(200 211 225 / 10%);
+    --status-neutral-border: rgb(200 211 225 / 16%);
+    --status-info-text: #8cc5ff;
+    --status-info-surface: rgb(120 186 255 / 13%);
+    --status-info-border: rgb(120 186 255 / 22%);
+    --status-success-text: #83dda6;
+    --status-success-surface: rgb(83 207 132 / 12%);
+    --status-success-border: rgb(83 207 132 / 21%);
+    --status-warning-text: #ffd080;
+    --status-warning-surface: rgb(255 184 73 / 12%);
+    --status-warning-border: rgb(255 184 73 / 22%);
+    --status-danger-text: #ffaaa1;
+    --status-danger-surface: rgb(255 123 110 / 12%);
+    --status-danger-border: rgb(255 123 110 / 23%);
+
+    --glass-rgb: 21 29 43;
+    --glass-opacity-subtle: 0.52;
+    --glass-opacity-regular: 0.66;
+    --glass-opacity-strong: 0.8;
+    --glass-opacity-modal: 0.91;
+    --glass-border: rgb(255 255 255 / 16%);
+    --glass-border-quiet: rgb(255 255 255 / 10%);
+    --glass-highlight: rgb(255 255 255 / 22%);
+    --glass-edge-cool: rgb(96 177 255 / 28%);
+    --glass-inner-shade: rgb(0 0 0 / 24%);
+
+    --shadow-level-1: 0 8px 28px rgb(0 0 0 / 28%);
+    --shadow-level-2: 0 20px 56px rgb(0 0 0 / 38%);
+    --shadow-level-3: 0 34px 92px rgb(0 0 0 / 52%);
+    --shadow-button: 0 6px 16px -4px rgb(0 0 0 / 50%);
+    --shadow-control: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-inner:
+      inset 0 1px 0 rgb(255 255 255 / 15%),
+      inset 0 -1px 0 var(--glass-inner-shade);
+
+    --chart-grid: rgb(255 255 255 / 12%);
+    --chart-label: #aeb9c7;
+    --chart-primary: #78baff;
+    --chart-primary-strong: #a2ceff;
+    --chart-secondary: #479de5;
+    --chart-average: #a0aab7;
+    --chart-alert: #ff8d80;
+    --chart-alert-text: #ffaaa1;
+    --chart-tooltip: #182231;
+    --chart-teal: #65d4c7;
+    --chart-orange: #ffad68;
+    --chart-purple: #b8a4ff;
+
+    --ambient-a: rgb(31 118 205 / 20%);
+    --ambient-b: rgb(23 139 126 / 17%);
+    --ambient-c: rgb(104 73 190 / 16%);
+  }
+}

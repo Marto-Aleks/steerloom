@@ -1,0 +1,17 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/sora';
+@import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/glass.css';
+@import './styles/components.css';
+@import './styles/workspace.css';
+@import './styles/motion.css';
+@import './styles/icons.css';
+@import './styles/redesign/base.css';
+@import './styles/redesign/dashboard.css';
+@import './styles/redesign/ai-chat.css';
+@import './styles/redesign/local.css';
+@import './styles/redesign/landing.css';
+@import './styles/redesign/entry.css';
+@import './styles/redesign/setup.css';
+@import './styles/redesign/board.css';

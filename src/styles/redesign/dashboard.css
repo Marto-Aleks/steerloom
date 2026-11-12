@@ -1,0 +1,2242 @@
+/*
+ * Briefing (dashboard) — Focused volume of the Steerloom design system.
+ * One hero per view (the top at-risk signal or the forecast), white cards on
+ * the page gradient, status colour only for meaning and always with a label.
+ * Every value below comes from tokens.css; the scoped properties on `.report`
+ * name the design-system roles in codebase terms.
+ */
+.report {
+  --briefing-card-bg: var(--surface-raised);
+  --briefing-card-border: var(--separator-soft);
+  --briefing-card-radius: var(--radius-card);
+  --briefing-nested-radius: var(--radius-control);
+  --briefing-card-shadow: var(--shadow-level-1);
+  --briefing-hover-shadow: var(--shadow-level-2);
+  --briefing-hero-shadow: var(--shadow-level-2);
+  --briefing-card-pad: var(--space-6);
+  --briefing-prose: 62ch;
+
+  /* Status roles: line/border colour, readable ink, tinted base. */
+  --status-risk-line: var(--chart-alert);
+  --status-risk-ink: var(--status-danger-text);
+  --status-risk-soft: var(--status-danger-surface);
+  --status-warn-line: var(--chart-orange);
+  --status-warn-ink: var(--status-warning-text);
+  --status-warn-soft: var(--status-warning-surface);
+  --status-rework-line: var(--accent);
+  --status-rework-ink: var(--status-info-text);
+  --status-rework-soft: var(--status-info-surface);
+  --status-ok-line: var(--status-success-text);
+  --status-ok-ink: var(--status-success-text);
+  --status-ok-soft: var(--status-success-surface);
+  --status-info-line: var(--status-neutral-text);
+  --status-info-ink: var(--status-neutral-text);
+  --status-info-soft: var(--status-neutral-surface);
+
+  --late-fill: linear-gradient(
+    180deg,
+    var(--chart-orange) 0%,
+    var(--chart-alert) 100%
+  );
+}
+
+/* Status role per element: data-status="risk|bottleneck|aging|rework|ok|info". */
+.report [data-status] {
+  --tone-line: var(--status-info-line);
+  --tone-ink: var(--status-info-ink);
+  --tone-soft: var(--status-info-soft);
+}
+
+.report [data-status='risk'] {
+  --tone-line: var(--status-risk-line);
+  --tone-ink: var(--status-risk-ink);
+  --tone-soft: var(--status-risk-soft);
+}
+
+.report :is([data-status='bottleneck'], [data-status='aging']) {
+  --tone-line: var(--status-warn-line);
+  --tone-ink: var(--status-warn-ink);
+  --tone-soft: var(--status-warn-soft);
+}
+
+.report [data-status='rework'] {
+  --tone-line: var(--status-rework-line);
+  --tone-ink: var(--status-rework-ink);
+  --tone-soft: var(--status-rework-soft);
+}
+
+.report [data-status='ok'] {
+  --tone-line: var(--status-ok-line);
+  --tone-ink: var(--status-ok-ink);
+  --tone-soft: var(--status-ok-soft);
+}
+
+/* Shared card surface for every briefing block. */
+.report
+  :is(
+    .work-stages,
+    .signal-card,
+    .forecast,
+    .briefing-metric,
+    .aging-work,
+    .chart-card
+  ) {
+  border: 1px solid var(--briefing-card-border);
+  border-radius: var(--briefing-card-radius);
+  background: var(--briefing-card-bg);
+  box-shadow: var(--shadow-inner), var(--briefing-card-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Text link / tertiary action: blue, semibold, arrow nudges on hover. */
+.briefing-link {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-small);
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.briefing-link > span[aria-hidden='true'] {
+  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease-glass);
+}
+
+.briefing-link:hover {
+  color: var(--accent-hover);
+}
+
+/* The mark and "Ask AI": the same on every link that opens Steerloom AI. */
+.ask-ai-tag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.ask-ai-tag .steerloom-mark {
+  flex: none;
+}
+
+.briefing-link:hover > span[aria-hidden='true'] {
+  transform: translateX(3px);
+}
+
+.briefing-link:focus-visible,
+.signal-card__external:focus-visible,
+.hero-signal__key a:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Header: the plain-language verdict, review actions and the ⋯ menu
+ * ------------------------------------------------------------------------- */
+.report-hero {
+  display: grid;
+  min-width: 0;
+}
+
+.report-hero__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1) 0;
+}
+
+.report-hero__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.report-hero__text {
+  display: grid;
+  flex: 1 1 36rem;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.report-hero__headline {
+  max-width: 36ch;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.15;
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.report-hero__summary {
+  max-width: var(--briefing-prose);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-wrap: pretty;
+}
+
+.report-hero__link {
+  color: var(--accent);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.report-hero__link:focus-visible {
+  border-radius: var(--radius-small);
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.report-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Questions for Steerloom AI: labelled as such, so nobody expects a
+   document or a meeting tool. */
+.report-hero__ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.report-hero__ask > span:first-child {
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.report-hero__meta {
+  margin: 0 0 var(--space-3);
+  overflow-wrap: anywhere;
+}
+
+.report-hero__caveat {
+  margin: 0;
+  color: var(--status-warning-text);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.report-hero[data-tone='insufficient'] .report-hero__caveat:first-of-type,
+.report-hero[data-tone='attention'] .report-hero__caveat {
+  color: var(--status-danger-text);
+}
+
+.report-data-details {
+  margin-top: var(--space-1);
+}
+
+.report-data-details .report-header__metadata {
+  margin-top: var(--space-3);
+  border-width: 1px;
+  border-radius: var(--briefing-nested-radius);
+  padding: var(--space-3) var(--space-4);
+}
+
+.report-data-details > .metadata-copy {
+  max-width: var(--briefing-prose);
+  margin-top: var(--space-3);
+}
+
+/* ⋯ report menu */
+.report-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.report-menu__button {
+  display: grid;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-glass),
+    border-color var(--duration-fast) var(--ease-glass);
+}
+
+.report-menu__button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.report-menu__button:hover,
+.report-menu__button[aria-expanded='true'] {
+  border-color: var(--separator);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.report-menu__button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.report-menu__list {
+  position: absolute;
+  z-index: var(--z-navigation);
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  min-width: 14rem;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-level-3);
+  padding: var(--space-1);
+  animation: briefing-menu-in var(--duration-standard) var(--ease-glass);
+}
+
+@keyframes briefing-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.report-menu__list button {
+  min-height: 2.5rem;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-menu__list button:hover:not(:disabled),
+.report-menu__list button:focus-visible {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.report-menu__list button:disabled {
+  color: var(--text-tertiary);
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------------------
+ * Stage: the hero next to "Where work sits now"
+ * ------------------------------------------------------------------------- */
+.briefing-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .briefing-stage[data-layout='split'] {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+}
+
+/* The right column: stages, then code review; the last box takes the rest
+   of the height so both columns end together. */
+.briefing-stage__side {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.briefing-stage__side > :last-child {
+  flex: 1 0 auto;
+}
+
+/* Showcase panel: the one element on the screen that is clearly bigger. */
+.briefing-hero {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--briefing-card-border);
+  border-radius: var(--radius-panel);
+  background:
+    radial-gradient(
+      70% 80% at 10% 0%,
+      color-mix(in srgb, var(--brand-cyan) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      60% 70% at 100% 100%,
+      color-mix(in srgb, var(--brand-violet) 12%, transparent),
+      transparent 70%
+    ),
+    var(--surface-raised);
+  box-shadow: var(--shadow-inner), var(--briefing-hero-shadow);
+  padding: var(--space-8);
+}
+
+.report .forecast.briefing-hero {
+  border-radius: var(--radius-panel);
+  background:
+    radial-gradient(
+      70% 80% at 10% 0%,
+      color-mix(in srgb, var(--brand-cyan) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      60% 70% at 100% 100%,
+      color-mix(in srgb, var(--brand-violet) 12%, transparent),
+      transparent 70%
+    ),
+    var(--surface-raised);
+  box-shadow: var(--shadow-inner), var(--briefing-hero-shadow);
+  padding: var(--space-8);
+}
+
+/* ---- Hero: the top at-risk signal ---- */
+.hero-signal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hero-signal::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--tone-line);
+  content: '';
+  transform-origin: left;
+}
+
+.hero-signal__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.hero-signal__status,
+.signal-card__status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--tone-soft);
+  padding: 2px var(--space-2);
+  color: var(--tone-ink);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.hero-signal__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+
+.hero-signal__number {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 4.25rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+}
+
+.hero-signal__unit {
+  max-width: 28ch;
+  text-wrap: balance;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.8vw, 1.4rem);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  letter-spacing: var(--tracking-title);
+}
+
+.hero-signal__items {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Side by side, the list takes the height the row gives it (its own size
+   does not count), keeps room for its first rows, and hides what does not
+   fit whole. Stacked on a narrow screen, it shows its first rows only. */
+.hero-signal__items {
+  flex: 1 1 0;
+  overflow: hidden;
+  contain: size;
+}
+
+.hero-signal__items li[data-hidden='true'] {
+  visibility: hidden;
+}
+
+.hero-signal__items li {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 8rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.hero-signal__key {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  color: var(--text-primary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.hero-signal__key a {
+  width: fit-content;
+  border-radius: var(--radius-small);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.hero-signal__key a:hover {
+  text-decoration: underline;
+}
+
+.hero-signal__key small,
+.hero-signal__age small {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-regular);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-signal__bar {
+  position: relative;
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--separator-soft);
+}
+
+.hero-signal__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--brand-cyan) 0%,
+    var(--chart-primary) var(--limit-in-fill, 0%),
+    var(--chart-orange) var(--limit-in-fill, 0%),
+    var(--chart-alert) 100%
+  );
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.hero-signal__limit {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: var(--hero-limit, 100%);
+  border-left: 2px dashed var(--chart-purple);
+}
+
+.hero-signal__age {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.hero-signal__age strong {
+  color: var(--tone-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-signal__actions,
+.signal-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-5);
+  margin-top: auto;
+}
+
+.signal-card__external {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-small);
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.signal-card__external:hover {
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Where work sits now: task-chip stacks per stage
+ * ------------------------------------------------------------------------- */
+.work-stages {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--briefing-card-pad);
+}
+
+.work-stages__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.work-stages__title,
+.forecast__title,
+.signals__title,
+.briefing-metrics__title,
+.report .chart-card__title,
+.aging-work__heading h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  letter-spacing: var(--tracking-title);
+}
+
+.work-stages__total {
+  color: var(--text-tertiary);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.work-stages__lanes {
+  display: grid;
+  grid-template-columns: repeat(var(--work-stage-count, 4), minmax(0, 1fr));
+  align-items: end;
+  gap: var(--space-3);
+  margin: auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.work-stages__lane {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--briefing-nested-radius);
+  background: var(--surface-inset);
+  padding: var(--space-4) var(--space-2) var(--space-3);
+}
+
+.work-stages__stack {
+  display: flex;
+  width: 100%;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--block-gap, 4px);
+  overflow: hidden;
+  padding-bottom: 4px;
+}
+
+/* Glossy task chips, as on the landing page: blue while healthy, the aging
+   colour once past the usual limit. */
+.work-stages__block {
+  display: block;
+  flex-shrink: 0;
+  width: min(66%, 44px);
+  border-radius: 6px;
+  background: var(--gradient-data);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.work-stages__block[data-late='true'] {
+  background: var(--late-fill);
+}
+
+.work-stages__baseline {
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--separator);
+}
+
+.work-stages__count {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+}
+
+.work-stages__name {
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.work-stages__flow {
+  margin: calc(-1 * var(--space-2)) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.work-stages__flow strong {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.work-stages__flow [data-growing='true'] {
+  color: var(--status-warning-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.work-stages__share-note {
+  margin: 0 0 calc(-1 * var(--space-2));
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+}
+
+.work-stages__share {
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.work-stages__lane[data-most='true'] .work-stages__share {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.work-stages__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  list-style: none;
+}
+
+.work-stages__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.work-stages__swatch {
+  width: 16px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--gradient-data);
+}
+
+.work-stages__swatch[data-late='true'] {
+  background: var(--late-fill);
+}
+
+/* ---------------------------------------------------------------------------
+ * Needs a decision today: signal cards
+ * ------------------------------------------------------------------------- */
+.signals {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.signals__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: 0 var(--space-1);
+}
+
+.signals__title {
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+}
+
+.signals__count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--tone-soft);
+  padding: var(--space-1) var(--space-3);
+  color: var(--tone-ink);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.signals__count::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: '';
+}
+
+.signals__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+}
+
+.signal-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-content: start;
+  gap: var(--space-4);
+  overflow: hidden;
+  padding: var(--briefing-card-pad);
+  transition:
+    transform var(--duration-standard) var(--ease-glass),
+    box-shadow var(--duration-standard) var(--ease-glass);
+}
+
+.signal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-inner), var(--briefing-hover-shadow);
+}
+
+.signal-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--tone-line);
+  content: '';
+  transform-origin: left;
+}
+
+.signal-card__icon {
+  width: 40px;
+  height: 40px;
+}
+
+.signal-card__body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.signal-card__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  letter-spacing: var(--tracking-title);
+  text-wrap: pretty;
+}
+
+.signal-card__meta {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.signal-card__actions {
+  padding-top: var(--space-1);
+}
+
+.signals__more,
+.signals__rules {
+  padding: 0 var(--space-1);
+}
+
+.signals__more > summary,
+.signals__rules > summary {
+  width: fit-content;
+  min-height: 2.25rem;
+  border-radius: var(--radius-small);
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: 2.25rem;
+  cursor: pointer;
+}
+
+.signals__more > summary:focus-visible,
+.signals__rules > summary:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.signals__grid--additional {
+  margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Forecast: when current work could finish
+ * ------------------------------------------------------------------------- */
+.forecast {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  /* Marker runners translate across the axis; keep them inside the card. */
+  overflow: hidden;
+  padding: var(--briefing-card-pad);
+}
+
+@media (min-width: 56rem) {
+  .forecast[data-variant='standard'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    column-gap: var(--space-8);
+  }
+
+  .forecast[data-variant='standard']
+    > :not(.forecast__summary, .forecast__visual) {
+    grid-column: 1 / -1;
+  }
+}
+
+.forecast__summary {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.forecast__visual {
+  display: grid;
+  align-content: end;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.forecast__headline {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.4vw, 1.85rem);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-title);
+}
+
+.forecast[data-variant='hero'] .forecast__headline {
+  font-size: clamp(2.1rem, 4.2vw, 3rem);
+  font-weight: 800;
+  letter-spacing: var(--tracking-display);
+}
+
+.forecast__chance,
+.forecast__unavailable {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.forecast__chance strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.forecast__axis {
+  position: relative;
+  height: 64px;
+  margin: 0 var(--space-3);
+}
+
+.forecast__track {
+  position: absolute;
+  inset: 34px 0 auto;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    var(--separator),
+    color-mix(in srgb, var(--accent) 55%, transparent)
+  );
+  transform-origin: left center;
+}
+
+.forecast__today {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  transform: translateX(-50%);
+}
+
+.forecast__today::before {
+  position: absolute;
+  top: -19px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  content: '';
+}
+
+/* Each marker rides a full-width runner so it can travel from Today:
+   translating the runner by a share of its own width moves the dot by the
+   same share of the track. */
+.forecast__runner {
+  position: absolute;
+  inset: 0;
+  transform: translateX(calc(var(--forecast-position, 0) * 100%));
+  pointer-events: none;
+}
+
+.forecast__mark {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.forecast__mark-label {
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.forecast__dot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface-raised);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 45%, var(--surface-raised));
+}
+
+.forecast__dot::after {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  content: '';
+  opacity: 0;
+}
+
+.forecast__mark[data-level='p70'] .forecast__dot {
+  background: color-mix(in srgb, var(--accent) 70%, var(--surface-raised));
+}
+
+.forecast__mark[data-level='p95'] .forecast__dot {
+  background: var(--brand-violet);
+}
+
+.forecast__mark[data-level='p85'] {
+  top: 0;
+}
+
+.forecast__mark[data-level='p85'] .forecast__mark-label {
+  color: var(--accent);
+  font-size: var(--text-small);
+}
+
+.forecast__mark[data-level='p85'] .forecast__dot {
+  width: 22px;
+  height: 22px;
+  border-width: 4px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.forecast__dates {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.forecast__dates li {
+  display: grid;
+  gap: 2px;
+  border-radius: var(--briefing-nested-radius);
+  background: var(--surface-inset);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* The selected confidence carries the ring, as on the landing page. */
+.forecast__dates li[data-level='p85'] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.forecast__dates-level {
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.forecast__dates li[data-level='p85'] .forecast__dates-level {
+  color: var(--accent);
+}
+
+.forecast__dates-day {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.forecast__next {
+  margin: 0;
+  border-radius: var(--briefing-nested-radius);
+  background: var(--status-info-surface);
+  padding: var(--space-3) var(--space-4);
+  color: var(--status-info-text);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.forecast__basis {
+  max-width: var(--briefing-prose);
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  line-height: 1.55;
+}
+
+.forecast__ask {
+  justify-self: start;
+}
+
+/* ---------------------------------------------------------------------------
+ * The numbers behind it: compact metrics row
+ * ------------------------------------------------------------------------- */
+.briefing-metrics {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.briefing-metrics__header {
+  padding: 0 var(--space-1);
+}
+
+.briefing-metrics__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+}
+
+.briefing-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    transform var(--duration-standard) var(--ease-glass),
+    box-shadow var(--duration-standard) var(--ease-glass);
+}
+
+.briefing-metric:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-inner), var(--briefing-hover-shadow);
+}
+
+.briefing-metric:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.briefing-metric__label {
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.briefing-metric__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.briefing-metric__number {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 2.4vw, 2.1rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  letter-spacing: var(--tracking-display);
+}
+
+.briefing-metric[data-tone='warn'] .briefing-metric__number {
+  color: var(--status-warning-text);
+}
+
+.briefing-metric__unit {
+  color: var(--text-tertiary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.briefing-metric__trend {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--status-neutral-surface);
+  padding: 2px var(--space-2);
+  color: var(--status-neutral-text);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.briefing-metric__trend[data-tone='positive'] {
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.briefing-metric__trend[data-tone='negative'] {
+  background: var(--status-warning-surface);
+  color: var(--status-warning-text);
+}
+
+.briefing-metric .report-sparkline {
+  display: block;
+  width: 100%;
+  height: 36px;
+  margin-top: var(--space-2);
+  overflow: visible;
+}
+
+.briefing-metric__how {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--accent);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ---------------------------------------------------------------------------
+ * Charts: rounded bars, light horizontal gridlines, the insight on top
+ * ------------------------------------------------------------------------- */
+.report .chart-card {
+  padding: var(--briefing-card-pad);
+}
+
+.report .chart-card__description {
+  max-width: var(--briefing-prose);
+  text-wrap: pretty;
+}
+
+.chart-card__insight {
+  display: inline-flex;
+  width: fit-content;
+  margin: var(--space-3) 0 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  padding: var(--space-1) var(--space-3);
+  color: var(--status-info-text);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.report .chart-tooltip__value {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.report .analysis-widget-grid {
+  gap: var(--space-5);
+}
+
+/* ---------------------------------------------------------------------------
+ * Oldest active work
+ * ------------------------------------------------------------------------- */
+.aging-work {
+  border-radius: var(--briefing-card-radius);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+}
+
+.aging-work__heading h2 {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.aging-work__hint {
+  margin: var(--space-1) 0 0;
+}
+
+.aging-work__preview li {
+  grid-template-areas: 'identity bar age risk';
+  grid-template-columns: minmax(6.5rem, 9rem) minmax(0, 1fr) auto 7.5rem;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+}
+
+.aging-work__preview-identity {
+  display: grid;
+  min-width: 0;
+  grid-area: identity;
+  gap: 2px;
+}
+
+.aging-work__preview-identity strong {
+  font-size: var(--text-small);
+}
+
+.aging-work__preview-age {
+  display: grid;
+  grid-area: age;
+  gap: 2px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.aging-work__preview-age strong {
+  color: var(--text-primary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-bold);
+}
+
+.aging-work__preview-age small {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+}
+
+.aging-work__preview li[data-risk='beyond'] .aging-work__preview-age strong {
+  color: var(--status-danger-text);
+}
+
+.aging-work__preview-risk {
+  grid-area: risk;
+  font-weight: var(--font-weight-semibold);
+}
+
+.aging-work__preview-risk[data-risk='beyond'] {
+  color: var(--status-danger-text);
+}
+
+.aging-work__bar {
+  position: relative;
+  display: block;
+  grid-area: bar;
+  height: 8px;
+  margin: 5px 6px 0 0;
+  border-radius: var(--radius-pill);
+  background: var(--separator-soft);
+}
+
+.aging-work__preview .aging-work__bar {
+  height: 20px;
+  margin: 0;
+}
+
+.aging-work__bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--brand-cyan) 0%,
+    var(--chart-primary) 100%
+  );
+}
+
+/* Beyond the usual limit the fill switches to the risk gradient, measured on
+ * the track so the colour break always sits exactly at the dashed line. */
+.aging-work__bar[data-risk='beyond'] .aging-work__bar-fill {
+  background: linear-gradient(
+    90deg,
+    var(--brand-cyan) 0%,
+    var(--chart-primary) var(--aging-limit, 100%),
+    var(--chart-orange) var(--aging-limit, 100%),
+    var(--chart-alert) 100%
+  );
+  background-size: calc(100% / var(--aging-fill-ratio, 1)) 100%;
+}
+
+.aging-work__bar-limit {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: var(--aging-limit, 100%);
+  width: 0;
+  border-left: 2px dashed var(--chart-purple);
+}
+
+.aging-work__item[data-risk='beyond'] .aging-work__bar > span {
+  background: linear-gradient(
+    90deg,
+    var(--brand-cyan) 0%,
+    var(--chart-primary) var(--aging-limit, 100%),
+    var(--chart-orange) var(--aging-limit, 100%),
+    var(--chart-alert) 100%
+  );
+}
+
+@media (max-width: 650px) {
+  .aging-work {
+    padding: var(--space-5);
+  }
+
+  .aging-work__preview li {
+    grid-template-areas:
+      'identity age'
+      'bar bar'
+      'risk risk';
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .aging-work__preview-stage {
+    grid-row: auto;
+  }
+
+  .aging-work__preview-risk {
+    text-align: left;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Small screens (375 / 768)
+ * ------------------------------------------------------------------------- */
+@media (max-width: 40rem) {
+  .report {
+    --briefing-card-pad: var(--space-5);
+  }
+
+  .report-hero__copy {
+    padding: var(--space-1) 0 0;
+  }
+
+  .report-hero__actions .glass-button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .briefing-hero,
+  .report .forecast.briefing-hero {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .hero-signal__items li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .hero-signal__bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .work-stages__lanes {
+    gap: var(--space-2);
+  }
+
+  .work-stages__lane {
+    padding-inline: var(--space-1);
+  }
+
+  .work-stages__count {
+    font-size: 1.25rem;
+  }
+
+  .forecast__dates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .signal-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- What the briefing measures: one line, Change opens a sheet ---------- */
+
+.measure-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.measure-scope strong {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.measure-scope__icon {
+  flex: none;
+  color: var(--accent);
+}
+
+.measure-scope__change {
+  font-size: var(--text-small);
+}
+
+.scope-sheet {
+  width: min(52rem, calc(100vw - 2rem));
+}
+
+.scope-sheet__body {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.scope-sheet__section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.scope-sheet__section .field-label {
+  margin: 0;
+}
+
+/* Even tiles: the live numbers for the draft, like the setup screen's. */
+.scope-sheet__numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.scope-sheet__numbers > div {
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--su-radius-tile);
+  background: var(--surface-inset);
+  padding: var(--space-3) var(--space-4);
+}
+
+.scope-sheet__numbers dt {
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.scope-sheet__numbers dd {
+  margin: var(--space-1) 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: calc(var(--text-body) * 1.35);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-title);
+}
+
+.scope-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid var(--separator-soft);
+  padding-top: var(--space-4);
+}
+
+.scope-sheet__buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------------
+ * Item keys (ItemKey): the same link and hover title in every list
+ * ------------------------------------------------------------------------- */
+a.item-key {
+  width: fit-content;
+  border-radius: var(--radius-small);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a.item-key:hover {
+  text-decoration: underline;
+}
+
+a.item-key:focus-visible,
+span.item-key:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The title sits above the key, aligned to its left edge rather than
+   centred, so keys at the start of a row never push it off the panel. */
+.tooltip-anchor[data-placement='top'] > .item-key + .glass-tooltip {
+  left: 0;
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  white-space: normal;
+  transform: translate(0, 3px) scale(0.98);
+}
+
+.tooltip-anchor:focus-within[data-placement='top'] > .item-key + .glass-tooltip,
+.tooltip-anchor:hover[data-placement='top'] > .item-key + .glass-tooltip {
+  transform: translate(0, 0) scale(1);
+}
+
+.ai-chat__setup-action {
+  margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Pinned chart tooltip: frozen where the hover one was, and clickable
+ * ------------------------------------------------------------------------- */
+.chart-pinnable {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-tooltip--pinned {
+  position: absolute;
+  z-index: 3;
+  max-width: 18rem;
+  pointer-events: auto;
+}
+
+.chart-tooltip__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.chart-tooltip__close {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: var(--space-5);
+  height: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  margin: -2px -4px 0 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.chart-tooltip__close:hover {
+  background: var(--surface-muted);
+  color: var(--text-primary);
+}
+
+.chart-tooltip__close:focus-visible,
+.chart-tooltip__link:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.chart-tooltip__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-small);
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-soft);
+  text-underline-offset: 3px;
+}
+
+.chart-tooltip__link:hover {
+  text-decoration-color: currentcolor;
+}
+
+.chart-tooltip__keys {
+  max-width: 16rem;
+}
+
+/* Reference lines and their pills never take the click meant for a bar. */
+.chart-card__plot .recharts-reference-line {
+  pointer-events: none;
+}
+
+/* The whole column is clickable, so the pointer says so across the plot. */
+/* Recharts puts cursor: default on its wrapper, so the surface sets its own. */
+.chart-pinnable .recharts-surface {
+  cursor: pointer;
+}
+
+.forecast__method > summary {
+  width: fit-content;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.forecast__method > summary:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.forecast__method .forecast__basis {
+  margin-top: var(--space-2);
+}
+
+.briefing-metrics__note {
+  margin: 0;
+  color: var(--status-warning-text);
+  font-size: var(--text-small);
+}
+
+/* The two trend charts, side by side from tablet width. */
+.report-charts {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-5);
+}
+
+@media (min-width: 56rem) {
+  .report-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.report-charts > :only-child {
+  grid-column: 1 / -1;
+}
+
+.report-charts .chart-card__plot {
+  height: 16rem;
+}
+
+/* Signals as compact rows: icon, what and which items, what to do. */
+.signals__grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.signal-card {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  padding: var(--space-4) var(--briefing-card-pad);
+}
+
+.signal-card__body {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.signal-card__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.signal-card__status,
+.signal-card__title,
+.signal-card__meta,
+.signal-card__evidence {
+  margin: 0;
+}
+
+.signal-card__title {
+  font-size: var(--text-body);
+}
+
+.signal-card__evidence {
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  text-wrap: pretty;
+}
+
+.signal-card__actions {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 48rem) {
+  .signal-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .signal-card__actions {
+    grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    white-space: normal;
+  }
+}
+
+/* "Flagged last week": what the briefing named then and what happened since */
+.flagged {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--radius-panel);
+  background: var(--surface-glass);
+  padding: var(--space-5) var(--space-6);
+}
+
+.flagged__summary {
+  display: grid;
+  gap: var(--space-3);
+  cursor: pointer;
+  list-style: none;
+}
+
+.flagged__summary::-webkit-details-marker {
+  display: none;
+}
+
+.flagged__summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: var(--radius-control);
+}
+
+.flagged__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.flagged__header .flagged__title {
+  flex: 1;
+}
+
+.flagged__chevron {
+  color: var(--text-tertiary);
+  transition: transform var(--duration-fast) var(--ease-glass);
+}
+
+.flagged[open] .flagged__chevron {
+  transform: rotate(180deg);
+}
+
+.flagged__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+}
+
+.flagged__count {
+  border-radius: var(--radius-pill);
+  background: var(--tone-soft);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.flagged__headline {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.flagged__headline strong {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.flagged__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flagged__row {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--surface-inset);
+  padding: var(--space-2) var(--space-3);
+}
+
+.flagged__mark {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.flagged__row[data-outcome='waiting'] .flagged__mark {
+  background: var(--status-warning-surface);
+  color: var(--status-warning-text);
+}
+
+.flagged__what {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  min-width: 0;
+}
+
+.flagged__reason {
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.flagged__outcome {
+  color: var(--text-primary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.flagged__row[data-outcome='waiting'] .flagged__outcome {
+  color: var(--status-warning-text);
+}
+
+.flagged__trend {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+/* A pull request state can need two lines in the hero's status slot. */
+.hero-signal__key small {
+  white-space: normal;
+}
+
+/* Code review, from GitHub: what the review stage holds today. Warm only for
+   waiting; blue for moving or done; grey for what GitHub cannot see. */
+.code-review__headline {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display, inherit);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.code-review__sub {
+  margin: calc(var(--space-3) * -1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.code-review__groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.code-review__groups li {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+
+/* One chip per item, the same glossy shape as the stage blocks. */
+.code-review__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chip-gap, 4px);
+  max-width: 24rem;
+}
+
+.code-review__disagree {
+  display: inline-flex;
+  min-height: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Thinner when there are many, set by the box from its biggest group. */
+.code-review__chips .code-review__chip {
+  width: var(--chip-width, 10px);
+  height: var(--chip-height, 24px);
+  border-radius: min(4px, calc(var(--chip-width, 10px) / 2));
+}
+
+.code-review__chip {
+  width: 10px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--separator-soft);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  transform-origin: bottom center;
+}
+
+/* A group is a button: its chips and label open the list of its items. */
+.code-review__group {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 10px);
+  background: none;
+  padding: var(--space-2);
+  margin: calc(var(--space-2) * -1);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast, 150ms) ease;
+}
+
+.code-review__group:hover,
+.code-review__group[data-open='true'] {
+  background: var(--surface-inset);
+}
+
+.code-review__group[data-open='true'] {
+  border-color: var(--separator-soft);
+}
+
+.code-review__group:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.code-review__open {
+  display: grid;
+  gap: var(--space-2);
+  border-radius: var(--briefing-nested-radius);
+  background: var(--surface-inset);
+  padding: var(--space-3) var(--space-4);
+}
+
+.code-review__open {
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.code-review__open[hidden] {
+  display: none;
+}
+
+.code-review__items {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-small);
+}
+
+.code-review__items li {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
+}
+
+.code-review__items .code-review__chip {
+  width: 6px;
+  height: 16px;
+}
+
+.code-review__items a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-text, var(--accent));
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.code-review__ask {
+  justify-self: end;
+}
+
+.code-review__label {
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.code-review__label strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-group='moving'] .code-review__chip {
+  background: var(--gradient-data);
+}
+
+[data-group='done'] .code-review__chip {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+[data-group='unreviewed'] .code-review__chip {
+  background: var(--late-fill);
+}
+
+[data-group='quiet'] .code-review__chip {
+  background: color-mix(in srgb, var(--status-warning-text) 55%, transparent);
+}
+
+[data-group='none'] .code-review__chip {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--separator-soft) 0 3px,
+    transparent 3px 6px
+  );
+  box-shadow: inset 0 0 0 1px var(--separator-soft);
+}
+
+/* The code trail: group colours for code states, and per-item tones. */
+[data-group='coding'] .code-review__chip,
+[data-group='review'] .code-review__chip {
+  background: var(--gradient-data);
+}
+
+[data-group='approved'] .code-review__chip,
+[data-group='merged'] .code-review__chip {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+[data-group='nocode'] .code-review__chip,
+.code-review__key .code-review__chip:not([data-tone]) {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--separator-soft) 0 3px,
+    transparent 3px 6px
+  );
+  box-shadow: inset 0 0 0 1px var(--separator-soft);
+}
+
+.code-review__chip[data-tone='alive'] {
+  background: var(--gradient-data);
+}
+
+.code-review__chip[data-tone='quiet'] {
+  background: color-mix(in srgb, var(--status-warning-text) 55%, transparent);
+}
+
+.code-review__chip[data-tone='waiting'] {
+  background: var(--late-fill);
+}
+
+.code-review__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  list-style: none;
+}
+
+.code-review__key li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.code-review__key .code-review__chip {
+  width: 6px;
+  height: 14px;
+}
+
+.code-review__note {
+  margin: auto 0 0;
+  border-top: 1px solid var(--separator-soft);
+  padding-top: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.code-review__note strong {
+  color: var(--text-primary);
+}
+
+.code-review__hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.code-review__hint a {
+  color: var(--accent);
+  font-weight: var(--font-weight-semibold);
+}

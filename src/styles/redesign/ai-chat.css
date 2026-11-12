@@ -1,0 +1,435 @@
+/*
+ * Steerloom AI chat panel — same family as the briefing (Focused volume).
+ * A docked white panel with the card radius and the floating shadow;
+ * answers read as prose, follow-ups are pills and the composer behaves like
+ * a form input. Overrides the base `.ai-chat*` rules in components.css.
+ */
+.ai-chat-dock {
+  --ai-chat-pad: var(--space-5);
+  --ai-chat-prose: 62ch;
+  --ai-chat-radius: var(--radius-card);
+}
+
+.ai-chat-dock .ai-chat {
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--ai-chat-radius);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-inner), var(--shadow-level-3);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Launcher: the floating pill that opens the panel. */
+.ai-chat-launcher {
+  min-height: var(--touch-target);
+  gap: var(--space-2);
+  padding-inline: var(--space-5);
+  box-shadow: var(--glow-brand);
+}
+
+.ai-chat-launcher[data-state='attention'] {
+  box-shadow:
+    0 0 0 3px var(--status-danger-surface),
+    var(--glow-brand);
+}
+
+.ai-chat-launcher:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* Header */
+.ai-chat__header {
+  padding: var(--ai-chat-pad) var(--ai-chat-pad) var(--space-4);
+}
+
+.ai-chat__heading {
+  display: grid;
+  gap: 2px;
+}
+
+.ai-chat__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-title);
+}
+
+.ai-chat__subtitle {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+}
+
+.ai-chat__setup,
+.ai-chat__error {
+  padding: var(--space-3) var(--ai-chat-pad);
+}
+
+/* Conversation */
+.ai-chat__conversation {
+  gap: var(--space-5);
+  padding: var(--ai-chat-pad);
+}
+
+.ai-chat__message {
+  border-radius: var(--radius-control);
+}
+
+/* Assistant answers are prose on the panel, not bubbles. */
+.ai-chat__message[data-role='assistant'] {
+  width: auto;
+  max-width: var(--ai-chat-prose);
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.ai-chat__message[data-role='user'] {
+  max-width: 85%;
+  border-color: transparent;
+  border-radius: var(--radius-control) var(--radius-control) var(--radius-small)
+    var(--radius-control);
+  background: var(--accent-soft);
+  padding: var(--space-3) var(--space-4);
+}
+
+.ai-chat__message-role {
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ai-chat__message[data-role='assistant'] .ai-chat__message-role {
+  color: var(--accent);
+}
+
+.ai-chat__message-content {
+  color: var(--text-primary);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.ai-chat__formatted-response {
+  gap: var(--space-3);
+}
+
+.ai-chat__formatted-response > ul {
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+}
+
+.ai-chat__response-heading {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-bold);
+}
+
+.ai-chat__ticket {
+  border-radius: var(--radius-small);
+  padding: 0 var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+a.ai-chat__ticket:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Keys in answers look and behave like keys everywhere else (ItemKey): an
+   accent link with the title on hover, not a code chip. */
+.ai-chat__ticket.item-key {
+  padding: 0;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+span.ai-chat__ticket.item-key {
+  color: var(--text-primary);
+}
+
+/* Board reading is remembered for this board: say so, and offer to stop. */
+.ai-chat__board-access {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.ai-chat__board-access button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.ai-chat__board-access button:hover {
+  text-decoration: underline;
+}
+
+.ai-chat__board-access button:focus-visible {
+  border-radius: var(--radius-small);
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ai-chat__jira-result {
+  font-size: var(--text-caption);
+}
+
+/* Copy and follow-ups: pills. */
+.ai-chat__message-actions {
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.ai-chat__action {
+  min-height: 2rem;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  transition:
+    border-color var(--duration-fast) var(--ease-glass),
+    background-color var(--duration-fast) var(--ease-glass),
+    color var(--duration-fast) var(--ease-glass);
+}
+
+.ai-chat__action:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.ai-chat__action:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Welcome and starter questions */
+.ai-chat__welcome h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  letter-spacing: var(--tracking-title);
+}
+
+.ai-chat__welcome p {
+  max-width: var(--ai-chat-prose);
+  font-size: var(--text-small);
+  line-height: var(--leading-body);
+}
+
+.ai-chat__starters {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ai-chat__starter {
+  min-height: var(--touch-target);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--surface-raised);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-medium);
+  transition:
+    border-color var(--duration-fast) var(--ease-glass),
+    background-color var(--duration-fast) var(--ease-glass),
+    transform var(--duration-fast) var(--ease-glass);
+}
+
+.ai-chat__starter:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ai-chat__starter:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ai-chat__agent-confirmation {
+  border-radius: var(--radius-control);
+}
+
+/* What the agent wants to read, one line each, before the person allows it. */
+.ai-chat__agent-requests {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  color: var(--text-primary);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.ai-chat__agent-confirmation > p.ai-chat__agent-note {
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+/* Composer: a 44px form input with the focus ring. */
+.ai-chat__composer {
+  gap: var(--space-2);
+  padding: var(--space-4) var(--ai-chat-pad) var(--ai-chat-pad);
+}
+
+.ai-chat__input.glass-input,
+.ai-chat__input {
+  min-height: var(--touch-target);
+  max-height: 8rem;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--surface-raised);
+  padding: 0.625rem var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  field-sizing: content;
+  box-shadow: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-glass),
+    box-shadow var(--duration-fast) var(--ease-glass);
+}
+
+.ai-chat__input.glass-input:focus,
+.ai-chat__input:focus,
+.ai-chat__input:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
+.ai-chat__input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.ai-chat__jira-intent {
+  border-radius: var(--radius-small);
+  font-size: var(--text-caption);
+}
+
+.ai-chat__composer-actions span {
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* On phones the floating launcher becomes an icon-only circle so it does not
+   cover the briefing actions; the button keeps its accessible name. */
+@media (max-width: 640px) {
+  .ai-chat-launcher {
+    width: 56px;
+    min-width: 56px;
+    height: 56px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .ai-chat-launcher > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .ai-chat-dock {
+    --ai-chat-pad: var(--space-4);
+  }
+}
+
+/* Team notes: one quiet line, a small form when editing. */
+.ai-team-notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-1);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.ai-team-notes__label {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ai-team-notes__preview {
+  display: -webkit-box;
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: pre-line;
+}
+
+.ai-team-notes > button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.ai-team-notes > button:hover {
+  text-decoration: underline;
+}
+
+.ai-team-notes > button:focus-visible {
+  border-radius: var(--radius-small);
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ai-team-notes--editing {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--radius-control);
+  background: var(--surface-inset);
+  padding: var(--space-3);
+  font-size: var(--text-caption);
+}
+
+.ai-team-notes__hint {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.ai-team-notes__field {
+  width: 100%;
+  resize: vertical;
+  font-size: var(--text-small);
+}
+
+.ai-team-notes__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.ai-team-notes__count {
+  margin-right: auto;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,30 @@
+# Steerloom
+
+> Steerloom reads a team's Jira, Trello or Azure DevOps board history and writes the briefing a delivery lead needs: what is stuck, why, what to raise today, and when the current work will actually finish. It is read-only and explains every number in plain words.
+
+Steerloom is for delivery leads, engineering managers, agile coaches and project managers who get asked "when will it be done?". It is not a dashboard of charts: it is a short, honest briefing with the evidence behind every statement.
+
+## What you get
+
+- A headline: how many active items have taken longer than usual, with the oldest listed. "Usual" is the team's own history (the 85th percentile of recently finished items), never an industry benchmark.
+- Signals that need a decision today: work piling up in one stage, items that re-entered the flow, fewer items finishing than before.
+- A forecast of when the current work could finish, at 50/70/85/95% confidence, from 10,000 replays of the team's own recent throughput (Monte Carlo).
+- The trend: throughput, cycle time and the usual limit, each compared with the previous period.
+- "How it's calculated" behind every number: what it means, how it was read off the team's items, which items set it, and what was left out and why.
+- Steerloom AI (bring your own key: Anthropic, OpenAI, Gemini, Grok or a company gateway): asks why work is stuck by reading the tickets themselves, names who it waits on only when the tickets show it, and drafts talking points. It reads; it never writes to the board.
+
+## Sources
+
+- Jira Cloud and Jira Data Center (read-only API token or OAuth), Trello (OAuth), Azure DevOps / Azure Boards (PAT, work-item read scope). Board history is read as-is; nothing is written back.
+- Data stays in memory for the session on the hosted version at https://steerloom.app, or entirely on your computer with the installed local version (macOS, Linux; Windows with a guide). The local version reaches company Jira servers behind VPNs that the hosted version cannot.
+
+## Try it
+
+- Live demo without an account, on a fictional board: https://steerloom.app/?hosted=1&demo=1
+- About page in plain words: https://steerloom.app/about.html
+- Privacy notice: https://steerloom.app/privacy.html
+- Terms: https://steerloom.app/terms.html
+
+## How it differs from metric dashboards
+
+Tools such as ActionableAgile, LinearB or Swarmia show charts of cycle time, aging work and forecasts. Steerloom starts from the decision: it tells you what to raise today, reads the tickets to say why, and shows the items behind every number so the team can check it. It works from the board alone (no git or IDE telemetry), and it never changes anything in the tracker.

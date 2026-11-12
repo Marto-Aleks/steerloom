@@ -1,0 +1,66 @@
+# Review and supply secrets in Render before creating this paid service.
+# The disk is required for encrypted sessions. Keep exactly one instance.
+services:
+  - type: web
+    name: steerloom
+    runtime: node
+    plan: 0.5c-512mb
+    region: frankfurt
+    numInstances: 1
+    buildCommand: npm ci --include=dev && npm run build:hosted
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    disk:
+      name: steerloom-sessions
+      mountPath: /var/data/steerloom
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '22'
+      - key: STEERLOOM_SESSION_FILE
+        value: /var/data/steerloom/sessions.enc
+      - key: STEERLOOM_PUBLIC_ORIGIN
+        sync: false
+      - key: STEERLOOM_SUPABASE_URL
+        sync: false
+      - key: STEERLOOM_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: STEERLOOM_SUPABASE_SECRET_KEY
+        sync: false
+      - key: STEERLOOM_CREDENTIAL_KEY
+        sync: false
+      - key: STEERLOOM_ATLASSIAN_CLIENT_ID
+        sync: false
+      - key: STEERLOOM_ATLASSIAN_CLIENT_SECRET
+        sync: false
+      - key: STEERLOOM_TRELLO_CLIENT_ID
+        sync: false
+      - key: STEERLOOM_TRELLO_CLIENT_SECRET
+        sync: false
+      # Behind Cloudflare, set to cf-connecting-ip so sign-in rate limits apply
+      # per user instead of to everyone. See STEERLOOM_EDGE_SECRET below.
+      - key: STEERLOOM_CLIENT_IP_HEADER
+        value: cf-connecting-ip
+      # A long random value that a Cloudflare Transform Rule adds to every
+      # request as the x-steerloom-edge header. The client address header is
+      # trusted only on requests carrying it, so requests that skip
+      # Cloudflare cannot fake their address to dodge rate limits.
+      - key: STEERLOOM_EDGE_SECRET
+        sync: false
+      # Tester feedback is emailed through Resend to STEERLOOM_FEEDBACK_TO.
+      # Without both, feedback is written to the service log instead.
+      - key: STEERLOOM_RESEND_API_KEY
+        sync: false
+      - key: STEERLOOM_FEEDBACK_TO
+        sync: false
+      # Emails that may open the usage counts at /?hosted=1&page=usage
+      # (comma-separated). Without it, STEERLOOM_FEEDBACK_TO is used.
+      - key: STEERLOOM_ADMIN_EMAILS
+        sync: false
+      # Comma-separated terms that must never appear in the public local
+      # package. Required: the build fails without it.
+      - key: STEERLOOM_PACKAGE_DENYLIST
+        sync: false
