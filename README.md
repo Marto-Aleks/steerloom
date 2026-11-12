@@ -80,7 +80,7 @@ rules are in [metric definitions](docs/using-steerloom.md#metric-definitions).
 Requires Node.js 20.19 or newer.
 
 ```bash
-git clone https://github.com/Marto-Aleks/steerloom-app.git steerloom
+git clone https://github.com/Marto-Aleks/steerloom.git
 cd steerloom
 npm install
 npm run dev
