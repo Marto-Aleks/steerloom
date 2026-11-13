@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyReviewPreset, parseFigmaFiles, readDashboard } from './model'
+import { parseFigmaFiles, readDashboard } from './model'
 
 const dashboard = {
   id: 'sample:1',
@@ -11,32 +11,21 @@ const dashboard = {
   metrics: ['median-cycle-time'],
 }
 describe('dashboard configuration', () => {
-  it('applies and persists review presets without changing the board or measured workflow', () => {
-    const original = readDashboard(dashboard)
-    const daily = applyReviewPreset(original, 'daily')
-    expect(daily.metrics).toEqual([
-      'aging-wip',
-      'percentile-85',
-      'exit-throughput',
-    ])
-    expect(daily.filters.selectedColumnIds).toEqual(
-      original.filters.selectedColumnIds,
-    )
-    expect(daily.filters.ticketTypes).toEqual(original.filters.ticketTypes)
-    expect(readDashboard(daily).reviewMode).toBe('daily')
-    // Both reviews read the same history, so an item is late in both or in neither.
-    expect(daily.filters.windowDays).toBe(90)
-    const weekly = applyReviewPreset(daily, 'weekly')
-    expect(weekly.filters.windowDays).toBe(90)
-    expect(weekly.metrics).toContain('cycle-trend')
-    expect(weekly.boardId).toBe(original.boardId)
-    expect(readDashboard(weekly).reviewMode).toBe('weekly')
-    expect(original).toEqual(dashboard)
+  it('still loads a dashboard saved with a daily or weekly review', () => {
+    // Every briefing shows all its numbers now; older saved choices are read
+    // and ignored, not refused.
+    const daily = readDashboard({
+      ...dashboard,
+      reviewMode: 'daily',
+      metrics: ['aging-wip', 'percentile-85', 'exit-throughput'],
+    })
+    expect(daily.reviewMode).toBe('daily')
+    expect(daily.boardId).toBe('demo-product')
     expect(() =>
       readDashboard({ ...dashboard, reviewMode: 'invented' }),
     ).toThrow()
   })
-  it('persists optional team expectations and preserves them through presets', () => {
+  it('persists optional team expectations', () => {
     const serviceExpectation = { days: 7, targetPercent: 85 }
     const saved = readDashboard({
       ...dashboard,
@@ -46,10 +35,6 @@ describe('dashboard configuration', () => {
       },
     })
     expect(saved.filters.serviceExpectation).toEqual(serviceExpectation)
-    expect(
-      readDashboard(applyReviewPreset(saved, 'daily')).filters
-        .serviceExpectation,
-    ).toEqual(serviceExpectation)
     expect(readDashboard(dashboard).filters.serviceExpectation).toBeUndefined()
     for (const invalid of [
       null,

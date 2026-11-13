@@ -33,8 +33,6 @@ interface JiraAnalysisSetupProps {
   onBack: () => void
   onContinue: () => void
   canContinue?: boolean
-  /** Shown after the stages: how the briefing will be used. */
-  briefing?: ReactNode
   /** Extra optional settings, shown inside "More options". */
   moreOptions?: ReactNode
 }
@@ -46,7 +44,6 @@ export function JiraAnalysisSetup({
   onBack,
   onContinue,
   canContinue = true,
-  briefing,
   moreOptions,
 }: JiraAnalysisSetupProps) {
   const providerName = {
@@ -273,8 +270,6 @@ export function JiraAnalysisSetup({
           }}
         />
       </GlassPanel>
-
-      {briefing}
 
       <details className="workspace-disclosure setup-more">
         <summary>

@@ -1693,13 +1693,6 @@ function DashboardTile({
     >
       <div className="home-card__top">
         <ProviderIcon provider={dashboard.provider} small />
-        <StatusBadge tone="info" className="home-card__chip">
-          {dashboard.reviewMode === 'daily'
-            ? 'Daily review'
-            : dashboard.reviewMode === 'weekly'
-              ? 'Weekly review'
-              : 'Custom review'}
-        </StatusBadge>
       </div>
       <h3 className="home-card__title">{dashboard.name}</h3>
       <p className="home-card__metric">

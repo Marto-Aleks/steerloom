@@ -6,7 +6,6 @@ import { Wordmark } from '../../components/Wordmark'
 import { StatusMessage } from '../../components/ui'
 import { demoSnapshot } from '../../lib/workspace/demo'
 import { DemoCodeHint } from './GithubLocalNote'
-import { defaultMetrics } from '../../lib/workspace/model'
 
 /*
  * The demo without an account: steerloom.app/?demo=1 opens the same sample
@@ -67,7 +66,6 @@ export function OpenDemo() {
             <FlowAnalysis
               snapshot={snapshot}
               filters={filters}
-              selectedMetrics={defaultMetrics}
               aiChat={false}
               pullRequests={code.pullRequests}
               branches={code.branches}

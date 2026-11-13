@@ -47,9 +47,7 @@ visit.
 
 1. Connect Jira, Trello or Azure DevOps (Azure Boards) and select up to ten boards at a time, or explore the
    demo.
-2. Choose **Daily review** or **Weekly review** as a starting point, or keep your
-   custom metrics (expand **Customize metrics** for individual metrics).
-   Configure the measured workflow stages, item types, and analysis period.
+2. Configure the measured workflow stages, item types, and analysis period.
    Exiting the selected stages is the completion rule.
 3. Resolve structural data-quality findings and save the dashboard.
 4. Review Today, your selected cards/charts, and the evidence behind each
@@ -162,21 +160,17 @@ mentions that are not on the board get a link built from the board's own
 link shape (Jira `…/browse/KEY`, Azure `…/_workitems/edit/ID`); Trello card
 links cannot be built from a key. The demo board carries fictional titles.
 
-## Daily and weekly reviews
+## One briefing, all its numbers
 
-In **Adjust report**, the Daily review preset selects aging work, P85, and
-throughput. Weekly review selects completed work, median cycle time, P85,
-throughput, and trends. Both read the last 90 days, so an item is late in both
-or in neither: the preset changes what the briefing shows, not the history
-behind it. New dashboards also start at 90 days. These are reporting scopes,
-not scheduled refreshes. Applying a preset preserves the board, measured stages, and
-item types. Changing selected metrics or the reporting period marks the view as
-custom. The preset and settings persist with the dashboard; existing dashboards
-retain their settings as custom views. What each metric shows: Throughput, the
-throughput number and the weekly chart; Cycle time and Historical P85, their
-numbers; Completed work, the chart of each finished item; Aging work, the
-items past the usual limit and the active-work review; Delivery trends, the
-change against the previous period on each number.
+Every briefing shows the same things, whatever the board: Throughput (the
+number and the weekly chart), Cycle time and the usual limit (P85), the chart
+of each finished item, the items past the usual limit with the active-work
+review, and the change against the previous period on each number. New
+dashboards read the last 90 days.
+
+Earlier versions offered a Daily or Weekly review and a choice of metrics,
+which hid some of these. That choice is gone; dashboards saved with it keep
+their board, stages and period, and now show everything.
 
 Two questions for Steerloom AI sit in the briefing header under **Ask
 Steerloom AI**: **What to raise today** (talking points on the oldest active

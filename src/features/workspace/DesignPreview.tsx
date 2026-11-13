@@ -173,7 +173,7 @@ function LoomyPreview() {
 function InstallPreview() {
   const [phase, setPhase] = useState<UpdatePhase | null>(null)
   const update = {
-    current: '2026.11.12.2',
+    current: '2026.11.13',
     available: true,
     latest: '2026.11.14',
     notes: [

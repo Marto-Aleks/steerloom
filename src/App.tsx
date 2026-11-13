@@ -3,19 +3,11 @@ import { UpdateNotice } from './features/workspace/UpdateNotice'
 import { AiKeySettings } from './features/workspace/AiKeySettings'
 import { GoogleWorkspaceSetup } from './features/workspace/GoogleWorkspaceSetup'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  FloatingNavigation,
-  GlassInput,
-  GlassPanel,
-  StatusMessage,
-} from './components/ui'
+import { FloatingNavigation, GlassInput, StatusMessage } from './components/ui'
 import { JiraAnalysisSetup } from './features/analysis/JiraAnalysisSetup'
-import { ReviewPresetPicker } from './features/workspace/ReviewPresetPicker'
 import { FigmaFileField } from './features/workspace/FigmaFileField'
 import { usePullRequests } from './features/workspace/use-pull-requests'
 import { demoCodeTrail } from './lib/workspace/demo-github'
-import { applyReviewPreset } from './lib/workspace/model'
-import { MetricPicker } from './features/workspace/MetricPicker'
 import { SignIn } from './features/workspace/SignIn'
 import { WorkspaceHome } from './features/workspace/WorkspaceHome'
 import { BoardLoadProgress } from './features/workspace/BoardLoadProgress'
@@ -481,24 +473,7 @@ export default function App() {
                   snapshot={snapshot}
                   filters={dashboard.filters}
                   onFiltersChange={(filters) =>
-                    setDashboard({
-                      ...dashboard,
-                      filters,
-                      reviewMode:
-                        filters.windowDays === dashboard.filters.windowDays
-                          ? dashboard.reviewMode
-                          : 'custom',
-                    })
-                  }
-                  briefing={
-                    <GlassPanel className="workspace-dashboard-settings">
-                      <ReviewPresetPicker
-                        value={dashboard.reviewMode ?? 'custom'}
-                        onChange={(preset) =>
-                          setDashboard(applyReviewPreset(dashboard, preset))
-                        }
-                      />
-                    </GlassPanel>
+                    setDashboard({ ...dashboard, filters })
                   }
                   moreOptions={
                     <div className="setup-more__dashboard">
@@ -528,22 +503,6 @@ export default function App() {
                           }
                         />
                       )}
-                      <details className="workspace-disclosure">
-                        <summary>
-                          Customize metrics ({dashboard.metrics.length}{' '}
-                          selected)
-                        </summary>
-                        <MetricPicker
-                          value={dashboard.metrics}
-                          onChange={(metrics) =>
-                            setDashboard({
-                              ...dashboard,
-                              metrics,
-                              reviewMode: 'custom',
-                            })
-                          }
-                        />
-                      </details>
                     </div>
                   }
                   onBack={() => navigate('home')}
@@ -569,8 +528,6 @@ export default function App() {
                     key={`${dashboard.id}:${snapshot.loadedAt}`}
                     snapshot={snapshot}
                     filters={dashboard.filters}
-                    selectedMetrics={dashboard.metrics}
-                    reviewMode={dashboard.reviewMode}
                     pullRequests={demoCode?.pullRequests ?? pullRequests}
                     branches={demoCode?.branches ?? branches}
                     pullRequestError={demoCode ? undefined : pullRequestError}

@@ -44,11 +44,6 @@ import type {
 } from '../../types'
 import { AiChatPanel, type AiChatDraftRequest } from './AiChatPanel'
 import {
-  defaultMetrics,
-  type DashboardMetric,
-  type ReviewMode,
-} from '../../lib/workspace/model'
-import {
   agingBaselineState,
   collectAgingWork,
 } from '../../lib/statistics/aging-work'
@@ -87,7 +82,6 @@ const ReportCharts = lazy(() =>
 interface FlowAnalysisProps {
   snapshot: FlowBoardSnapshot
   filters: AnalysisFilters
-  selectedMetrics?: DashboardMetric[]
   /** Reloads the board; omitted where the report cannot be refreshed. */
   onRefresh?: () => void
   /** Opens report settings; omitted for read-only viewers. */
@@ -103,7 +97,6 @@ interface FlowAnalysisProps {
   /** Changes when the workspace key changes, so the AI panel checks again. */
   aiConfigurationKey?: string
   refreshing?: boolean
-  reviewMode?: ReviewMode
   /** The AI chat needs a workspace; the open demo has none. */
   aiChat?: boolean
   /** Pull requests from the dashboard's GitHub repositories, when connected. */
@@ -335,7 +328,6 @@ export function FlowAnalysis({
   aiKeyForm,
   aiConfigurationKey,
   refreshing = false,
-  selectedMetrics = defaultMetrics,
   aiChat = true,
   pullRequests,
   branches,
@@ -344,8 +336,6 @@ export function FlowAnalysis({
   codeHint,
 }: FlowAnalysisProps) {
   const [showMethod, setShowMethod] = useState(false)
-  const enabled = (metric: DashboardMetric) => selectedMetrics.includes(metric)
-  const showAging = enabled('aging-wip')
   const [activeMetric, setActiveMetric] = useState<FlowMetricId | null>(null)
   const [agingOpen, setAgingOpen] = useState(false)
   const [aiDraftRequest, setAiDraftRequest] = useState<AiChatDraftRequest>()
@@ -544,7 +534,7 @@ export function FlowAnalysis({
     : null
   // The full list of active work opens on request: the hero already shows
   // the items past the usual limit.
-  const agingPanel = showAging ? (
+  const agingPanel = (
     <GlassModal
       className="aging-work-modal"
       open={agingOpen}
@@ -562,7 +552,7 @@ export function FlowAnalysis({
         }}
       />
     </GlassModal>
-  ) : null
+  )
   const aiReportContext = buildAiReportContext({
     generatedAt: snapshot.loadedAt,
     sourceLabel: reportSourceLabel,
@@ -671,7 +661,6 @@ export function FlowAnalysis({
           metrics={metrics}
           completedOutliers={completedOutliers}
           partialWeeks={partialWeeks}
-          enabled={enabled}
           animate={animate}
         />
       </Suspense>
@@ -684,17 +673,15 @@ export function FlowAnalysis({
           <h2 id="metrics-title" className="briefing-metrics__title">
             How the team is trending
           </h2>
-          {enabled('cycle-trend') &&
-            periodComparison?.previous.historyCoverage === 'partial' && (
-              <p className="briefing-metrics__note">
-                The earlier period has partial history, so the changes are a
-                rough guide.
-              </p>
-            )}
+          {periodComparison?.previous.historyCoverage === 'partial' && (
+            <p className="briefing-metrics__note">
+              The earlier period has partial history, so the changes are a rough
+              guide.
+            </p>
+          )}
         </div>
         <div className="briefing-metrics__row" aria-label="Key measures">
           <MetricCard
-            visible={enabled('exit-throughput')}
             metric="exit-throughput"
             label="Throughput"
             value={
@@ -708,13 +695,12 @@ export function FlowAnalysis({
                 ? 'Choose a fixed period to calculate the weekly rate'
                 : `Average over ${filters.windowDays} days, ${finishedLabel}`
             }
-            trend={enabled('cycle-trend') ? trends.throughput : undefined}
+            trend={trends.throughput}
             sparkline={metrics.weeklyThroughput.map((point) => point.items)}
             onExplain={setActiveMetric}
             style={stagger(metricsBase)}
           />
           <MetricCard
-            visible={enabled('median-cycle-time')}
             metric="median-cycle-time"
             label="Cycle time"
             value={
@@ -728,7 +714,7 @@ export function FlowAnalysis({
                 ? 'No finished items in this scope yet'
                 : `Median of ${finishedLabel}`
             }
-            trend={enabled('cycle-trend') ? trends.median : undefined}
+            trend={trends.median}
             sparkline={cycleTimeTrend
               .map((point) => point.rollingMedianCycleTime)
               .filter((value): value is number => value !== null)}
@@ -736,7 +722,6 @@ export function FlowAnalysis({
             style={stagger(metricsBase + 1)}
           />
           <MetricCard
-            visible={enabled('percentile-85')}
             metric="percentile-85"
             label="Usual limit (P85)"
             value={p85 === null ? 'Not available' : formatNumber(p85)}
@@ -746,7 +731,7 @@ export function FlowAnalysis({
                 ? 'No finished items in this scope yet'
                 : `85% of ${finishedLabel} took this long or less`
             }
-            trend={enabled('cycle-trend') ? trends.p85 : undefined}
+            trend={trends.p85}
             sparkline={cycleTimeTrend
               .map((point) => point.rollingPercentile85CycleTime)
               .filter((value): value is number => value !== null)}
@@ -769,7 +754,7 @@ export function FlowAnalysis({
               </h1>
               <p className="report-hero__summary">
                 {briefing.summary}
-                {beyondLimit > 0 && showAging && (
+                {beyondLimit > 0 && (
                   <>
                     {' '}
                     <button
@@ -935,7 +920,7 @@ export function FlowAnalysis({
             activeCount={agingWork.length}
             limitDays={p85}
             onAsk={requestAiDraft}
-            onShowAll={showAging ? () => setAgingOpen(true) : undefined}
+            onShowAll={() => setAgingOpen(true)}
           />
         ) : (
           <ForecastPanel result={forecast} onAsk={requestAiDraft} hero />

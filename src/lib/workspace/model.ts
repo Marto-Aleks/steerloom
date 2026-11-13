@@ -35,52 +35,11 @@ export const metricCatalog = [
   },
 ] as const
 export type DashboardMetric = (typeof metricCatalog)[number]['id']
+/**
+ * Kept so dashboards saved by earlier versions still load. Every briefing
+ * now shows all its numbers; the daily and weekly choice is gone.
+ */
 export type ReviewMode = 'daily' | 'weekly' | 'custom'
-export const reviewPresets = [
-  {
-    id: 'daily',
-    name: 'Daily review',
-    description: 'What’s late or stuck today, and who to talk to.',
-    focus: 'Aging work · pace',
-    windowDays: 90,
-    metrics: ['aging-wip', 'percentile-85', 'exit-throughput'],
-  },
-  {
-    id: 'weekly',
-    name: 'Weekly review',
-    description: 'How delivery is trending, week on week.',
-    focus: 'Trends · cycle time',
-    windowDays: 90,
-    metrics: [
-      'completed-observations',
-      'median-cycle-time',
-      'percentile-85',
-      'exit-throughput',
-      'cycle-trend',
-    ],
-  },
-] as const satisfies ReadonlyArray<{
-  id: ReviewMode
-  name: string
-  description: string
-  /** What the card says it shows; both reviews read the same history. */
-  focus: string
-  windowDays: number
-  metrics: readonly DashboardMetric[]
-}>
-
-export function applyReviewPreset(
-  dashboard: SavedDashboard,
-  presetId: 'daily' | 'weekly',
-): SavedDashboard {
-  const preset = reviewPresets.find((item) => item.id === presetId)!
-  return {
-    ...dashboard,
-    reviewMode: preset.id,
-    metrics: [...preset.metrics],
-    filters: { ...dashboard.filters, windowDays: preset.windowDays },
-  }
-}
 export const defaultMetrics: DashboardMetric[] = metricCatalog.map(
   (metric) => metric.id,
 )

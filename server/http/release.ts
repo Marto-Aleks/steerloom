@@ -7,8 +7,9 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.13',
+  version: '2026.11.13.2',
   notes: [
+    'Every briefing shows all its numbers: cycle time, the usual limit, throughput, their trends and the late work. The Daily and Weekly choice, which hid some of them, is gone',
     'Security hardening after a full review: a saved AI key is never sent to a new endpoint address without being typed again, and answers from boards and AI services are size-limited',
     'A new password can only be chosen from the reset link in your email, and wrong guesses from elsewhere no longer lock you out of your account',
     'On your computer: the link that signs you in from the app icon works once, update checks answer only to Steerloom’s own page, and update backups leave out sign-in files',

@@ -14,7 +14,6 @@ import {
 import type { CycleTimePoint, FlowMetrics } from '../../types'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { weekStart } from '../../lib/statistics'
-import type { DashboardMetric } from '../../lib/workspace/model'
 import { chartPalette } from './chart-theme'
 import {
   ChartCard,
@@ -32,7 +31,6 @@ export interface ReportChartsProps {
   metrics: FlowMetrics
   completedOutliers: CycleTimePoint[]
   partialWeeks: Set<string>
-  enabled: (metric: DashboardMetric) => boolean
   animate: boolean
 }
 
@@ -46,7 +44,6 @@ export function ReportCharts({
   metrics,
   completedOutliers,
   partialWeeks,
-  enabled,
   animate,
 }: ReportChartsProps) {
   // A clicked bar freezes its tooltip where it is (hover stays as it is):
@@ -94,7 +91,6 @@ export function ReportCharts({
       <ChartCard
         className="sl-rise"
         style={stagger(6)}
-        visible={enabled('exit-throughput')}
         title="Items finished each week"
         insight={
           bestWeek
@@ -255,7 +251,6 @@ export function ReportCharts({
       <ChartCard
         className="sl-rise"
         style={stagger(8)}
-        visible={enabled('completed-observations')}
         title="How long each finished item took"
         insight={
           p85 === null || !metrics.cycleTimeItemCount
