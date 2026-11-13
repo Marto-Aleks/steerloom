@@ -591,6 +591,93 @@ it('sends a reset link without revealing whether an account exists', async () =>
   )
 })
 
+it('does not let a signed-in session alone choose a new password', async () => {
+  // A browser left open, or a stolen session, must not lock the owner out:
+  // a new password needs the reset link from the account's email.
+  const session = await login()
+  const refused = await post(
+    'auth/password',
+    { password: 'a-new-fictional-password' },
+    session,
+  )
+  expect(refused.status).toBe(403)
+  expect(await refused.text()).toContain('Forgot your password?')
+  expect(provider.updatePassword).not.toHaveBeenCalled()
+})
+
+it('lets a reset link set the password once, not again later with the same session', async () => {
+  const started = await post('auth/recover', {
+    email: 'person@example.invalid',
+  })
+  const back = await fetch(
+    `${origin}/api/hosted/auth/callback?code=fictional-code`,
+    { headers: { Cookie: cookies(started) } },
+  )
+  const session = cookies(back)
+  expect(
+    (
+      await post(
+        'auth/password',
+        { password: 'a-new-fictional-password' },
+        session,
+      )
+    ).status,
+  ).toBe(200)
+  expect(
+    (
+      await post(
+        'auth/password',
+        { password: 'another-fictional-password' },
+        session,
+      )
+    ).status,
+  ).toBe(403)
+  expect(provider.updatePassword).toHaveBeenCalledOnce()
+})
+
+it('counts a fetched install link once, and limits how often links are used', async () => {
+  const count = vi.fn()
+  const own: SupabaseAuthConfig = {
+    origin: '',
+    supabaseUrl: 'https://fictional.supabase.co',
+    publishableKey: 'sb_publishable_fictional',
+  }
+  const counted = createHostedAuthServices(
+    own,
+    provider,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { usage: { count, report: vi.fn() } as never },
+  )
+  const other = createServer((req, res) => {
+    void counted.handle(req, res, () => res.end())
+  })
+  await new Promise<void>((resolve) => other.listen(0, '127.0.0.1', resolve))
+  const base = `http://127.0.0.1:${(other.address() as { port: number }).port}`
+  own.origin = base
+  try {
+    const command = (await (
+      await fetch(`${base}/api/hosted/download/install-command`)
+    ).json()) as { command: string }
+    const link = /t=(\d{13}\.[\w-]{43})/.exec(command.command)![1]!
+    for (let index = 0; index < 5; index++)
+      await fetch(`${base}/api/hosted/install.sh?t=${link}`)
+    expect(
+      count.mock.calls.filter(([step]) => step === 'install_started'),
+    ).toHaveLength(1)
+    // A link is not a way around the hourly limit.
+    let last = 200
+    for (let index = 0; index < 120; index++)
+      last = (await fetch(`${base}/api/hosted/download/local?t=${link}`)).status
+    expect(last).toBe(429)
+  } finally {
+    other.closeAllConnections()
+    await new Promise<void>((resolve) => other.close(() => resolve()))
+  }
+})
+
 it('returns a reset link to the new-password form, then saves the password', async () => {
   const started = await post('auth/recover', {
     email: 'person@example.invalid',

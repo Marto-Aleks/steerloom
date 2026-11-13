@@ -298,7 +298,8 @@ export function createWorkspaceServices(
         request.method === 'POST'
       ) {
         const address = request.socket.remoteAddress ?? 'local'
-        if (!attempts.hit(address, 20)) {
+        // All accounts on this computer together: generous, and never reset.
+        if (!attempts.hit(address, 200)) {
           json(response, 429, {
             error: 'Too many sign-in attempts. Try again in 15 minutes.',
           })
@@ -307,6 +308,16 @@ export function createWorkspaceServices(
         const body = await readBody(request)
         const username = string(body.username, 40)
         const password = string(body.password, 128, false)
+        // Every request here comes from this computer, so the address alone
+        // says nothing: wrong passwords are counted per username, and a
+        // sign-in to one account does not clear another's count.
+        const nameKey = `user:${username.toLowerCase()}`
+        if (!path.endsWith('register') && !attempts.hit(nameKey, 20)) {
+          json(response, 429, {
+            error: 'Too many sign-in attempts. Try again in 15 minutes.',
+          })
+          return
+        }
         const id = path.endsWith('register')
           ? await getStore().register(
               username,
@@ -314,7 +325,7 @@ export function createWorkspaceServices(
               string(body.workspaceName, 100),
             )
           : await getStore().login(username, password)
-        attempts.reset(address)
+        attempts.reset(nameKey)
         issueSession(id, response, token)
         json(response, 200, { session: getStore().session(id) })
         return

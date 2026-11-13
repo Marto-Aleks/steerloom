@@ -10,6 +10,7 @@ export const RELEASE = {
   version: '2026.11.13',
   notes: [
     'Security hardening after a full review: a saved AI key is never sent to a new endpoint address without being typed again, and answers from boards and AI services are size-limited',
+    'A new password can only be chosen from the reset link in your email, and wrong guesses from elsewhere no longer lock you out of your account',
     'On your computer: the link that signs you in from the app icon works once, update checks answer only to Steerloom’s own page, and update backups leave out sign-in files',
     'The installer never replaces a folder named “node” that is not Steerloom’s own',
     'Update from inside Steerloom: “Update now” does it in one click, saves a copy of your boards and settings first, and reopens by itself. No terminal',

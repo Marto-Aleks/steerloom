@@ -44,7 +44,14 @@ interface Session {
   tokens: SupabaseTokens
   expires: number
   refreshing?: Promise<void>
+  /**
+   * Set when the session came from a password-reset link: until then a new
+   * password may be chosen. Kept in memory only.
+   */
+  mayResetUntil?: number
 }
+/** How long after opening a reset link the new password may be chosen. */
+const RESET_WINDOW = 15 * 60 * 1000
 interface Flow {
   verifier: string
   expires: number
@@ -173,6 +180,7 @@ export function createHostedAuthServices(
     windowMs: 60 * 60_000,
     capacity: LIMITER_KEYS,
   })
+  const FEEDBACK_EMAILS_AN_HOUR = 60
   const WORKSPACES_PER_ACCOUNT = 10
   const NEW_WORKSPACES_AN_HOUR = 5
   const workspaceAttempts = attemptLimiter({ windowMs: 60 * 60_000 })
@@ -188,6 +196,20 @@ export function createHostedAuthServices(
     windowMs: 60 * 60_000,
     capacity: LIMITER_KEYS,
   })
+  const linkAttempts = attemptLimiter({
+    windowMs: 60 * 60_000,
+    capacity: LIMITER_KEYS,
+  })
+  // Install links already counted as an install or update. Links last 30
+  // minutes, so the oldest can go when the set is full.
+  const countedLinks = new Set<string>()
+  const firstUse = (link: string) => {
+    if (countedLinks.has(link)) return false
+    if (countedLinks.size >= 5000)
+      countedLinks.delete(countedLinks.values().next().value!)
+    countedLinks.add(link)
+    return true
+  }
   const sendArchive = async (response: ServerResponse) => {
     const archive = await readFile(
       resolve('dist', 'downloads', 'steerloom-local.tar.gz'),
@@ -246,6 +268,7 @@ export function createHostedAuthServices(
     request: IncomingMessage,
     response: ServerResponse,
     tokens: SupabaseTokens,
+    recovery = false,
   ) {
     await provider!.database.identity(tokens.accessToken)
     usage?.count('signed_in', accountIdFromToken(tokens.accessToken))
@@ -263,7 +286,11 @@ export function createHostedAuthServices(
     if (account && own.length >= SESSIONS_PER_ACCOUNT) evictOldest(own)
     if (sessions.size >= 1000) evictOldest(sessions.keys())
     const key = randomBytes(32).toString('hex')
-    sessions.set(hash(key), { tokens, expires: Date.now() + lifetime })
+    sessions.set(hash(key), {
+      tokens,
+      expires: Date.now() + lifetime,
+      ...(recovery ? { mayResetUntil: Date.now() + RESET_WINDOW } : {}),
+    })
     persist()
     setCookie(response, SESSION, key, lifetime / 1000, secure())
   }
@@ -388,7 +415,7 @@ export function createHostedAuthServices(
             await provider
               .updatePassword(tokens.accessToken, flow.password)
               .catch(() => undefined)
-          await issue(request, response, tokens)
+          await issue(request, response, tokens, flow.purpose === 'recovery')
           returnToApp(response, false, flow.purpose === 'recovery')
         } catch {
           returnToApp(response, true)
@@ -492,8 +519,14 @@ export function createHostedAuthServices(
               ? 'Use a password of 12–128 characters.'
               : 'Enter your password.',
           )
-        const emailKey = `email:${hash(email)}`
-        if (!attempts.hit(emailKey, 20)) {
+        // Counted per email and network together, so someone guessing from
+        // elsewhere cannot lock the owner out of their own account. A much
+        // higher ceiling per email alone still slows a wide attack.
+        const emailKey = `email:${hash(email)}:${address}`
+        if (
+          !attempts.hit(emailKey, 20) ||
+          !attempts.hit(`email:${hash(email)}`, 300)
+        ) {
           json(response, 429, {
             error: 'Too many attempts. Try again in 15 minutes.',
           })
@@ -524,11 +557,21 @@ export function createHostedAuthServices(
         request.method === 'GET'
       ) {
         const linkToken = url.searchParams.get('t')
+        // A link is no pass around the hourly limit: one install is two
+        // requests, so this leaves room for a whole team behind one address.
+        if (!linkAttempts.hit(addressOf(request), 120)) {
+          json(response, 429, {
+            error: 'Too many downloads from here. Try again in an hour.',
+          })
+          return
+        }
         // One install = one script fetch (the package download follows it);
-        // the command from an installed copy counts as an update.
+        // the command from an installed copy counts as an update. A link
+        // fetched again is the same install, counted once.
         if (
           installs.valid(linkToken) &&
-          !url.pathname.endsWith('/download/local')
+          !url.pathname.endsWith('/download/local') &&
+          firstUse(linkToken!)
         )
           usage?.count(
             url.searchParams.get('u') === '1'
@@ -652,7 +695,16 @@ export function createHostedAuthServices(
             : undefined,
         )
         const agent = request.headers['user-agent']?.slice(0, 200)
-        await feedback.send({ ...parsed, ...(agent ? { agent } : {}) })
+        const note = { ...parsed, ...(agent ? { agent } : {}) }
+        // A flood from many addresses must not fill the inbox or spend the
+        // mail allowance: past the hourly ceiling a note is kept in the
+        // service log instead of emailed.
+        if (feedbackAttempts.hit('all emails', FEEDBACK_EMAILS_AN_HOUR))
+          await feedback.send(note)
+        else
+          console.info(
+            `[feedback] over the hourly email limit: ${JSON.stringify(note)}`,
+          )
         json(response, 200, { ok: true })
         return
       }
@@ -784,12 +836,23 @@ export function createHostedAuthServices(
         url.pathname === '/api/hosted/auth/password' &&
         request.method === 'POST'
       ) {
+        // Only straight after a reset link, which proves the person reads
+        // the account's email. A session alone is not enough: a browser left
+        // open, or a stolen session, must not be able to lock the owner out.
+        if (!session.mayResetUntil || session.mayResetUntil <= Date.now()) {
+          json(response, 403, {
+            error:
+              'To choose a new password, use “Forgot your password?” on the sign-in page and open the link we email you.',
+          })
+          return
+        }
         const input = await body(request)
         const password =
           typeof input.password === 'string' ? input.password : ''
         if (password.length < 12 || password.length > 128)
           throw new Error('Use a password of 12–128 characters.')
         await provider.updatePassword(token, password)
+        delete session.mayResetUntil
         json(response, 200, { ok: true })
         return
       }
