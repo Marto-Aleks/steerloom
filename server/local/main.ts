@@ -93,6 +93,17 @@ const ownerName = (() => {
   }
 })()
 let secret = ''
+/** A fresh start secret, written where only this computer user can read it. */
+function renewSecret() {
+  secret = randomBytes(32).toString('hex')
+  try {
+    mkdirSync(dataDir, { recursive: true, mode: 0o700 })
+    writeFileSync(secretFile, secret, { mode: 0o600 })
+    chmodSync(secretFile, 0o600)
+  } catch {
+    secret = ''
+  }
+}
 
 const workspace = createWorkspaceServices(
   undefined,
@@ -101,6 +112,8 @@ const workspace = createWorkspaceServices(
   undefined,
   {
     secret: () => secret,
+    // A used link stops working: the next start reads the new secret.
+    used: () => renewSecret(),
     owner: { username: ownerName, workspaceName: 'My workspace' },
   },
 )
@@ -128,9 +141,15 @@ const updates = updateChecker({
     : {}),
 })
 
-// "Update now" in the app: only an installed copy updates itself. A copy run
-// from the source folder is updated by its developer.
-const installed = basename(here) === 'steerloom-local'
+// "Update now" in the app: only a copy the installer installed updates
+// itself. The installer writes into the folder around the app, so a copy
+// unpacked by hand (say in Downloads) or run from source must not: its
+// launcher beside the app is how an installed copy is told apart.
+const installed =
+  basename(here) === 'steerloom-local' &&
+  ['start-steerloom', 'start-steerloom.cmd'].some((launcher) =>
+    existsSync(resolve(here, '..', launcher)),
+  )
 const selfUpdate = selfUpdater({
   appDir: here,
   dataDir,
@@ -138,6 +157,16 @@ const selfUpdate = selfUpdater({
     ? { origin: env.STEERLOOM_UPDATE_ORIGIN }
     : {}),
 })
+
+/** A request from this app's own page: its address, and not another site. */
+function ownPage(request: import('node:http').IncomingMessage): boolean {
+  const site = request.headers['sec-fetch-site']
+  const host = request.headers.host
+  return (
+    (site === undefined || site === 'same-origin' || site === 'none') &&
+    (host === `127.0.0.1:${port}` || host === `localhost:${port}`)
+  )
+}
 
 const server = createServer(
   { requestTimeout: 0, headersTimeout: 15000, maxHeaderSize: 16384 },
@@ -151,6 +180,14 @@ const server = createServer(
       response.setHeader('Content-Type', 'application/json')
       response.setHeader('Cache-Control', 'no-store')
       response.end('{"configured":false}')
+      return
+    }
+    // Update routes answer only on this computer's own address, so another
+    // website cannot read them or spend the update allowance through them.
+    if (request.url?.startsWith('/api/local/') && !ownPage(request)) {
+      response.statusCode = 403
+      response.setHeader('Content-Type', 'application/json')
+      response.end('{"error":"Not allowed."}')
       return
     }
     if (
@@ -175,13 +212,7 @@ const server = createServer(
       response.setHeader('Cache-Control', 'no-store')
       // Only this app's own page may start an update: another website open
       // in the browser cannot set the header or pass as the same site.
-      const site = request.headers['sec-fetch-site']
-      const host = request.headers.host
-      if (
-        request.headers['x-steerloom-update'] !== '1' ||
-        (site !== undefined && site !== 'same-origin') ||
-        (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`)
-      ) {
+      if (request.headers['x-steerloom-update'] !== '1') {
         response.statusCode = 403
         response.end('{"error":"Not allowed."}')
         return
@@ -342,14 +373,7 @@ server.listen(port, '127.0.0.1', () => {
   keepServing()
   updates.start()
   // A new secret for every start; written only once this server owns the port.
-  secret = randomBytes(32).toString('hex')
-  try {
-    mkdirSync(dataDir, { recursive: true, mode: 0o700 })
-    writeFileSync(secretFile, secret, { mode: 0o600 })
-    chmodSync(secretFile, 0o600)
-  } catch {
-    secret = ''
-  }
+  renewSecret()
   console.info(`Steerloom is running at ${url}`)
   if (shouldOpen) openApp(startUrl(secret))
 })

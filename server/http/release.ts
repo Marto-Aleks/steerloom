@@ -7,8 +7,11 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.12.3',
+  version: '2026.11.13',
   notes: [
+    'Security hardening after a full review: a saved AI key is never sent to a new endpoint address without being typed again, and answers from boards and AI services are size-limited',
+    'On your computer: the link that signs you in from the app icon works once, update checks answer only to Steerloom’s own page, and update backups leave out sign-in files',
+    'The installer never replaces a folder named “node” that is not Steerloom’s own',
     'Update from inside Steerloom: “Update now” does it in one click, saves a copy of your boards and settings first, and reopens by itself. No terminal',
     'A shorter briefing header: each fact once, with the detail one hover away',
     '“Ask AI” and the Steerloom mark now start every link that opens Steerloom AI',

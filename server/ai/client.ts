@@ -1,5 +1,6 @@
 import { Agent, fetch, ProxyAgent, type Dispatcher } from 'undici'
 import { bypassesProxy } from '../http/no-proxy'
+import { AI_RESPONSE_BYTES, cappedJson } from '../http/capped-body'
 import type { AiReportContext } from '../../src/lib/ai/report-context'
 import type { AiJiraLookup } from '../../src/lib/ai/jira-evidence'
 import { looksLikeCard } from './answer-card'
@@ -464,7 +465,7 @@ export class AiClient {
     }
     if (!response.ok) {
       const reason = providerReason(
-        await response.json().catch(() => null),
+        await cappedJson(response, AI_RESPONSE_BYTES).catch(() => null),
         this.config.apiKey,
       )
       throw new AiUpstreamError(
@@ -476,7 +477,7 @@ export class AiClient {
       )
     }
     return readModelList(
-      await response.json().catch(() => null),
+      await cappedJson(response, AI_RESPONSE_BYTES).catch(() => null),
       this.config.source === 'openai',
     )
   }
@@ -739,7 +740,7 @@ export class AiClient {
           continue
         }
         const reason = providerReason(
-          await response.json().catch(() => null),
+          await cappedJson(response, AI_RESPONSE_BYTES).catch(() => null),
           this.config.apiKey,
         )
         if (adaptations < 3 && this.adapt(response.status, reason)) {
@@ -770,7 +771,7 @@ export class AiClient {
             'The connection to the AI provider dropped while it was answering. Try again.',
           )
         }
-      return response.json().catch(() => null)
+      return cappedJson(response, AI_RESPONSE_BYTES).catch(() => null)
     }
   }
 }

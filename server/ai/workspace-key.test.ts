@@ -93,6 +93,52 @@ describe('workspace AI keys', () => {
       ).toThrow('public HTTPS AI endpoint')
   })
 
+  it('never sends a saved key to a different server: a new endpoint needs the key again', () => {
+    const saved = readAiKeyInput({
+      provider: 'custom',
+      apiKey: 'fictional-key-123',
+      endpoint: 'https://models.example.invalid/v1',
+      model: 'team-model',
+    })
+    // Same server, another model or path: the saved key is kept.
+    expect(
+      readAiKeyInput(
+        {
+          provider: 'custom',
+          endpoint: 'https://models.example.invalid/v2',
+          model: 'other-model',
+        },
+        saved,
+      ).apiKey,
+    ).toBe('fictional-key-123')
+    expect(
+      readAiKeyInput({ provider: 'custom', model: 'other-model' }, saved)
+        .apiKey,
+    ).toBe('fictional-key-123')
+    // Another host, port or scheme: the key must be typed again.
+    for (const endpoint of [
+      'https://attacker.example.invalid/v1',
+      'https://models.example.invalid:8443/v1',
+      'http://models.example.invalid/v1',
+      'https://models.example.invalid.attacker.example.invalid/v1',
+    ])
+      expect(() =>
+        readAiKeyInput({ provider: 'custom', endpoint, model: 'm' }, saved),
+      ).toThrow('Paste the API key again: the endpoint address changed.')
+    // Typed together with the new address, it is accepted.
+    expect(
+      readAiKeyInput(
+        {
+          provider: 'custom',
+          endpoint: 'https://other.example.invalid/v1',
+          apiKey: 'fictional-key-456',
+          model: 'm',
+        },
+        saved,
+      ).apiKey,
+    ).toBe('fictional-key-456')
+  })
+
   it('rejects keys with spaces', () => {
     expect(() =>
       readAiKeyInput({ provider: 'anthropic', apiKey: 'two words' }),

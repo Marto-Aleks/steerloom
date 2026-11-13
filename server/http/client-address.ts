@@ -39,7 +39,37 @@ export function clientAddress(
   }
   return (request) => {
     const value = name && fromEdge(request) ? request.headers[name] : undefined
-    if (typeof value === 'string' && isIP(value.trim())) return value.trim()
-    return request.socket.remoteAddress ?? 'unknown'
+    if (typeof value === 'string' && isIP(value.trim()))
+      return limitKey(value.trim())
+    return limitKey(request.socket.remoteAddress ?? 'unknown')
   }
+}
+
+/**
+ * What a limit counts as one visitor. An IPv4 address is itself. An IPv6
+ * address is its /64 network: one home or phone connection holds a whole /64
+ * and can pick a new address in it for every request, so counting full
+ * addresses would give one person unlimited tries.
+ */
+export function limitKey(address: string): string {
+  if (isIP(address) !== 6) return address
+  const [head = '', tail = ''] = address.toLowerCase().split('::')
+  // An IPv4 address written the IPv6 way (::ffff:203.0.113.7) is that IPv4.
+  const mapped = /^(?:0{0,4}:){0,5}ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(
+    address.toLowerCase().replace(/^::/, ''),
+  )
+  if (mapped) return mapped[1]!
+  const left = head ? head.split(':') : []
+  const right = tail ? tail.split(':') : []
+  const groups = address.includes('::')
+    ? [
+        ...left,
+        ...Array.from({ length: 8 - left.length - right.length }, () => '0'),
+        ...right,
+      ]
+    : left
+  return `${groups
+    .slice(0, 4)
+    .map((group) => group.replace(/^0+(?=.)/, ''))
+    .join(':')}::/64`
 }

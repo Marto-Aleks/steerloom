@@ -26,13 +26,24 @@ export function streamingUrl(url: string, format: Format): string {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+/** A whole streamed answer, and one event in it: far above any real one. */
+const STREAM_BYTES = 32 * 1024 * 1024
+const EVENT_BYTES = 4 * 1024 * 1024
+
 /** Every `data:` payload in a server-sent event stream, as it arrives. */
 async function* events(body: ReadableStream<Uint8Array>) {
   const reader = body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let size = 0
   for (;;) {
     const { done, value } = await reader.read()
+    // An endless or enormous stream must not fill the server's memory.
+    size += value?.byteLength ?? 0
+    if (size > STREAM_BYTES || buffer.length > EVENT_BYTES) {
+      await reader.cancel().catch(() => undefined)
+      throw new Error('The AI service sent more than Steerloom can read.')
+    }
     buffer += done ? decoder.decode() : decoder.decode(value, { stream: true })
     // Events end with a blank line; "\r\n" from some gateways too.
     buffer = buffer.replace(/\r\n/g, '\n')

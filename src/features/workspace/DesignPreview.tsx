@@ -175,7 +175,7 @@ function InstallPreview() {
   const update = {
     current: '2026.11.12.2',
     available: true,
-    latest: '2026.11.13',
+    latest: '2026.11.14',
     notes: [
       'Update Steerloom from inside the app: one click, no terminal',
       'A shorter briefing header, and “Ask AI” on every link that opens Steerloom AI',

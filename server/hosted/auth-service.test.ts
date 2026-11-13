@@ -270,6 +270,50 @@ it('registers without logging in or returning the password or provider response'
     ).status,
   ).toBe(400)
 })
+it('gives the account to whoever opens the sign-up link: their password replaces any set before', async () => {
+  // Someone else registered this address first and is waiting. The real
+  // owner now signs up in their own browser with their own password.
+  const signUp = await post('auth/register', {
+    email: 'person@example.invalid',
+    password: 'the-owners-own-password',
+  })
+  const confirmed = await fetch(
+    `${origin}/api/hosted/auth/callback?code=fictional`,
+    { headers: { Cookie: cookies(signUp) } },
+  )
+  expect(await confirmed.text()).not.toContain('auth=error')
+  // The password typed in this browser is set on the confirmed account.
+  expect(provider.updatePassword).toHaveBeenCalledOnce()
+  expect(provider.updatePassword).toHaveBeenCalledWith(
+    expect.any(String),
+    'the-owners-own-password',
+  )
+  // A Google sign-in has no password to set.
+  vi.mocked(provider.updatePassword).mockClear()
+  const google = await post('auth/google')
+  await fetch(`${origin}/api/hosted/auth/callback?code=fictional`, {
+    headers: { Cookie: cookies(google) },
+  })
+  expect(provider.updatePassword).not.toHaveBeenCalled()
+})
+
+it('still signs in when the account service refuses the repeat password', async () => {
+  // The usual case: the password is already the one typed, and the service
+  // says so with an error.
+  vi.mocked(provider.updatePassword).mockRejectedValueOnce(
+    new Error('same password'),
+  )
+  const signUp = await post('auth/register', {
+    email: 'person@example.invalid',
+    password: 'the-owners-own-password',
+  })
+  const confirmed = await fetch(
+    `${origin}/api/hosted/auth/callback?code=fictional`,
+    { headers: { Cookie: cookies(signUp) } },
+  )
+  expect(await confirmed.text()).not.toContain('auth=error')
+})
+
 it('resends confirmation links with one answer for every email and a per-email limit', async () => {
   vi.mocked(provider.resendConfirmation).mockRejectedValueOnce(
     new Error('provider detail'),

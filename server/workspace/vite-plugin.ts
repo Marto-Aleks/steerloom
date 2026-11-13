@@ -82,6 +82,8 @@ export function createWorkspaceServices(
   /** The packaged app's start link: its secret and who it creates on a first start. */
   start?: {
     secret: () => string | undefined
+    /** Called after the link signed someone in, to replace the secret. */
+    used?: () => void
     owner: { username: string; workspaceName: string }
   },
 ): WorkspaceServices {
@@ -282,6 +284,9 @@ export function createWorkspaceServices(
         ) {
           const id = getStore().startUser(start.owner)
           if (id) issueSession(id, response, token)
+          // One use: the link was visible to other programs on this computer
+          // while the browser opened it.
+          start.used?.()
         }
         response.statusCode = 302
         response.setHeader('Location', '/')

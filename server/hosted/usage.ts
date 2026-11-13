@@ -149,7 +149,8 @@ export function usageCounter(
       if (source) {
         const sources = (data.sources ??= {})
         const key =
-          source in sources || Object.keys(sources).length < MAX_SOURCES
+          Object.hasOwn(sources, source) ||
+          Object.keys(sources).length < MAX_SOURCES
             ? source
             : 'other'
         const counts = (sources[key] ??= {})

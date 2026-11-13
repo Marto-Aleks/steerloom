@@ -99,7 +99,14 @@ install_node() {
   expected=$(printf '%s\\n' "$sums" | awk -v f="$file" '$2 == f {print $1}')
   curl -fsSL "$base/$file" -o "$DIR/node.tar.gz" || fail "Node.js download failed."
   [ "$(sha256 "$DIR/node.tar.gz")" = "$expected" ] || fail "Node.js download did not match its checksum."
-  rm -rf "$DIR/node" && mkdir -p "$DIR/node"
+  # Only Steerloom's own Node.js folder is replaced, never another "node".
+  # An empty folder, or one left by an install that stopped halfway, is ours.
+  if [ -e "$DIR/node" ] && [ ! -x "$DIR/node/bin/node" ] && [ ! -e "$DIR/node/.steerloom" ] &&
+    [ -n "$(ls -A "$DIR/node" 2>/dev/null)" ]; then
+    rm -f "$DIR/node.tar.gz"
+    fail "$DIR/node exists and is not Steerloom's Node.js. Move it, or set STEERLOOM_DIR to another folder."
+  fi
+  rm -rf "$DIR/node" && mkdir -p "$DIR/node" && : >"$DIR/node/.steerloom"
   tar -xzf "$DIR/node.tar.gz" -C "$DIR/node" --strip-components 1
   rm -f "$DIR/node.tar.gz"
 }
@@ -297,8 +304,18 @@ function Install-SteerloomNode([string]$Dir, [int]$Major) {
     throw 'Node.js download did not match its checksum.'
   }
   $target = Join-Path $Dir 'node'
+  # Only Steerloom's own Node.js folder is replaced, never another "node".
+  # An empty folder, or one left by an install that stopped halfway, is ours.
+  if ((Test-Path -LiteralPath $target) -and
+      -not (Test-Path -LiteralPath (Join-Path $target 'node.exe')) -and
+      -not (Test-Path -LiteralPath (Join-Path $target '.steerloom')) -and
+      (Get-ChildItem -LiteralPath $target -Force | Select-Object -First 1)) {
+    Remove-Item -LiteralPath $zip -Force
+    throw "$target exists and is not Steerloom's Node.js. Move it, or set STEERLOOM_DIR to another folder."
+  }
   if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
   New-Item -ItemType Directory -Force -Path $target | Out-Null
+  New-Item -ItemType File -Force -Path (Join-Path $target '.steerloom') | Out-Null
   # bsdtar reads zip files and strips the top folder much faster than Expand-Archive.
   $tar = Get-SteerloomTar
   Invoke-SteerloomNative 'Unpacking Node.js' { & $tar -xf $zip -C $target --strip-components 1 }

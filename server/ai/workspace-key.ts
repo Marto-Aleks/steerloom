@@ -67,9 +67,24 @@ export function readAiKeyInput(
   )
     throw new Error('Choose an AI provider.')
   const typedKey = typeof input.apiKey === 'string' ? input.apiKey.trim() : ''
+  // The saved key is reused only for the service it was saved for. A new
+  // endpoint address needs the key typed again: otherwise anyone who may
+  // change the settings could have the saved key sent to a server of their
+  // own and read it there.
+  const movesEndpoint =
+    provider === 'custom' &&
+    typeof input.endpoint === 'string' &&
+    input.endpoint.trim() !== '' &&
+    !sameOrigin(input.endpoint.trim(), existing?.endpoint)
   const apiKey =
-    typedKey || (existing?.provider === provider ? existing.apiKey : '')
-  if (!apiKey) throw new Error('Paste an API key.')
+    typedKey ||
+    (existing?.provider === provider && !movesEndpoint ? existing.apiKey : '')
+  if (!apiKey)
+    throw new Error(
+      movesEndpoint && existing?.provider === provider
+        ? 'Paste the API key again: the endpoint address changed.'
+        : 'Paste an API key.',
+    )
   if (apiKey.length > 400 || /\s/.test(apiKey))
     throw new Error('Paste the API key exactly as the provider shows it.')
   const typedModel = typeof input.model === 'string' ? input.model.trim() : ''
@@ -318,5 +333,17 @@ async function resolveModel(
     throw new AiModelRequiredError(
       caught instanceof AiUpstreamError ? caught.status : 400,
     )
+  }
+}
+
+/** Whether two addresses are the same server (scheme, host and port). */
+function sameOrigin(typed: string, saved: string | undefined): boolean {
+  if (!saved) return false
+  try {
+    const withScheme = (value: string) =>
+      /^https?:\/\//i.test(value) ? value : `https://${value}`
+    return new URL(withScheme(typed)).origin === new URL(saved).origin
+  } catch {
+    return false
   }
 }

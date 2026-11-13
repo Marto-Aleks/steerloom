@@ -26,6 +26,9 @@ import type { UpdateCommand } from './update-check'
  */
 const LINK = /[?&]t=(\d{13}\.[\w-]{43})(?=[&"]|$)/
 const ORIGIN = /^https?:\/\/[A-Za-z0-9.-]+(?::\d{1,5})?$/
+const LOOPBACK = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$/
+/** Sign-in state: useless in a backup, and better not kept around. */
+const NOT_BACKED_UP = new Set(['start.key', 'sessions.json'])
 const BACKUP_NAME = /^before-update-\d{8}T\d{6}$/
 const KEEP_BACKUPS = 3
 /** A second click while an update runs starts nothing new. */
@@ -52,6 +55,9 @@ export function updateProcess(
   }: { origin: string; appDir: string; platform: NodeJS.Platform },
 ): UpdateProcess | null {
   if (!ORIGIN.test(origin)) return null
+  // Plain http would let anyone on the network swap the installer: allowed
+  // only for a test site on this computer.
+  if (origin.startsWith('http://') && !LOOPBACK.test(origin)) return null
   const windows = platform === 'win32'
   const link = LINK.exec(windows ? command.windowsCommand : command.command)
   if (!link) return null
@@ -104,7 +110,10 @@ export function backUp({
   const target = resolve(root, backupName(at))
   mkdirSync(target, { recursive: true, mode: 0o700 })
   if (existsSync(dataDir))
-    cpSync(dataDir, resolve(target, basename(dataDir)), { recursive: true })
+    cpSync(dataDir, resolve(target, basename(dataDir)), {
+      recursive: true,
+      filter: (source) => !NOT_BACKED_UP.has(basename(source)),
+    })
   const settings = resolve(appDir, '.env.local')
   if (existsSync(settings)) cpSync(settings, resolve(target, '.env.local'))
   const older = readdirSync(root)

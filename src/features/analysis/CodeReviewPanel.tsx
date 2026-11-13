@@ -2,6 +2,7 @@ import { useId, useState, type CSSProperties, type ReactNode } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { AskAiTag } from '../../components/AskAiTag'
 import { UiIcon } from '../../components/UiIcon'
+import { externalHttpUrl } from './format'
 
 /** One item in a group: its key, where to open it, and the full sentence. */
 export interface CodeReviewItem {
@@ -214,8 +215,12 @@ export function CodeReviewPanel({
                     data-tone={item.tone}
                     aria-hidden="true"
                   />
-                  {item.browseUrl ? (
-                    <a href={item.browseUrl} target="_blank" rel="noreferrer">
+                  {externalHttpUrl(item.browseUrl) ? (
+                    <a
+                      href={externalHttpUrl(item.browseUrl) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       {item.key}
                       <UiIcon icon={ExternalLink} size={12} />
                     </a>

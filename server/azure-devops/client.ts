@@ -1,3 +1,8 @@
+import {
+  BOARD_RESPONSE_BYTES,
+  cappedText,
+  ResponseTooLargeError,
+} from '../http/capped-body'
 import { fetch, ProxyAgent, type Dispatcher } from 'undici'
 import { fetchWithRetry } from '../http/fetch-retry'
 import { bypassesProxy } from '../http/no-proxy'
@@ -576,7 +581,15 @@ export class AzureDevOpsClient {
       if (signal?.aborted) throw error
       throw azureNetworkError(error, this.config)
     }
-    const text = await response.text()
+    const text = await cappedText(response, BOARD_RESPONSE_BYTES).catch(
+      (error: unknown) => {
+        if (error instanceof ResponseTooLargeError)
+          throw new AzureDevOpsError(
+            'Azure DevOps sent more data than this report can safely load. Narrow the project or team.',
+          )
+        throw error
+      },
+    )
     // A rejected token gets a sign-in page (203 or a redirect), not an error code.
     const signIn =
       response.status === 203 ||

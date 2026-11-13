@@ -28,6 +28,8 @@ beforeEach(() => {
   dataDir = resolve(appDir, '.flowlens')
   mkdirSync(dataDir, { recursive: true })
   writeFileSync(resolve(dataDir, 'workspace.json'), '{"boards":1}')
+  writeFileSync(resolve(dataDir, 'start.key'), 'fictional-start-secret')
+  writeFileSync(resolve(dataDir, 'sessions.json'), '{}')
   writeFileSync(resolve(appDir, '.env.local'), 'STEERLOOM_PORT=5173\n')
 })
 afterEach(() => rmSync(home, { recursive: true, force: true }))
@@ -77,6 +79,13 @@ it('runs nothing the site did not sign: a tampered answer has no link to use', (
   expect(
     updateProcess(COMMAND, { ...options, origin: 'https://x"; rm -rf ~; "' }),
   ).toBeNull()
+  // Plain http could be swapped on the way: only a test site on this computer.
+  expect(
+    updateProcess(COMMAND, { ...options, origin: 'http://steerloom.app' }),
+  ).toBeNull()
+  expect(
+    updateProcess(COMMAND, { ...options, origin: 'http://127.0.0.1:5173' }),
+  ).not.toBeNull()
 })
 
 it('copies the data and settings first, and keeps the three newest copies', () => {
@@ -97,6 +106,8 @@ it('copies the data and settings first, and keeps the three newest copies', () =
   expect(readFileSync(resolve(latest, '.env.local'), 'utf8')).toContain(
     'STEERLOOM_PORT',
   )
+  // Sign-in state is not kept in a backup.
+  expect(readdirSync(resolve(latest, '.flowlens'))).toEqual(['workspace.json'])
   // Anything else in the backups folder is left alone.
   mkdirSync(resolve(root, 'my-own-copy'))
   backUp({ appDir, dataDir, at: start + 6 * day })

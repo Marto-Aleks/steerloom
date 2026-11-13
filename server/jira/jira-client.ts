@@ -26,6 +26,12 @@ import {
 } from '../ai/board-reader'
 import type { ProgressReporter } from '../http/progress'
 import {
+  BOARD_RESPONSE_BYTES,
+  cappedText,
+  ERROR_RESPONSE_BYTES,
+  ResponseTooLargeError,
+} from '../http/capped-body'
+import {
   BOARD_PROGRESS,
   LARGE_BOARD_DETAIL,
   foundDetail,
@@ -261,6 +267,14 @@ export const JIRA_TOKEN_REJECTED =
 
 class JiraTooManyItemsError extends JiraUpstreamError {}
 
+/** Far more pages than any real board needs; a guard, not a product limit. */
+const MAX_PAGES = 500
+const tooManyPages = () =>
+  new JiraTooManyItemsError(
+    502,
+    'Jira kept sending pages without an end. Narrow the project scope.',
+  )
+
 export class JiraClient {
   private readonly root: string
   private readonly headers: Record<string, string>
@@ -292,7 +306,9 @@ export class JiraClient {
     const boards: JiraBoardOption[] = []
     let startAt = 0
 
-    for (;;) {
+    // A server that never says "last page" must not keep this running.
+    for (let pages = 0; ; pages++) {
+      if (pages >= MAX_PAGES) throw tooManyPages()
       const page = await this.get<JiraBoardPage>(
         `/rest/agile/1.0/board?projectKeyOrId=${encodeURIComponent(projectKey)}&startAt=${startAt}&maxResults=50`,
         signal,
@@ -621,7 +637,8 @@ export class JiraClient {
     let reported = 0
     onProgress?.(BOARD_PROGRESS.items)
 
-    for (;;) {
+    for (let pages = 0; ; pages++) {
+      if (pages >= MAX_PAGES) throw tooManyPages()
       const jql = `project = "${escapeJql(projectKey)}"${restriction ? ` AND ${restriction}` : ''}`
       const page = await this.get<JiraIssuePage>(
         `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/issue?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=100&fields=issuetype,created,status`,
@@ -717,7 +734,8 @@ export class JiraClient {
         HISTORY_CONCURRENCY,
         async (keys) => {
           let startAt = 0
-          for (;;) {
+          for (let pages = 0; ; pages++) {
+            if (pages >= MAX_PAGES) throw tooManyPages()
             const page = await this.get<JiraIssuePage>(
               `/rest/api/2/search?jql=${encodeURIComponent(`key in (${quoteKeys(keys)}) ORDER BY key`)}&startAt=${startAt}&maxResults=40&fields=${SNAPSHOT_FIELDS}&expand=changelog`,
               signal,
@@ -1013,13 +1031,23 @@ export class JiraClient {
           ? (caught as { name?: string; cause?: { code?: string } })
           : {}
       const code = error.cause?.code
+      const timedOut =
+        error.name === 'TimeoutError' || code === 'UND_ERR_CONNECT_TIMEOUT'
+      // On the hosted site a failed connection gets one answer whatever the
+      // cause, so the wording cannot be used to learn which names exist on
+      // the server's own network.
+      if (this.config.hosted && !timedOut)
+        throw new JiraUpstreamError(
+          502,
+          HOSTED_CANNOT_REACH,
+          'jira-not-reachable-hosted',
+        )
       const message =
         code === 'ENOTFOUND'
           ? 'The server could not resolve Jira. Check the installation’s network or proxy settings.'
           : code === 'ECONNREFUSED'
             ? 'The Jira connection was refused. Check that the installation’s proxy or VPN is running.'
-            : error.name === 'TimeoutError' ||
-                code === 'UND_ERR_CONNECT_TIMEOUT'
+            : timedOut
               ? 'Jira did not respond in time. Check your VPN and try again.'
               : 'The server could not connect to Jira. Check the installation’s VPN, proxy, and certificate settings.'
       throw new JiraUpstreamError(502, message)
@@ -1068,7 +1096,9 @@ export class JiraClient {
       // that on, so the assistant can correct its search.
       const reason =
         response.status === 400
-          ? jiraErrorReason(await response.text().catch(() => ''))
+          ? jiraErrorReason(
+              await cappedText(response, ERROR_RESPONSE_BYTES).catch(() => ''),
+            )
           : ''
       if (reason)
         throw new JiraUpstreamError(400, `Jira could not run this: ${reason}`)
@@ -1081,7 +1111,16 @@ export class JiraClient {
           : upstreamMessage(response.status),
       )
     }
-    const text = await response.text()
+    const text = await cappedText(response, BOARD_RESPONSE_BYTES).catch(
+      (error: unknown) => {
+        if (error instanceof ResponseTooLargeError)
+          throw new JiraTooManyItemsError(
+            502,
+            'Jira sent more data than this report can safely load. Narrow the project scope.',
+          )
+        throw error
+      },
+    )
     try {
       return JSON.parse(text) as T
     } catch {

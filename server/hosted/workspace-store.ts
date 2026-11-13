@@ -16,6 +16,9 @@ const AI_SCOPE = '00000000-0000-4000-8000-00000000a1a1'
 const AI_MIGRATION =
   'Apply the workspace AI migration (202610210004) in Supabase before adding an AI key.'
 
+/** Dashboards one workspace may hold. */
+const MAX_DASHBOARDS = 50
+
 export class HostedWorkspaceStore {
   private readonly vault: ReturnType<typeof credentialVault>
   constructor(
@@ -298,8 +301,17 @@ export class HostedWorkspaceStore {
     if ((await this.database.role(token, workspaceId)) === 'member')
       throw new Error('Only owners and admins can edit dashboards.')
     const dashboard = readDashboard(value)
+    const session = await this.session(token, workspaceId)
+    // Every request to a workspace loads its dashboards, so their number
+    // has a ceiling well above what a team uses.
+    if (
+      session.dashboards.length >= MAX_DASHBOARDS &&
+      !session.dashboards.some((item) => item.id === dashboard.id)
+    )
+      throw new Error(
+        `A workspace holds up to ${MAX_DASHBOARDS} dashboards. Remove one first.`,
+      )
     if (dashboard.provider !== 'demo') {
-      const session = await this.session(token, workspaceId)
       const connection = session.connections.find(
         (item) => item.id === dashboard.connectionId,
       )

@@ -23,7 +23,11 @@ import { appendCookie, readSecretCookie } from '../http/cookies'
 import { attemptLimiter } from '../http/rate-limit'
 import { publicMessage } from '../http/public-error'
 import { RELEASE } from '../http/release'
-import { clientAddress, type ClientAddress } from '../http/client-address'
+import {
+  clientAddress,
+  limitKey,
+  type ClientAddress,
+} from '../http/client-address'
 import { parseFeedback, type FeedbackSender } from './feedback'
 import {
   accountIdFromToken,
@@ -47,6 +51,11 @@ interface Flow {
   sessionCookie?: string
   /** A password reset: the return lands on "Choose a new password". */
   purpose?: 'recovery'
+  /**
+   * Sign-up only, in memory until the emailed link returns or 30 minutes
+   * pass: the password this person typed. See the callback for why.
+   */
+  password?: string
 }
 const hash = (value: string) => createHash('sha256').update(value).digest('hex')
 function setCookie(
@@ -71,6 +80,12 @@ function json(response: ServerResponse, status: number, value: unknown) {
 }
 /** The same limit as the local server: a dashboard with long lists passes 8 KB. */
 const BODY_LIMIT = 32 * 1024
+/**
+ * How many visitors each limit remembers at once. When a table is full, new
+ * visitors are refused, so it must be far above what a flood from a few
+ * networks can fill; an entry is a few dozen bytes.
+ */
+const LIMITER_KEYS = 50_000
 
 async function body(
   request: IncomingMessage,
@@ -125,7 +140,7 @@ export function createHostedAuthServices(
   const { usage, admins = [] } = extras
   const eventAttempts = attemptLimiter({
     windowMs: 60 * 60_000,
-    capacity: 5000,
+    capacity: LIMITER_KEYS,
   })
   const sessions = new Map<string, Session>(persistence?.load())
   const persist = () => persistence?.save(sessions)
@@ -152,11 +167,11 @@ export function createHostedAuthServices(
    * what one address may start in 30 minutes, so one visitor cannot push
    * everyone else's pending sign-in out.
    */
-  const PENDING_SIGN_INS = 2000
-  const attempts = attemptLimiter({ capacity: 5000 })
+  const PENDING_SIGN_INS = 20_000
+  const attempts = attemptLimiter({ capacity: LIMITER_KEYS })
   const feedbackAttempts = attemptLimiter({
     windowMs: 60 * 60_000,
-    capacity: 5000,
+    capacity: LIMITER_KEYS,
   })
   const WORKSPACES_PER_ACCOUNT = 10
   const NEW_WORKSPACES_AN_HOUR = 5
@@ -165,13 +180,13 @@ export function createHostedAuthServices(
   // Installed copies asking for an update command: a few per address an hour.
   const updateAttempts = attemptLimiter({
     windowMs: 60 * 60_000,
-    capacity: 5000,
+    capacity: LIMITER_KEYS,
   })
   // The local version needs no account: install commands and package
   // downloads are limited per address instead.
   const localAttempts = attemptLimiter({
     windowMs: 60 * 60_000,
-    capacity: 5000,
+    capacity: LIMITER_KEYS,
   })
   const sendArchive = async (response: ServerResponse) => {
     const archive = await readFile(
@@ -362,11 +377,18 @@ export function createHostedAuthServices(
             code.length > 2048
           )
             throw new Error('Invalid sign-in return.')
-          await issue(
-            request,
-            response,
-            await provider.exchange(code, flow.verifier),
-          )
+          const tokens = await provider.exchange(code, flow.verifier)
+          // Someone else may have registered this address first, with a
+          // password of their own, and waited: the account service keeps
+          // that first password when the real owner signs up later. Whoever
+          // opens the emailed link owns the address, so their password is
+          // the one that counts. It also ends any other session. A refusal
+          // (the password is already this one) changes nothing.
+          if (flow.password)
+            await provider
+              .updatePassword(tokens.accessToken, flow.password)
+              .catch(() => undefined)
+          await issue(request, response, tokens)
           returnToApp(response, false, flow.purpose === 'recovery')
         } catch {
           returnToApp(response, true)
@@ -408,7 +430,9 @@ export function createHostedAuthServices(
         // An address read from the edge header is one person's network. The
         // socket address may be the hosting proxy, shared by everyone, so it
         // keeps a limit that all visitors together stay under.
-        const shared = secure() && address === request.socket.remoteAddress
+        const shared =
+          secure() &&
+          address === limitKey(request.socket.remoteAddress ?? 'unknown')
         if (!attempts.hit(address, shared ? 200 : 30)) {
           json(response, 429, {
             error: 'Too many attempts. Try again in 15 minutes.',
@@ -477,6 +501,7 @@ export function createHostedAuthServices(
         }
         if (register) {
           const flow = startFlow(request, response)
+          flow.password = password
           await provider.register(email, password, flow.verifier)
           json(response, 200, {
             notice:
