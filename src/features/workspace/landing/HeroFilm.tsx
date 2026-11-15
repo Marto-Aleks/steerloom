@@ -8,7 +8,7 @@ import { UiIcon } from '../../../components/UiIcon'
  * opens the modal player (FilmPlayer).
  */
 
-export const FILM_POSTER = `${import.meta.env.BASE_URL}video/loomy-poster-6.jpg`
+export const FILM_POSTER = `${import.meta.env.BASE_URL}video/loomy-poster-7.jpg`
 
 export function HeroFilm({
   onOpen,

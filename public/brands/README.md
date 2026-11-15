@@ -28,7 +28,7 @@ across and 6 apart down).
 - `steerloom-white.svg`: white version for coloured or photographic backgrounds; resting tickets at 55 % opacity.
 - `steerloom-favicon.svg`: the mark without its trail on a navy rounded tile, for the browser tab.
 - `../icons/`: the app icons (192, 512, maskable 512, Apple touch, and the Windows `.ico` used by the installer) are the navy tile with the mark; the trail is drawn from 32 px up and left out below that.
-- `../social/steerloom-share-2.png`: the link preview card. Use a new file name when it changes, because sites cache previews by URL.
+- `../social/steerloom-share-3.png`: the link preview card (`steerloom-share-2.png` stays as the README picture). Use a new file name when it changes, because sites cache previews by URL.
 
 In the app, use the `SteerloomMark` component instead of these files: it follows
 the theme through the `--brand-mark-*` tokens and has a white tone for filled
