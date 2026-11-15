@@ -59,3 +59,23 @@ it('names formats Steerloom does not speak, and copes with no example at all', (
   ).toMatchObject({ unsupported: 'the OpenAI Responses API', model: 'gpt-5' })
   expect(parseAiExample('just some words')).toEqual({ keyHeader: undefined })
 })
+
+it('reads Claude on Vertex behind a gateway, but not Google’s own Vertex address', () => {
+  expect(
+    parseAiExample(
+      `curl -X POST "https://gw.example.com/api/google/v1/publishers/anthropic/models/claude-sonnet-5-5:streamRawPredict" -H "x-goog-api-key: $KEY" -d '{"anthropic_version":"vertex-2023-10-16","messages":[],"max_tokens":64}'`,
+    ),
+  ).toEqual({
+    format: 'anthropic',
+    keyHeader: 'x-goog-api-key',
+    model: 'claude-sonnet-5-5',
+    endpoint:
+      'https://gw.example.com/api/google/v1/publishers/anthropic/models/claude-sonnet-5-5:rawPredict',
+  })
+  // Google's own address takes hour-long sign-in tokens, not a key.
+  expect(
+    parseAiExample(
+      `curl https://europe-west1-aiplatform.googleapis.com/v1/projects/p/locations/europe-west1/publishers/anthropic/models/claude-sonnet-5-5:rawPredict -H "Authorization: Bearer $(gcloud auth print-access-token)"`,
+    ),
+  ).toMatchObject({ unsupported: 'Google Vertex AI' })
+})

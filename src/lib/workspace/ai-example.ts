@@ -22,6 +22,10 @@ export interface AiExample {
   unsupported?: string
 }
 
+/** Claude on Vertex: …/publishers/anthropic/models/<model>:rawPredict. */
+const VERTEX_CLAUDE =
+  /\/publishers\/anthropic\/models\/([^/:?]+):(?:stream)?rawPredict(?=\?|$)/i
+
 const KEY_HEADERS: AiExampleKeyHeader[] = [
   'authorization',
   'api-key',
@@ -56,10 +60,16 @@ export function parseAiExample(text: string): AiExample {
       result.unsupported = 'the OpenAI Responses API'
     else if (/bedrock|\/converse(?:\?|$)|\/invoke(?:\?|$)/i.test(url))
       result.unsupported = 'AWS Bedrock'
-    else if (/aiplatform\.googleapis\.com|:rawPredict/i.test(url))
+    // Google's own Vertex address takes hour-long sign-in tokens, not a key.
+    // Claude on Vertex behind a company gateway takes a key, and works.
+    else if (
+      /aiplatform\.googleapis\.com/i.test(url) ||
+      (/:(?:stream)?rawPredict/i.test(url) && !VERTEX_CLAUDE.test(url))
+    )
       result.unsupported = 'Google Vertex AI'
+    else if (VERTEX_CLAUDE.test(url)) result.format = 'anthropic'
   }
-  if (!result.unsupported) {
+  if (!result.unsupported && !result.format) {
     if (
       /:generateContent/i.test(url ?? '') ||
       (body && Array.isArray(body.contents))
@@ -81,6 +91,7 @@ export function parseAiExample(text: string): AiExample {
   const pathModel =
     /\/models\/([^/:?]+):generateContent/i.exec(url ?? '')?.[1] ??
     /\/deployments\/([^/?]+)/i.exec(url ?? '')?.[1] ??
+    VERTEX_CLAUDE.exec(url ?? '')?.[1] ??
     ''
   const model = (bodyModel || pathModel).trim()
   if (/^[\w.:/@-]{1,100}$/.test(model)) result.model = model
@@ -89,7 +100,7 @@ export function parseAiExample(text: string): AiExample {
     result.endpoint =
       result.format === 'gemini'
         ? url.replace(/\/models\/[^/:?]+:generateContent.*$/i, '')
-        : url
+        : url.replace(/:streamRawPredict(?=\?|$)/i, ':rawPredict')
   }
   return result
 }

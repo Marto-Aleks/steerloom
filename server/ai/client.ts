@@ -5,10 +5,13 @@ import type { AiReportContext } from '../../src/lib/ai/report-context'
 import type { AiJiraLookup } from '../../src/lib/ai/jira-evidence'
 import { looksLikeCard } from './answer-card'
 import { readStreamedPayload, streamingBody, streamingUrl } from './stream'
-import type { AiServerConfig } from './config'
+import { isVertexClaude, type AiServerConfig } from './config'
 import type { AiSkillDefinition } from './skills/registry'
 import { listAiSkills } from './skills/registry'
 import type { AgentTool, AgentToolCall, AgentToolResult } from './agent-tools'
+
+/** The version field Claude on Vertex AI expects in the request body. */
+const VERTEX_ANTHROPIC_VERSION = 'vertex-2023-10-16'
 
 export interface AiChatMessage {
   role: 'user' | 'assistant'
@@ -273,7 +276,7 @@ export class AiClient {
       })
       const firstUser = turns.findIndex((turn) => turn.role === 'user')
       return JSON.stringify({
-        model: this.config.model,
+        ...this.anthropicModel(),
         system,
         messages: firstUser < 0 ? [] : turns.slice(firstUser),
         max_tokens: maxTokens,
@@ -396,8 +399,32 @@ export class AiClient {
     })
   }
 
+  /**
+   * Claude on Vertex AI names the model in the address and wants its own
+   * version field in the body; Anthropic's API wants the model in the body.
+   */
+  private anthropicModel(): Record<string, string> {
+    return isVertexClaude(this.config.endpoint)
+      ? { anthropic_version: VERTEX_ANTHROPIC_VERSION }
+      : { model: this.config.model }
+  }
+
+  /** Anthropic's version header; Vertex takes the version in the body. */
+  private anthropicHeaders(): Record<string, string> {
+    return this.config.format === 'anthropic' &&
+      !isVertexClaude(this.config.endpoint)
+      ? { 'anthropic-version': '2023-06-01' }
+      : {}
+  }
+
   /** Where a chat request goes: Gemini names the model in the path. */
   private requestUrl(): string {
+    // Vertex: the model field decides, whatever model the address was saved with.
+    if (isVertexClaude(this.config.endpoint) && this.config.model)
+      return this.config.endpoint.replace(
+        /(\/publishers\/anthropic\/models\/)[^/?]+(:(?:stream)?rawPredict)/i,
+        `$1${encodeURIComponent(this.config.model)}$2`,
+      )
     if (this.config.format !== 'gemini') return this.config.endpoint
     const base = this.config.endpoint.replace(/\/+$/, '')
     return `${base}/models/${encodeURIComponent(this.config.model)}:generateContent`
@@ -428,6 +455,8 @@ export class AiClient {
    * (Anthropic and OpenAI-compatible APIs both offer GET .../models).
    */
   async listModels(signal?: AbortSignal): Promise<AiModelOption[]> {
+    // Vertex has no list of Claude models to read: the model is typed.
+    if (isVertexClaude(this.config.endpoint)) return []
     const url =
       this.config.format === 'gemini'
         ? `${this.config.endpoint.replace(/\/+$/, '')}/models?pageSize=100`
@@ -449,9 +478,7 @@ export class AiClient {
           headers: {
             Accept: 'application/json',
             [this.config.apiKeyHeader]: authorization,
-            ...(this.config.format === 'anthropic'
-              ? { 'anthropic-version': '2023-06-01' }
-              : {}),
+            ...this.anthropicHeaders(),
           },
           dispatcher: this.dispatcher,
           signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
@@ -535,7 +562,7 @@ export class AiClient {
       // Anthropic conversations must start with a user turn.
       const firstUser = messages.findIndex((item) => item.role === 'user')
       return JSON.stringify({
-        model: this.config.model,
+        ...this.anthropicModel(),
         system,
         messages: firstUser < 0 ? [] : messages.slice(firstUser),
         max_tokens: maxTokens,
@@ -688,9 +715,7 @@ export class AiClient {
               Accept: streaming ? 'text/event-stream' : 'application/json',
               'Content-Type': 'application/json',
               [this.config.apiKeyHeader]: authorization,
-              ...(this.config.format === 'anthropic'
-                ? { 'anthropic-version': '2023-06-01' }
-                : {}),
+              ...this.anthropicHeaders(),
             },
             body: requestBody,
             dispatcher: this.dispatcher,

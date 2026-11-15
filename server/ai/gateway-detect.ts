@@ -1,5 +1,10 @@
 import { AiUpstreamError } from './client'
-import { geminiBase, type AiFormat } from './config'
+import {
+  geminiBase,
+  isVertexClaude,
+  VERTEX_CLAUDE,
+  type AiFormat,
+} from './config'
 import {
   AiModelRequiredError,
   AZURE_API_VERSION,
@@ -73,6 +78,28 @@ export function azureDeploymentAddress(
   return url.toString()
 }
 
+/**
+ * Claude on Vertex AI, as company gateways pass it through on their "google"
+ * route: …/v1/publishers/anthropic/models/<model>:rawPredict. Only for a
+ * Claude model, which Vertex files under the publisher "anthropic".
+ */
+export function vertexClaudeAddress(
+  endpoint: string,
+  model: string,
+): string | null {
+  if (!/^claude[\w.:@-]{0,95}$/i.test(model)) return null
+  const url = new URL(endpoint)
+  if (VERTEX_CLAUDE.test(url.pathname)) return url.toString()
+  const base = url.pathname
+    .replace(/\/+$/, '')
+    .replace(/\/publishers\/[^/]+\/models\/[^/]+$/i, '')
+    .replace(/\/models\/[^/]+$/i, '')
+    .replace(/\/(?:chat\/completions|messages|openai)$/, '')
+  url.pathname = `${/\/v\d+\w*$/i.test(base) ? base : `${base}/v1`}/publishers/anthropic/models/${encodeURIComponent(model)}:rawPredict`
+  url.search = ''
+  return url.toString()
+}
+
 /** Gemini's own OpenAI-compatible path lives beside its base: …/v1beta/openai. */
 function geminiOpenAiAddress(endpoint: string): string {
   const url = new URL(endpoint)
@@ -104,6 +131,10 @@ export async function detectGateway(
     /:generateContent/i.test(typed)
   const anthropicFirst =
     /\/messages(?:\?|$)/.test(typed) || /anthropic|claude/i.test(typed)
+  // A Claude model on a Google route is Claude on Vertex AI: that address
+  // first. Elsewhere it is a last try, after every other style found nothing.
+  const vertex = vertexClaudeAddress(typed, secret.model)
+  const vertexFirst = !!vertex && (googleish || isVertexClaude(typed))
   // Each candidate: an API style at the address shaped for it. The order
   // follows the hints in the address; the last ones only run when every
   // earlier try found nothing at its address.
@@ -123,27 +154,31 @@ export async function detectGateway(
             ...list.slice(1),
           ]
       : list
-  const candidates: Array<{ format: AiFormat; endpoint: string }> =
-    withDeployment(
-      googleish
+  const styles: Array<{ format: AiFormat; endpoint: string }> = withDeployment(
+    googleish
+      ? [
+          { format: 'gemini', endpoint: addressFor(typed, 'gemini') },
+          { format: 'openai', endpoint: geminiOpenAiAddress(typed) },
+          { format: 'openai', endpoint: addressFor(typed, 'openai') },
+          { format: 'anthropic', endpoint: addressFor(typed, 'anthropic') },
+        ]
+      : anthropicFirst
         ? [
+            { format: 'anthropic', endpoint: addressFor(typed, 'anthropic') },
+            { format: 'openai', endpoint: addressFor(typed, 'openai') },
             { format: 'gemini', endpoint: addressFor(typed, 'gemini') },
-            { format: 'openai', endpoint: geminiOpenAiAddress(typed) },
+          ]
+        : [
             { format: 'openai', endpoint: addressFor(typed, 'openai') },
             { format: 'anthropic', endpoint: addressFor(typed, 'anthropic') },
-          ]
-        : anthropicFirst
-          ? [
-              { format: 'anthropic', endpoint: addressFor(typed, 'anthropic') },
-              { format: 'openai', endpoint: addressFor(typed, 'openai') },
-              { format: 'gemini', endpoint: addressFor(typed, 'gemini') },
-            ]
-          : [
-              { format: 'openai', endpoint: addressFor(typed, 'openai') },
-              { format: 'anthropic', endpoint: addressFor(typed, 'anthropic') },
-              { format: 'gemini', endpoint: addressFor(typed, 'gemini') },
-            ],
-    )
+            { format: 'gemini', endpoint: addressFor(typed, 'gemini') },
+          ],
+  )
+  const candidates = vertex
+    ? vertexFirst
+      ? [{ format: 'anthropic' as const, endpoint: vertex }, ...styles]
+      : [...styles, { format: 'anthropic' as const, endpoint: vertex }]
+    : styles
   const tries: Try[] = []
   const run = async (candidate: AiKeySecret) => {
     try {
@@ -177,11 +212,13 @@ export async function detectGateway(
     if (index > 0 && !tries.every((tried) => tried.status === 404)) break
     const guess: KeyHeader = azureAddress(endpoint)
       ? 'api-key'
-      : format === 'anthropic'
-        ? 'x-api-key'
-        : format === 'gemini'
-          ? 'x-goog-api-key'
-          : 'authorization'
+      : isVertexClaude(endpoint) && googleish
+        ? 'x-goog-api-key'
+        : format === 'anthropic'
+          ? 'x-api-key'
+          : format === 'gemini'
+            ? 'x-goog-api-key'
+            : 'authorization'
     const headers = [
       guess,
       ...(Object.keys(KEY_HEADERS) as KeyHeader[]).filter((h) => h !== guess),

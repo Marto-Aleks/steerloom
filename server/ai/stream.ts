@@ -16,10 +16,15 @@ export function streamingBody(body: string, format: Format): string {
   return JSON.stringify({ ...parsed, stream: true })
 }
 
-/** Gemini's streaming address for a generateContent address. */
+/**
+ * The streaming address: Gemini's for a generateContent address, and
+ * Vertex's :streamRawPredict for Claude's :rawPredict.
+ */
 export function streamingUrl(url: string, format: Format): string {
-  return format === 'gemini'
-    ? `${url.replace(/:generateContent$/, ':streamGenerateContent')}${url.includes('?') ? '&' : '?'}alt=sse`
+  if (format === 'gemini')
+    return `${url.replace(/:generateContent$/, ':streamGenerateContent')}${url.includes('?') ? '&' : '?'}alt=sse`
+  return format === 'anthropic'
+    ? url.replace(/:rawPredict(?=\?|$)/i, ':streamRawPredict')
     : url
 }
 

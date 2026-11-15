@@ -143,12 +143,31 @@ export function normaliseEndpoint(
     // A full …/chat/completions or Anthropic-style …/messages address stays.
     if (!path) url.pathname = '/v1/chat/completions'
     else if (/\/(?:chat\/completions|messages)$/.test(path)) url.pathname = path
+    // Saved as the plain address; streaming switches to :streamRawPredict.
+    else if (VERTEX_CLAUDE.test(path))
+      url.pathname = path.replace(/:streamRawPredict$/i, ':rawPredict')
     else if (/\/(?:v\d+\w*|openai|deployments\/[^/]+)$/i.test(path))
       url.pathname = `${path}/chat/completions`
     else url.pathname = `${path}/v1/chat/completions`
     return url.toString()
   } catch {
     return ''
+  }
+}
+
+/**
+ * Claude on Google Vertex AI, usually behind a company gateway's "google"
+ * route: Anthropic-style messages, but the model is in the address
+ * (…/publishers/anthropic/models/<model>:rawPredict) instead of the body.
+ */
+export const VERTEX_CLAUDE =
+  /\/publishers\/anthropic\/models\/[^/]+:(?:stream)?rawPredict$/i
+
+export function isVertexClaude(endpoint: string): boolean {
+  try {
+    return VERTEX_CLAUDE.test(new URL(endpoint).pathname)
+  } catch {
+    return false
   }
 }
 
