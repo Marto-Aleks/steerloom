@@ -12,10 +12,10 @@ import { track } from '../../../lib/usage/track'
  */
 
 const BASE = import.meta.env.BASE_URL
-export const FILM_MP4 = `${BASE}video/loomy-film-6.mp4`
-export const FILM_CAPTIONS = `${BASE}video/loomy-film-6.vtt`
+export const FILM_MP4 = `${BASE}video/loomy-film-7.mp4`
+export const FILM_CAPTIONS = `${BASE}video/loomy-film-7.vtt`
 /** The 9:16 cut for phones held upright; its captions are burned in. */
-export const FILM_VERTICAL_MP4 = `${BASE}video/loomy-film-6-vertical.mp4`
+export const FILM_VERTICAL_MP4 = `${BASE}video/loomy-film-7-vertical.mp4`
 
 /** Phones held upright get the vertical cut, which fills the screen. */
 function wantsVerticalFilm(): boolean {
