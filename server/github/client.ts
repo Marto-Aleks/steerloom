@@ -3,7 +3,9 @@ import { fetchWithRetry, isDropped } from '../http/fetch-retry'
 import { bypassesProxy } from '../http/no-proxy'
 import {
   pullRequestKeys,
+  unlinkedReason,
   type BranchRecord,
+  type UnlinkedReason,
   type PullRequestChecks,
   type PullRequestRecord,
 } from '../../src/lib/data-source/github'
@@ -88,13 +90,41 @@ const BRANCHES_QUERY = `query ($owner: String!, $name: String!, $after: String) 
   }
 }`
 
-/** The only documents that may ever be sent: all four are read queries. */
+/*
+ * Only for the check when GitHub is connected: why a pull request names no
+ * item key. Its description and the first lines of up to 30 commits are
+ * searched for keys and dropped at once; only counts are kept. The author's
+ * type tells a bot apart; no login is asked for.
+ */
+const LINK_CHECK_QUERY = `query ($owner: String!, $name: String!, $after: String) {
+  repository(owner: $owner, name: $name) {
+    nameWithOwner
+    pullRequests(first: ${PAGE_SIZE}, after: $after, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        title headRefName body updatedAt
+        author { __typename }
+        headlines: commits(first: 30) { nodes { commit { messageHeadline } } }
+      }
+    }
+  }
+}`
+
+/** The only documents that may ever be sent: all five are read queries. */
 const READ_QUERIES = new Set([
   VIEWER_QUERY,
   REPOSITORY_QUERY,
   PULL_REQUESTS_QUERY,
   BRANCHES_QUERY,
+  LINK_CHECK_QUERY,
 ])
+
+/** Pull requests in one repository: how many, how many name a key, and why the rest do not. */
+export interface LinkCheck {
+  read: number
+  linked: number
+  unlinked: Partial<Record<UnlinkedReason, number>>
+}
 
 /** What GitHub says about the token itself, from the headers of a reply. */
 export interface GithubTokenAccess {
@@ -114,7 +144,7 @@ interface PullRequestNode {
   updatedAt?: string
   mergedAt?: string | null
   closedAt?: string | null
-  author?: { login?: string } | null
+  author?: { login?: string; __typename?: string } | null
   comments?: { totalCount?: number }
   additions?: number
   deletions?: number
@@ -132,6 +162,10 @@ interface PullRequestNode {
     } | null>
   }
   timelineItems?: { nodes?: Array<{ createdAt?: string } | null> }
+  body?: string | null
+  headlines?: {
+    nodes?: Array<{ commit?: { messageHeadline?: string } | null } | null>
+  } | null
 }
 
 /**
@@ -181,6 +215,63 @@ export class GithubClient {
     tally?: { read: number },
   ): Promise<PullRequestRecord[]> {
     const records: PullRequestRecord[] = []
+    for await (const { repo, node } of this.recentPullRequests(
+      PULL_REQUESTS_QUERY,
+      fullName,
+      since,
+      signal,
+    )) {
+      if (tally) tally.read += 1
+      const record = toRecord(repo, node)
+      if (record) records.push(record)
+    }
+    return records
+  }
+
+  /**
+   * The check on connect: pull requests updated since `since`, how many
+   * name an item key in their title or branch, and why the others do not.
+   */
+  async linkCheck(
+    fullName: string,
+    since: Date,
+    signal?: AbortSignal,
+  ): Promise<LinkCheck> {
+    const check: LinkCheck = { read: 0, linked: 0, unlinked: {} }
+    for await (const { node } of this.recentPullRequests(
+      LINK_CHECK_QUERY,
+      fullName,
+      since,
+      signal,
+    )) {
+      check.read += 1
+      const title = node.title ?? ''
+      const branch = node.headRefName ?? ''
+      if (pullRequestKeys(title, branch).length) {
+        check.linked += 1
+        continue
+      }
+      const reason = unlinkedReason({
+        title,
+        branch,
+        description: node.body ?? '',
+        commits: (node.headlines?.nodes ?? []).map(
+          (entry) => entry?.commit?.messageHeadline ?? '',
+        ),
+        bot: node.author?.__typename === 'Bot',
+      })
+      check.unlinked[reason] = (check.unlinked[reason] ?? 0) + 1
+    }
+    return check
+  }
+
+  /** Pull requests updated since `since`, newest first, page by page. */
+  private async *recentPullRequests(
+    document: string,
+    fullName: string,
+    since: Date,
+    signal?: AbortSignal,
+  ): AsyncGenerator<{ repo: string; node: PullRequestNode }> {
     let after: string | null = null
     for (let read = 0; read < PULL_REQUEST_LIMIT; read += PAGE_SIZE) {
       const data: {
@@ -192,29 +283,23 @@ export class GithubClient {
           }
         } | null
       } = await this.query(
-        PULL_REQUESTS_QUERY,
+        document,
         { ...splitRepository(fullName), after },
         signal,
       )
       const repository = data.repository
       if (!repository?.nameWithOwner) throw notVisible(fullName)
       const page = repository.pullRequests
-      let older = false
       for (const node of page?.nodes ?? []) {
         if (!node) continue
-        if (node.updatedAt && Date.parse(node.updatedAt) < since.getTime()) {
-          older = true
-          break
-        }
-        if (tally) tally.read += 1
-        const record = toRecord(repository.nameWithOwner, node)
-        if (record) records.push(record)
+        if (node.updatedAt && Date.parse(node.updatedAt) < since.getTime())
+          return
+        yield { repo: repository.nameWithOwner, node }
       }
-      if (older || !page?.pageInfo?.hasNextPage) break
+      if (!page?.pageInfo?.hasNextPage) return
       after = page.pageInfo.endCursor ?? null
-      if (!after) break
+      if (!after) return
     }
-    return records
   }
 
   /**
@@ -330,11 +415,12 @@ export class GithubClient {
       )
     }
     // A repository the token cannot see is "not found", not a failure; nor
-    // are checks a token may not read: those pull requests have no checks.
+    // are checks or commits a token may not read: those are just left out.
     const errors = (body.errors ?? []).filter(
       (error) =>
         error.type !== 'NOT_FOUND' &&
-        !error.path?.includes('statusCheckRollup'),
+        !error.path?.includes('statusCheckRollup') &&
+        !error.path?.includes('headlines'),
     )
     if (errors.length || !body.data)
       throw new GithubError(

@@ -129,7 +129,8 @@ export function githubSummary(secret: GithubSecret): WorkspaceGithubSettings {
 /**
  * Checks the token and every repository before saving: the token's access,
  * that it can see each repository, and how many of the last year's pull
- * requests name an item key. A wrong name or naming habit shows at once.
+ * requests name an item key, and why the others do not. A wrong name or
+ * naming habit shows at once.
  */
 export async function connectGithub(
   secret: GithubSecret,
@@ -143,9 +144,7 @@ export async function connectGithub(
   const checks = await Promise.all(
     secret.repositories.map(async (typed) => {
       const name = await client.repository(typed, signal)
-      const tally = { read: 0 }
-      const linked = await client.pullRequests(name, since, signal, tally)
-      return { name, read: tally.read, linked: linked.length }
+      return { name, ...(await client.linkCheck(name, since, signal)) }
     }),
   )
   return {

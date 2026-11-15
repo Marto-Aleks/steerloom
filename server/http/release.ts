@@ -7,8 +7,9 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.15',
+  version: '2026.11.15.2',
   notes: [
+    'GitHub: connecting now shows why pull requests do not link to the board: the key only in the description or commits, a bare number, a bot, or nothing',
     'Company AI gateways: Claude on Google Vertex AI now connects. Enter the gateway’s Google address and a Claude model, or paste your AI team’s example request',
     'Every briefing shows all its numbers: cycle time, the usual limit, throughput, their trends and the late work. The Daily and Weekly choice, which hid some of them, is gone',
     'Security hardening after a full review: a saved AI key is never sent to a new endpoint address without being typed again, and answers from boards and AI services are size-limited',

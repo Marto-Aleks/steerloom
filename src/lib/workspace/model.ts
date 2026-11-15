@@ -1,4 +1,5 @@
 import type { AnalysisFilters } from '../../types'
+import type { UnlinkedReason } from '../data-source/github'
 import { isServiceExpectation } from '../statistics/service-expectation'
 
 export type ProviderId = 'jira' | 'trello' | 'azure-devops' | 'demo'
@@ -152,6 +153,8 @@ export interface GithubRepositoryCheck {
   read: number
   /** Of those, how many name an item key in their title or branch. */
   linked: number
+  /** The rest, by why they name no key; absent in checks saved before. */
+  unlinked?: Partial<Record<UnlinkedReason, number>>
 }
 
 export interface WorkspaceGithubSettings {

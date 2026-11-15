@@ -63,3 +63,58 @@ export function pullRequestKeys(title: string, branch: string): string[] {
     for (const match of text.matchAll(KEY)) keys.add(match[0].toUpperCase())
   return [...keys]
 }
+
+/**
+ * Why a pull request names no item key in its title or branch, checked in
+ * this order: a bot opened it, the key is only in its description, only in
+ * its commits, it names a bare number ("feature/1234-login", "#1234"), or
+ * nothing at all. Counted when GitHub is connected, so a team sees what its
+ * naming habit costs before a dashboard is empty.
+ */
+export type UnlinkedReason =
+  | 'bot'
+  | 'description'
+  | 'commits'
+  | 'number'
+  | 'none'
+
+/*
+ * In free text only upper-case keys count, as people write them ("FLOW-12:
+ * fix"), and common technical names that look like keys do not.
+ */
+const WRITTEN_KEY = /\b([A-Z][A-Z0-9_]{1,9})-[1-9]\d{0,6}\b/g
+const NOT_KEYS = new Set(
+  'AES BASE CVE CWE ECMA ES GPT HTTP IPV ISO MD PEP RFC RSA SHA SSL TLS UTF UUID WCAG COVID'.split(
+    ' ',
+  ),
+)
+const DATE = /\b(?:19|20)\d\d[-_.]\d{1,2}(?:[-_.]\d{1,2})?\b/g
+
+function namesKey(text: string): boolean {
+  for (const match of text.matchAll(WRITTEN_KEY))
+    if (!NOT_KEYS.has(match[1]!)) return true
+  return false
+}
+
+function namesNumber(title: string, branch: string): boolean {
+  if (/(?:^|\W|\b[A-Z]{1,4})#\d{1,7}\b/.test(title)) return true
+  if (/^\s*\[?\d{2,7}\]?[\s:-]/.test(title)) return true
+  return branch
+    .replace(DATE, '')
+    .split(/[/_-]+/)
+    .some((part) => /^\d{2,7}$/.test(part))
+}
+
+export function unlinkedReason(pull: {
+  title: string
+  branch: string
+  description: string
+  commits: string[]
+  bot: boolean
+}): UnlinkedReason {
+  if (pull.bot) return 'bot'
+  if (namesKey(pull.description)) return 'description'
+  if (pull.commits.some(namesKey)) return 'commits'
+  if (namesNumber(pull.title, pull.branch)) return 'number'
+  return 'none'
+}

@@ -244,7 +244,12 @@ settings → GitHub**, enters the address (`https://github.com` or the company's
 GitHub Enterprise Server), a token and up to 10 repositories (`owner/name` or
 pasted links), and Steerloom checks them together before saving: the token,
 that it can see each repository, and how many of each repository's pull
-requests from the last year name an item key. An entry that is not
+requests from the last year name an item key, and why the others do not:
+opened by a bot, the key only in the description or only in commit
+messages, a bare number (`feature/1234-login`, `#1234`), or nothing. For
+this check only, Steerloom reads each pull request's description and the
+first line of up to 30 commit messages, looks for keys, and keeps only the
+counts. An entry that is not
 `owner/name` is named in the error. A blank token keeps the saved one for the
 same address.
 
@@ -255,7 +260,7 @@ owner approves it; Steerloom then says the repository is not visible.
 
 Steerloom calls GitHub's GraphQL API (`api.github.com/graphql`, or
 `<server>/api/graphql` on Enterprise Server). GraphQL takes every request as a
-POST; Steerloom only sends four fixed read queries and no write operation
+POST; Steerloom only sends five fixed read queries and no write operation
 exists. Per pull request it reads the title and branch to find item keys, the
 ready, review, approval, merge and close times, and the author and reviewer
 logins only to tell a review from the author's own reply, and the number of
@@ -270,7 +275,7 @@ are read, going back over the report period, and at least a year, so quiet pull
 requests on long-running items are still found.
 
 **Read-only governance.** The client refuses to send any document other than
-its four fixed read queries, so no write can leave Steerloom whatever the
+its five fixed read queries, so no write can leave Steerloom whatever the
 token allows. When the token is checked, GitHub's reply headers say what it is:
 
 - **Fine-grained tokens** are limited by their own permissions (Pull requests:

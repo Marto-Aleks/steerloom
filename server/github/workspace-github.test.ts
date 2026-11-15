@@ -68,17 +68,18 @@ it('reads names and links, and names what it cannot read', () => {
   ).toThrow('up to 10')
 })
 
-it('checks every repository on save and counts linked pull requests', async () => {
+it('checks every repository on save, counts linked pull requests and why the rest are not', async () => {
   const reply = (data: unknown) =>
     new Response(JSON.stringify({ data }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  const pr = (title: string) => ({
+  const pr = (title: string, more: Record<string, unknown> = {}) => ({
     number: 1,
     url: 'https://git.example.invalid/Acme/Web/pull/1',
     title,
     headRefName: 'main',
+    ...more,
     isDraft: false,
     createdAt: '2026-10-01T09:00:00Z',
     updatedAt: '2026-10-05T09:00:00Z',
@@ -96,7 +97,19 @@ it('checks every repository on save and counts linked pull requests', async () =
             nameWithOwner: 'Acme/Web',
             pullRequests: {
               pageInfo: { hasNextPage: false },
-              nodes: [pr('FLOW-1 fix'), pr('tidy up'), pr('FLOW-2: add')],
+              nodes: [
+                pr('FLOW-1 fix'),
+                pr('tidy up'),
+                pr('FLOW-2: add'),
+                pr('Bump react', { author: { __typename: 'Bot' } }),
+                pr('Fix login', { body: 'Closes FLOW-3' }),
+                pr('Fix logout', {
+                  headlines: {
+                    nodes: [{ commit: { messageHeadline: 'FLOW-4 logout' } }],
+                  },
+                }),
+                pr('Fix search', { headRefName: 'feature/1234-search' }),
+              ],
             },
           },
         }),
@@ -114,7 +127,22 @@ it('checks every repository on save and counts linked pull requests', async () =
     new Date('2026-11-06T09:00:00Z'),
   )
   expect(saved.repositories).toEqual(['Acme/Web'])
-  expect(saved.checks).toEqual([{ name: 'Acme/Web', read: 3, linked: 2 }])
+  expect(saved.checks).toEqual([
+    {
+      name: 'Acme/Web',
+      read: 7,
+      linked: 2,
+      unlinked: { none: 1, bot: 1, description: 1, commits: 1, number: 1 },
+    },
+  ])
+  // The check asks for descriptions and commit lines; nothing else does.
+  const sent = mocks.fetch.mock.calls.map(
+    ([, init]) =>
+      (JSON.parse((init as { body: string }).body) as { query: string }).query,
+  )
+  expect(sent.find((query) => query.includes('pullRequests('))).toContain(
+    'messageHeadline',
+  )
   expect(saved.checkedAt).toBe('2026-11-06T09:00:00.000Z')
 })
 

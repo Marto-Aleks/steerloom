@@ -9,6 +9,7 @@ import {
   StatusMessage,
 } from '../../components/ui'
 import { workspaceRequest } from '../../lib/workspace/api'
+import type { UnlinkedReason } from '../../lib/data-source/github'
 import type {
   GithubRepositoryCheck,
   WorkspaceSession,
@@ -43,6 +44,28 @@ function checkLine(check: GithubRepositoryCheck): string {
   const all = `${check.read} pull request${check.read === 1 ? '' : 's'} in the last year`
   if (!check.linked) return `${all} · none names an item key`
   return `${all} · ${check.linked} name${check.linked === 1 ? 's' : ''} an item key`
+}
+
+/** Most common first: "Not linked: 9 key in description · 3 from bots". */
+const UNLINKED_LABELS: Array<[UnlinkedReason, string]> = [
+  ['description', 'key in description'],
+  ['commits', 'key in commits'],
+  ['number', 'number only'],
+  ['bot', 'from bots'],
+  ['none', 'no key'],
+]
+
+function unlinkedLine(check: GithubRepositoryCheck): string | undefined {
+  const counts = UNLINKED_LABELS.map(
+    ([reason, label]) => [check.unlinked?.[reason] ?? 0, label] as const,
+  )
+    .filter(([count]) => count > 0)
+    .sort((a, b) => b[0] - a[0])
+  const total = counts.reduce((sum, [count]) => sum + count, 0)
+  if (!total) return undefined
+  return `Not linked: ${counts
+    .map(([count, label]) => `${count} ${label}`)
+    .join(' · ')}`
 }
 
 /**
@@ -176,6 +199,7 @@ export function GithubSettings({
             <ul className="github-repos" aria-label="Repositories">
               {current.repositories.map((name) => {
                 const check = current.checks?.find((c) => c.name === name)
+                const why = check && unlinkedLine(check)
                 return (
                   <li
                     key={name}
@@ -185,6 +209,7 @@ export function GithubSettings({
                     {check && (
                       <span className="metadata-copy">{checkLine(check)}</span>
                     )}
+                    {why && <span className="metadata-copy">{why}</span>}
                   </li>
                 )
               })}

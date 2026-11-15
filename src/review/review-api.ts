@@ -109,8 +109,18 @@ const REVIEW_GITHUB = {
   repositories: ['acme/shop', 'acme/docs'],
   checkedAt: '2026-11-06T09:00:00.000Z',
   checks: [
-    { name: 'acme/shop', read: 87, linked: 64 },
-    { name: 'acme/docs', read: 12, linked: 0 },
+    {
+      name: 'acme/shop',
+      read: 87,
+      linked: 64,
+      unlinked: { description: 9, commits: 5, bot: 6, none: 3 },
+    },
+    {
+      name: 'acme/docs',
+      read: 12,
+      linked: 0,
+      unlinked: { number: 8, none: 4 },
+    },
   ],
 }
 
