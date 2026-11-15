@@ -73,17 +73,36 @@
   transition: color var(--duration-standard) var(--ease-glass);
 }
 
-.landing__local-link:hover {
+/* The source on GitHub: mark and name, as quiet as "Run locally", and
+   hidden on phones with it (the footer links it too). */
+.landing__source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-control);
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition: color var(--duration-standard) var(--ease-glass);
+}
+
+.landing__local-link:hover,
+.landing__source-link:hover {
   color: var(--accent);
 }
 
+.landing__source-link:focus-visible,
 .landing__local-link:focus-visible {
   outline: none;
   box-shadow: var(--ring-focus);
 }
 
 @media (max-width: 640px) {
-  .landing__local-link {
+  .landing__local-link,
+  .landing__source-link {
     display: none;
   }
 }
@@ -3327,5 +3346,6 @@
 
 .landing__footer-links {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
