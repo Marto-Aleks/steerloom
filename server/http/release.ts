@@ -11,6 +11,7 @@ export const RELEASE = {
   notes: [
     'The open demo: Steerloom AI answers its starter questions and the dashboard’s Ask AI buttons, replaying answers the real assistant gave on the demo board, with no account or AI key needed',
     'The demo board reads like a real team: owners, comments, a blocker from another team, and work in Review',
+    'Steerloom AI answers no longer slide sideways and cut off text at the panel’s edges',
     'Where work sits now: each stage’s percentage says it is the share of finished items’ time (“40% of time”), not of today’s items',
     'GitHub: connecting now shows why pull requests do not link to the board: the key only in the description or commits, a bare number, a bot, or nothing',
     'Company AI gateways: Claude on Google Vertex AI now connects. Enter the gateway’s Google address and a Claude model, or paste your AI team’s example request',
