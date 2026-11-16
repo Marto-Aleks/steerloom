@@ -33,7 +33,7 @@ describe('guided review evidence', () => {
       expect(prompt.length).toBeLessThanOrEqual(AI_USER_MESSAGE_CHAR_LIMIT)
     }
     expect(selectedWorkPrompt(oversized, null)).toContain(
-      '5 of 7 items supplied',
+      '5 of 9 items supplied',
     )
     expect(selectedWorkPrompt(oversized, null)).toContain('P85: unavailable')
   })
@@ -42,7 +42,7 @@ describe('guided review evidence', () => {
     expect(prompt.indexOf(items[0]!.item)).toBeLessThan(
       prompt.indexOf(items[1]!.item),
     )
-    expect(prompt).toContain('7 active items')
+    expect(prompt).toContain('9 active items')
     expect(prompt).not.toContain(items[6]!.item)
     expect(standupPrompt([], null)).toContain('No active items were observed')
   })

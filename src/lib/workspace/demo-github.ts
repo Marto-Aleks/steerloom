@@ -1,5 +1,6 @@
 import type { BranchRecord, PullRequestRecord } from '../data-source/github'
 import type { FlowBoardSnapshot } from '../../types'
+import { DEMO_REVIEW_KEYS } from './demo'
 
 const DAY = 86_400_000
 
@@ -94,6 +95,26 @@ export function demoCodeTrail(snapshot: FlowBoardSnapshot): {
         linesChanged: 140,
         filesChanged: 4,
         checks: 'failing',
+      }),
+      // In Review on the board, and moving in the code too.
+      record(`DEMO-${DEMO_REVIEW_KEYS[0]}`, 206, {
+        readyAt: ago(1),
+        firstReviewAt: ago(0.3),
+        lastActivityAt: ago(0.3),
+        comments: 2,
+        linesChanged: 120,
+        filesChanged: 3,
+        checks: 'passing',
+      }),
+      record(`DEMO-${DEMO_REVIEW_KEYS[1]}`, 207, {
+        readyAt: ago(3),
+        firstReviewAt: ago(2),
+        changesRequested: 1,
+        lastActivityAt: ago(0.2),
+        comments: 5,
+        linesChanged: 260,
+        filesChanged: 7,
+        checks: 'running',
       }),
       // Merged, but the cards still say In progress.
       record('DEMO-31', 204, {

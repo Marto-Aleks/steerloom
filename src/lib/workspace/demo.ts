@@ -1,4 +1,11 @@
-import type { FlowBoardSnapshot } from '../../types'
+import type { AnalysisFilters, FlowBoardSnapshot } from '../../types'
+
+/** The demo dashboard's scope: In progress and Review, the last 30 days. */
+export const DEMO_FILTERS: AnalysisFilters = {
+  selectedColumnIds: ['stage-1', 'stage-2'],
+  windowDays: 30,
+  ticketTypes: [],
+}
 
 /** Fictional product work, so the demo's keys read like a real board on hover. */
 const DEMO_TITLES = [
@@ -140,6 +147,110 @@ const FINISHED_WEEKS: number[][] = [
 const FINISH_DAYS = [0.4, 1.3, 2.6, 3.5, 4.4, 5.2, 6.1]
 const ACTIVE_KEYS = [30, 31, 32, 33, 34, 35, 36]
 
+/*
+ * Who holds each active item. DEMO-36 has nobody: Sam was pulled onto an
+ * incident and no one picked it up. Names are fictional.
+ */
+const OWNERS: Record<number, string | null> = {
+  30: 'Ana',
+  31: 'Tom',
+  32: 'Priya',
+  33: 'Ana',
+  34: 'Tom',
+  35: 'Priya',
+  36: null,
+}
+
+/** The newest keys: two items in Review whose code is moving as it should. */
+const LAST_KEY = FINISHED_WEEKS.flat().length + ACTIVE_KEYS.length
+export const DEMO_REVIEW_KEYS = [LAST_KEY + 1, LAST_KEY + 2] as const
+const REVIEWING = [
+  // Ready yesterday, first look this morning.
+  {
+    key: DEMO_REVIEW_KEYS[0],
+    title: 91,
+    started: 4,
+    review: 1,
+    owner: 'Jonas',
+  },
+  // Changes requested two days ago, fixes pushed today.
+  { key: DEMO_REVIEW_KEYS[1], title: 93, started: 6, review: 3, owner: 'Sam' },
+]
+
+/**
+ * What a real tracker would add to the active items: comments and a
+ * blocker, which Steerloom AI reads like it reads Jira. Days count back from
+ * the demo's "now", like everything else on the demo board.
+ */
+export const DEMO_ITEM_NOTES: Record<
+  string,
+  {
+    comments?: Array<{ author: string; daysAgo: number; body: string }>
+    blockedBy?: { key: string; summary: string; status: string }
+  }
+> = {
+  'DEMO-36': {
+    comments: [
+      {
+        author: 'Sam',
+        daysAgo: 12,
+        body: 'Pausing this to help with the checkout incident. Back on it next week.',
+      },
+    ],
+  },
+  'DEMO-35': {
+    comments: [
+      {
+        author: 'Priya',
+        daysAgo: 3,
+        body: 'The form part is done. Waiting on the accounts team: the saved-address API (ACC-118) is not live yet.',
+      },
+    ],
+    blockedBy: {
+      key: 'ACC-118',
+      summary: 'Saved-address API for the web shop',
+      status: 'In progress',
+    },
+  },
+  'DEMO-34': {
+    comments: [
+      {
+        author: 'Tom',
+        daysAgo: 5,
+        body: 'Ready for review. Bigger than planned: the rounding fix touches the basket, checkout and the order emails.',
+      },
+    ],
+  },
+  'DEMO-33': {
+    comments: [
+      {
+        author: 'Jonas',
+        daysAgo: 1,
+        body: 'Approved. The e2e checkout test fails on CI but passes locally. Flaky?',
+      },
+    ],
+  },
+  'DEMO-32': {
+    comments: [
+      {
+        author: 'Ana',
+        daysAgo: 6,
+        body: "Reopened: items added today still sort below last week's.",
+      },
+    ],
+  },
+  [`DEMO-${DEMO_REVIEW_KEYS[1]}`]: {
+    comments: [
+      {
+        author: 'Priya',
+        daysAgo: 2,
+        body: 'Two small changes: keep focus on the close button, and let Escape close the drawer.',
+      },
+      { author: 'Sam', daysAgo: 0, body: 'Both done, pushed.' },
+    ],
+  },
+}
+
 export function demoSnapshot(
   boardId = 'demo-product',
   now = new Date(),
@@ -154,6 +265,7 @@ export function demoSnapshot(
     index: number,
     started: number,
     history: { statusId: string; daysAgo: number }[],
+    owner?: string | null,
   ) => {
     const id = `${boardId}-${key}`
     issues.push({
@@ -163,6 +275,9 @@ export function demoSnapshot(
       issueTypeName: index % 4 === 0 ? 'Bug' : 'Story',
       createdAt: date(started + 3 + (index % 5)),
       title: DEMO_TITLES[index % DEMO_TITLES.length]!,
+      ...(owner === undefined
+        ? {}
+        : { ownerKnown: true, ...(owner ? { assignee: owner } : {}) }),
     })
     for (const step of history) {
       transitions.push({
@@ -196,17 +311,38 @@ export function demoSnapshot(
   // was closed once and reopened.
   ACTIVE_KEYS.forEach((active, position) => {
     const started = 2 + position * 3
-    add(active, active - 1, started, [
-      { statusId: 'stage-0', daysAgo: started + 4 },
-      { statusId: 'stage-1', daysAgo: started },
-      ...(active === 32
-        ? [
-            { statusId: 'stage-3', daysAgo: started - 1 },
-            { statusId: 'stage-1', daysAgo: started - 2 },
-          ]
-        : []),
-    ])
+    add(
+      active,
+      active - 1,
+      started,
+      [
+        { statusId: 'stage-0', daysAgo: started + 4 },
+        { statusId: 'stage-1', daysAgo: started },
+        ...(active === 32
+          ? [
+              { statusId: 'stage-3', daysAgo: started - 1 },
+              { statusId: 'stage-1', daysAgo: started - 2 },
+            ]
+          : []),
+      ],
+      OWNERS[active],
+    )
   })
+
+  // Two newer items in Review, still inside the usual limit.
+  REVIEWING.forEach((item) =>
+    add(
+      item.key,
+      item.title,
+      item.started,
+      [
+        { statusId: 'stage-0', daysAgo: item.started + 2 },
+        { statusId: 'stage-1', daysAgo: item.started },
+        { statusId: 'stage-2', daysAgo: item.review },
+      ],
+      item.owner,
+    ),
+  )
 
   return {
     source: { kind: 'demo', label: 'Fictional sample data' },

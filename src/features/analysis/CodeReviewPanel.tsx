@@ -3,42 +3,13 @@ import { ExternalLink } from 'lucide-react'
 import { AskAiTag } from '../../components/AskAiTag'
 import { UiIcon } from '../../components/UiIcon'
 import { externalHttpUrl } from './format'
+import {
+  codeGroupQuestion,
+  codeMismatchQuestion,
+} from '../../lib/ai/review-prompts'
 
-/** One item in a group: its key, where to open it, and the full sentence. */
-export interface CodeReviewItem {
-  key: string
-  detail: string
-  browseUrl?: string
-  /** Colours this item's chip by its own state instead of its group's. */
-  tone?: 'alive' | 'quiet' | 'waiting'
-  /** The board and the code disagree about this item: the chip is ringed. */
-  mismatch?: boolean
-}
-
-/** What GitHub says about the items sitting in a review stage today. */
-export interface CodeReviewGroup {
-  id:
-    | 'moving'
-    | 'unreviewed'
-    | 'quiet'
-    | 'done'
-    | 'none'
-    | 'nocode'
-    | 'coding'
-    | 'review'
-    | 'approved'
-    | 'merged'
-  label: string
-  items: CodeReviewItem[]
-}
-
-/** The question the assistant gets for one group, ready to send. */
-function groupQuestion(group: CodeReviewGroup, stage: string): string {
-  const keys = group.items.map((item) => item.key).join(', ')
-  return group.id === 'none' || group.id === 'nocode'
-    ? `${keys} sit in ${stage} without a linked pull request. What could they be waiting for, and what should I ask the team?`
-    : `${keys}: their pull requests are ${group.label}. Why, and what should happen next?`
-}
+export type { CodeReviewGroup, CodeReviewItem } from './code-review-types'
+import type { CodeReviewGroup } from './code-review-types'
 
 /**
  * Code review, from GitHub: what the review stage is holding today, grouped
@@ -238,8 +209,8 @@ export function CodeReviewPanel({
                 onClick={() =>
                   onAsk(
                     open.id === 'mismatch'
-                      ? `${open.items.map((item) => item.key).join(', ')}: the board and the code disagree about where these items are. What does each mean, and what should happen next?`
-                      : groupQuestion(open, stage),
+                      ? codeMismatchQuestion(open.items.map((item) => item.key))
+                      : codeGroupQuestion(open, stage),
                   )
                 }
               >

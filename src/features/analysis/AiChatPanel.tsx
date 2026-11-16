@@ -43,6 +43,11 @@ import { RichText } from './AiRichText'
 import { AgentActivity } from './AgentActivity'
 import { AnswerCard } from './AnswerCard'
 import { StreamingAnswer } from './StreamingAnswer'
+import {
+  recordedAnswer,
+  type DemoAiQuestion,
+  type DemoAiRecording,
+} from './demo-ai'
 
 /*
  * Board reading, once allowed, is remembered for the person in this browser,
@@ -87,7 +92,30 @@ interface AiChatPanelProps {
   teamNotes?: string
   /** Owners and admins save the notes with the briefing. */
   onTeamNotesChange?: (notes: string) => void
+  /** The open demo: recorded answers replayed, no account or key needed. */
+  replay?: AiReplay
 }
+
+export interface AiReplay {
+  recording: DemoAiRecording
+  questions: DemoAiQuestion[]
+  /** Where someone goes to ask their own question. */
+  signUpHref: string
+  onAsked?: () => void
+}
+
+const pause = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((done, fail) => {
+    const timer = setTimeout(done, ms)
+    signal.addEventListener('abort', () => {
+      clearTimeout(timer)
+      fail(new DOMException('Stopped', 'AbortError'))
+    })
+  })
+
+const reducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 export interface AiChatDraftRequest {
   id: number
@@ -106,6 +134,7 @@ export function AiChatPanel({
   configurationKey = '',
   teamNotes,
   onTeamNotesChange,
+  replay,
 }: AiChatPanelProps) {
   const readingKey = boardReadingKey(jiraScope)
   const [readingRemembered, setReadingRemembered] = useState(() =>
@@ -116,7 +145,9 @@ export function AiChatPanel({
     useState<AiConfigurationInfo | null>(null)
   const [messages, setMessages] = useState<AiConversationMessage[]>([])
   const [draft, setDraft] = useState('')
-  const [checking, setChecking] = useState(true)
+  const [checking, setChecking] = useState(!replay)
+  /** The demo was asked something it has no recorded answer for. */
+  const [replayInvite, setReplayInvite] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [pendingConfirmation, setPendingConfirmation] =
@@ -176,6 +207,7 @@ export function AiChatPanel({
   // Checked on open and again whenever the workspace key changes (a key
   // saved in this panel turns the setup view into the chat).
   useEffect(() => {
+    if (replay) return
     const controller = new AbortController()
     getAiConfiguration(controller.signal)
       .then(setConfiguration)
@@ -186,7 +218,7 @@ export function AiChatPanel({
         if (!controller.signal.aborted) setChecking(false)
       })
     return () => controller.abort()
-  }, [configurationKey])
+  }, [configurationKey, replay])
 
   useEffect(() => {
     activeRequest.current?.abort()
@@ -217,7 +249,7 @@ export function AiChatPanel({
     return () => document.body.classList.remove(AI_CHAT_DOCKED_CLASS)
   }, [open])
 
-  const configured = configuration?.configured === true
+  const configured = Boolean(replay) || configuration?.configured === true
 
   // Move focus into the panel on open (the composer once AI is configured,
   // otherwise the panel itself so Escape still works) and back on close.
@@ -236,7 +268,7 @@ export function AiChatPanel({
     if (!open) return
     const conversation = conversationRef.current
     if (conversation) conversation.scrollTop = conversation.scrollHeight
-  }, [error, messages, open, pendingConfirmation, sending])
+  }, [error, messages, open, pendingConfirmation, sending, replayInvite])
 
   // Titles the assistant read in this chat, then the board's own.
   const titleOf = (key: string): string | undefined => {
@@ -338,8 +370,80 @@ export function AiChatPanel({
     }
   }
 
+  /*
+   * The demo: the recorded steps and answer, played at reading pace. A
+   * question with no recording invites the visitor to ask their own.
+   */
+  const replayAnswer = async (content: string) => {
+    if (!replay) return
+    const found = recordedAnswer(replay.recording, content)
+    setReplayInvite(false)
+    if (!found) {
+      setDraft('')
+      setReplayInvite(true)
+      return
+    }
+    replay.onAsked?.()
+    activeRequest.current?.abort()
+    const controller = new AbortController()
+    activeRequest.current = controller
+    const shown = [
+      ...messages,
+      { role: 'user' as const, content: found.label },
+    ].slice(-AI_CONVERSATION_HISTORY_LIMIT)
+    setMessages(shown)
+    setDraft('')
+    setError('')
+    setTrail([])
+    setStreamed('')
+    setProgress(null)
+    lastProgress.current = null
+    setSending(true)
+    try {
+      if (!reducedMotion()) {
+        // At most eight steps, about 0.7 s each, then the answer streams in.
+        const steps = found.trail
+          .filter((event) => event.step !== 'answer')
+          .slice(0, 8)
+        for (const event of steps) {
+          onProgress({ type: 'progress', step: event.step, label: event.label })
+          await pause(700, controller.signal)
+        }
+        onProgress({ type: 'progress', step: 'answer', label: 'Writing' })
+        const words = found.message.split(/(?<=\s)/)
+        const chunk = Math.max(1, Math.ceil(words.length / 40))
+        for (let index = 0; index < words.length; index += chunk) {
+          setStreamed(
+            (current) => current + words.slice(index, index + chunk).join(''),
+          )
+          await pause(60, controller.signal)
+        }
+      }
+      setMessages([
+        ...shown,
+        {
+          role: 'assistant',
+          content: found.message,
+          ...(found.card ? { card: found.card } : {}),
+          ...(found.checkedJiraKeys?.length
+            ? { checkedJiraKeys: found.checkedJiraKeys }
+            : {}),
+          ...(found.skill ? { skill: found.skill } : {}),
+        },
+      ])
+    } catch {
+      /* Cleared or closed: nothing to show. */
+    } finally {
+      if (!controller.signal.aborted) setSending(false)
+    }
+  }
+
   const ask = async (question: string) => {
     const content = question.trim()
+    if (replay) {
+      if (content && !sending) await replayAnswer(content)
+      return
+    }
     if (!content || !configured || sending) return
     const userMessage: AiConversationMessage = { role: 'user', content }
     const nextMessages: AiConversationMessage[] = [
@@ -470,7 +574,9 @@ export function AiChatPanel({
             </p>
           </div>
           <div className="ai-chat__header-actions">
-            {checking ? (
+            {replay ? (
+              <StatusBadge tone="neutral">Recorded</StatusBadge>
+            ) : checking ? (
               <StatusBadge tone="neutral">Checking setup</StatusBadge>
             ) : !configured ? (
               <StatusBadge tone="warning">Setup needed</StatusBadge>
@@ -542,39 +648,66 @@ export function AiChatPanel({
                   </button>
                 </p>
               )}
-              {messages.length === 0 && !pendingConfirmation && !sending && (
+              {replay && messages.length === 0 && !sending && (
                 <div className="ai-chat__welcome">
-                  <h3>What would you like to know?</h3>
+                  <h3>See what Steerloom AI finds</h3>
                   <p>
-                    Steerloom AI answers from this briefing&apos;s evidence
-                    {jiraScope
-                      ? ` and can check ${providerLabel} read-only when you allow it`
-                      : ''}
-                    . Pick a starting point or ask in your own words.
+                    Real answers it gave on this demo board, recorded. Pick a
+                    question.
                   </p>
                   <ul className="ai-chat__starters">
-                    {[
-                      ...AI_STARTER_QUESTIONS,
-                      jiraScope
-                        ? 'Who holds the oldest items, and what do their latest comments say?'
-                        : 'Explain how the usual limit (P85) is calculated.',
-                    ].map((question) => (
-                      <li key={question}>
-                        <button
-                          type="button"
-                          className="ai-chat__starter"
-                          onClick={() => {
-                            setDraft(question)
-                            inputRef.current?.focus()
-                          }}
-                        >
-                          {question}
-                        </button>
-                      </li>
-                    ))}
+                    {replay.questions
+                      .filter((question) => question.starter)
+                      .map((question) => (
+                        <li key={question.label}>
+                          <button
+                            type="button"
+                            className="ai-chat__starter"
+                            onClick={() => void ask(question.question)}
+                          >
+                            {question.label}
+                          </button>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               )}
+              {!replay &&
+                messages.length === 0 &&
+                !pendingConfirmation &&
+                !sending && (
+                  <div className="ai-chat__welcome">
+                    <h3>What would you like to know?</h3>
+                    <p>
+                      Steerloom AI answers from this briefing&apos;s evidence
+                      {jiraScope
+                        ? ` and can check ${providerLabel} read-only when you allow it`
+                        : ''}
+                      . Pick a starting point or ask in your own words.
+                    </p>
+                    <ul className="ai-chat__starters">
+                      {[
+                        ...AI_STARTER_QUESTIONS,
+                        jiraScope
+                          ? 'Who holds the oldest items, and what do their latest comments say?'
+                          : 'Explain how the usual limit (P85) is calculated.',
+                      ].map((question) => (
+                        <li key={question}>
+                          <button
+                            type="button"
+                            className="ai-chat__starter"
+                            onClick={() => {
+                              setDraft(question)
+                              inputRef.current?.focus()
+                            }}
+                          >
+                            {question}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               {messages.map((message, index) => (
                 <article
                   className="ai-chat__message"
@@ -634,6 +767,38 @@ export function AiChatPanel({
                     )}
                 </article>
               ))}
+
+              {replay && messages.length > 0 && !sending && (
+                <ul className="ai-chat__starters" aria-label="More questions">
+                  {replay.questions
+                    .filter(
+                      (question) =>
+                        question.starter &&
+                        !messages.some(
+                          (message) => message.content === question.label,
+                        ),
+                    )
+                    .map((question) => (
+                      <li key={question.label}>
+                        <button
+                          type="button"
+                          className="ai-chat__starter"
+                          onClick={() => void ask(question.question)}
+                        >
+                          {question.label}
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+
+              {replay && replayInvite && (
+                <StatusMessage variant="info" title="Ask your own question">
+                  The demo replays recorded answers.{' '}
+                  <a href={replay.signUpHref}>Create a free account</a> and add
+                  your AI key to ask anything about your own board.
+                </StatusMessage>
+              )}
 
               {pendingConfirmation && (
                 <article className="ai-chat__agent-confirmation" role="status">
@@ -734,7 +899,11 @@ export function AiChatPanel({
                   if (error) setError('')
                 }}
                 onKeyDown={handleComposerKeyDown}
-                placeholder="Ask about this briefing…"
+                placeholder={
+                  replay
+                    ? 'Pick a question above, or type your own…'
+                    : 'Ask about this briefing…'
+                }
                 maxLength={AI_USER_MESSAGE_CHAR_LIMIT}
                 rows={1}
                 disabled={sending}
@@ -767,6 +936,7 @@ export function AiChatPanel({
                       setMessages([])
                       setDraft('')
                       setSending(false)
+                      setReplayInvite(false)
                       setError('')
                       setPendingConfirmation(null)
                       setJiraAllowedForChat(readingRemembered)

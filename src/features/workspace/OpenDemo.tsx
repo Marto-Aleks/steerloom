@@ -4,14 +4,22 @@ import { track } from '../../lib/usage/track'
 import { askForFeedbackSoon } from '../../components/feedback-nudge'
 import { Wordmark } from '../../components/Wordmark'
 import { StatusMessage } from '../../components/ui'
-import { demoSnapshot } from '../../lib/workspace/demo'
+import { DEMO_FILTERS, demoSnapshot } from '../../lib/workspace/demo'
 import { DemoCodeHint } from './GithubLocalNote'
+import type { AiReplay } from '../analysis/AiChatPanel'
+import {
+  demoAiSetup,
+  recordedAnswer,
+  type DemoAiRecording,
+} from '../analysis/demo-ai'
+import recordedDemoAnswers from '../analysis/demo-ai-answers.json'
 
 /*
  * The demo without an account: steerloom.app/?demo=1 opens the same sample
  * dashboard signed-in people get from "Explore the demo". Everything is
- * computed in the browser from fictional data; nothing is saved. The AI
- * assistant needs a workspace, so its buttons invite people to sign up.
+ * computed in the browser from fictional data; nothing is saved. Steerloom
+ * AI replays answers it gave on this board (see demo-ai.ts); asking
+ * anything else invites people to sign up.
  */
 
 const FlowAnalysis = lazy(() =>
@@ -23,10 +31,23 @@ const FlowAnalysis = lazy(() =>
 const SIGN_UP = '/?hosted=1&page=signup'
 const snapshot = demoSnapshot('demo-product')
 const code = demoCodeTrail(snapshot)
-const filters = {
-  selectedColumnIds: ['stage-1', 'stage-2'],
-  windowDays: 30,
-  ticketTypes: [],
+const replay = demoAiReplay()
+
+/** Recorded answers, when there are any for today's demo questions. */
+function demoAiReplay(): AiReplay | undefined {
+  const recording = recordedDemoAnswers as DemoAiRecording
+  const { questions } = demoAiSetup(new Date(snapshot.loadedAt))
+  const answered = questions.filter((question) =>
+    recordedAnswer(recording, question.question),
+  )
+  return answered.length
+    ? {
+        recording,
+        questions: answered,
+        signUpHref: SIGN_UP,
+        onAsked: () => track('demo_ai_asked'),
+      }
+    : undefined
 }
 
 export function OpenDemo() {
@@ -65,8 +86,9 @@ export function OpenDemo() {
           >
             <FlowAnalysis
               snapshot={snapshot}
-              filters={filters}
-              aiChat={false}
+              filters={DEMO_FILTERS}
+              aiChat={Boolean(replay)}
+              aiReplay={replay}
               pullRequests={code.pullRequests}
               branches={code.branches}
               codeHint={<DemoCodeHint />}

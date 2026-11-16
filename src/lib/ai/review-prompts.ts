@@ -56,3 +56,19 @@ export const periodSummaryPrompt =
 function round(value: number) {
   return Math.round(value * 100) / 100
 }
+
+/** The question for one group of the code view, ready to send. */
+export function codeGroupQuestion(
+  group: { id: string; label: string; items: Array<{ key: string }> },
+  stage: string,
+): string {
+  const keys = group.items.map((item) => item.key).join(', ')
+  return group.id === 'none' || group.id === 'nocode'
+    ? `${keys} sit in ${stage} without a linked pull request. What could they be waiting for, and what should I ask the team?`
+    : `${keys}: their pull requests are ${group.label}. Why, and what should happen next?`
+}
+
+/** The question for the items where the board and the code disagree. */
+export function codeMismatchQuestion(keys: string[]): string {
+  return `${keys.join(', ')}: the board and the code disagree about where these items are. What does each mean, and what should happen next?`
+}

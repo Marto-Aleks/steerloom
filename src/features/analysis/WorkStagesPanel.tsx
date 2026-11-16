@@ -132,7 +132,7 @@ export function WorkStagesPanel({
               <span className="work-stages__name">{load.name}</span>
               {load.timeShare !== undefined && (
                 <span className="work-stages__share">
-                  {Math.round(load.timeShare * 100)}%
+                  {Math.round(load.timeShare * 100)}% of time
                 </span>
               )}
             </li>

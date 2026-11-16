@@ -16,7 +16,7 @@ describe('aging work review interactions', () => {
       <AgingWorkPanel items={items} p85={7} sampleCount={20} onAsk={onAsk} />,
     )
     // Opened on request, so the whole review shows at once.
-    expect(screen.getAllByRole('checkbox')).toHaveLength(7)
+    expect(screen.getAllByRole('checkbox')).toHaveLength(9)
     fireEvent.click(
       screen.getByLabelText(`Select ${items[0]!.item} for review`),
     )
@@ -47,7 +47,7 @@ describe('aging work review interactions', () => {
         onAsk={vi.fn()}
       />,
     )
-    expect(screen.getAllByText('Baseline unavailable')).toHaveLength(7)
+    expect(screen.getAllByText('Baseline unavailable')).toHaveLength(9)
     for (const item of items.slice(0, 5))
       fireEvent.click(screen.getByLabelText(`Select ${item.item} for review`))
     expect(
@@ -78,7 +78,7 @@ describe('item keys', () => {
       />,
     )
     const links = container.querySelectorAll('a.item-key')
-    expect(links).toHaveLength(7)
+    expect(links).toHaveLength(9)
     links.forEach((link) => {
       expect(link).toHaveAttribute('target', '_blank')
       expect(link.getAttribute('href')).toMatch(

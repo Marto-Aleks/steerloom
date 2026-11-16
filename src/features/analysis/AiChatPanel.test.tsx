@@ -541,3 +541,76 @@ describe('Steerloom AI answer formatting', () => {
     expect(document.body.textContent).not.toContain('**')
   })
 })
+
+describe('Steerloom AI in the open demo', () => {
+  const recording = {
+    model: 'fictional-model',
+    recordedAt: '2026-11-16T09:00:00Z',
+    boardNow: '2026-11-16T09:00:00Z',
+    fingerprint: '00000000',
+    answers: [
+      {
+        label: 'What should we raise today?',
+        question: 'What should the team raise today? Facts: DEMO-36.',
+        message: 'Raise DEMO-36: 20 days in progress.',
+        trail: [{ step: 'read', label: 'Reading the report', at: 0 }],
+      },
+    ],
+  }
+  const replay = {
+    recording,
+    questions: [
+      {
+        label: 'What should we raise today?',
+        question: recording.answers[0]!.question,
+        starter: true,
+      },
+    ],
+    signUpHref: '/?hosted=1&page=signup',
+    onAsked: vi.fn(),
+  }
+
+  beforeEach(() => {
+    aiMocks.getAiConfiguration.mockReset()
+    aiMocks.sendAiChat.mockReset()
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    cleanup()
+  })
+
+  it('replays a recorded answer without a key or any AI call', async () => {
+    render(<AiChatPanel context={context} replay={replay} />)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open Steerloom AI chat' }),
+    )
+    expect(screen.getByText('Recorded')).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'What should we raise today?' }),
+    )
+    expect(await screen.findByText(/20 days in progress/)).toBeTruthy()
+    expect(replay.onAsked).toHaveBeenCalledTimes(1)
+    expect(aiMocks.getAiConfiguration).not.toHaveBeenCalled()
+    expect(aiMocks.sendAiChat).not.toHaveBeenCalled()
+  })
+
+  it('invites a visitor to sign up for a question it has no answer for', async () => {
+    render(<AiChatPanel context={context} replay={replay} />)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open Steerloom AI chat' }),
+    )
+    fireEvent.change(
+      screen.getByLabelText('Ask a question about this report'),
+      {
+        target: { value: 'Who is the slowest developer?' },
+      },
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+    const link = await screen.findByRole('link', {
+      name: 'Create a free account',
+    })
+    expect(link.getAttribute('href')).toBe('/?hosted=1&page=signup')
+    expect(aiMocks.sendAiChat).not.toHaveBeenCalled()
+  })
+})

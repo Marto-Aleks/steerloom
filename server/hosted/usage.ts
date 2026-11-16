@@ -22,6 +22,7 @@ export const PERSON_STEPS = [
 export const VISITOR_STEPS = [
   'landing_view',
   'demo_opened',
+  'demo_ai_asked',
   'film_played',
   'install_started',
   'update_started',
@@ -35,6 +36,7 @@ export type UsageStep =
 export const CLIENT_STEPS: ReadonlySet<string> = new Set([
   'landing_view',
   'demo_opened',
+  'demo_ai_asked',
   'film_played',
   'briefing_built',
   'briefing_useful',

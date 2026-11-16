@@ -21,6 +21,7 @@
     "start:local": "node dist-local/server.mjs --open",
     "package:local": "node scripts/package-local.mjs",
     "ai:eval": "tsx server/ai/eval/run.ts",
+    "ai:demo-record": "tsx server/ai/eval/demo-record.ts",
     "start": "node dist-server/main.js"
   },
   "dependencies": {

@@ -2,9 +2,7 @@ import { AskAiTag } from '../../components/AskAiTag'
 import { MetricCard } from './ReportMetricCard'
 import { itemLinkResolver } from '../../lib/workspace/item-links'
 import { MeasureScope } from './MeasureScope'
-import { weeklyThroughputForPeriod } from '../../lib/statistics/weekly-throughput'
 import { summarizeServiceExpectation } from '../../lib/statistics/service-expectation'
-import { assessDataQuality } from '../../lib/statistics/data-quality'
 import { DataQualityPanel } from './DataQualityPanel'
 import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import {
@@ -13,48 +11,24 @@ import {
   GlassPanel,
   StatusMessage,
 } from '../../components/ui'
-import { buildAiReportContext } from '../../lib/ai/report-context'
 import {
-  calculateBoardMetrics,
-  rollingCycleTimeTrend,
-  throughputRateForWindow,
-} from '../../lib/statistics'
-import {
-  buildFlowPeriodComparison,
-  buildMetricEvidence,
-  type FlowMetricId,
-} from '../../lib/statistics/flow-evidence'
+  activeItemsWithCode,
+  codeReview,
+  codeTrailGroups,
+  computeReport,
+  dashboardAiContext,
+} from './dashboard-evidence'
+import { type FlowMetricId } from '../../lib/statistics/flow-evidence'
 import { analysisScopeLabel } from '../../lib/statistics/filter'
-import { replayFlaggedItems } from '../../lib/statistics/flagged-replay'
+import type { AnalysisFilters, FlowBoardSnapshot } from '../../types'
 import {
-  stageTimeShares,
-  startFinishBalance,
-} from '../../lib/statistics/stage-time'
-import { buildFocusNowSummary } from '../../lib/statistics/focus-now'
-import { forecastThroughput } from '../../lib/statistics/forecast'
-import { buildBriefing, stageLoads } from '../../lib/statistics/briefing'
-import {
-  filterBoardSnapshot,
-  resolveExitPeriod,
-} from '../../lib/statistics/snapshot-filter'
-import type {
-  AnalysisFilters,
-  FlowBoardSnapshot,
-  FlowMetrics,
-} from '../../types'
-import { AiChatPanel, type AiChatDraftRequest } from './AiChatPanel'
-import {
-  agingBaselineState,
-  collectAgingWork,
-} from '../../lib/statistics/aging-work'
+  AiChatPanel,
+  type AiChatDraftRequest,
+  type AiReplay,
+} from './AiChatPanel'
 import { standupPrompt, periodSummaryPrompt } from '../../lib/ai/review-prompts'
 import { AgingWorkPanel } from './AgingWorkPanel'
-import {
-  describeTrend,
-  formatNumber,
-  isPartialWeek,
-  metricTitle,
-} from './format'
+import { formatNumber, metricTitle } from './format'
 import { MetricEvidenceView } from './MetricEvidenceView'
 import { stagger } from './motion'
 import { ReportMenu } from './ReportMenu'
@@ -62,12 +36,7 @@ import { HeroSignal, TodayPanel } from './TodayPanel'
 import { WorkStagesPanel } from './WorkStagesPanel'
 import { FlaggedPanel } from './FlaggedPanel'
 import { ForecastPanel } from './ForecastPanel'
-import { CodeReviewPanel, type CodeReviewGroup } from './CodeReviewPanel'
-import { pullRequestInsight } from '../../lib/statistics/pull-requests'
-import {
-  buildPullRequestEvidence,
-  CODE_LOOKUP_LIMIT,
-} from '../../lib/ai/pull-request-evidence'
+import { CodeReviewPanel } from './CodeReviewPanel'
 import type {
   BranchRecord,
   PullRequestRecord,
@@ -99,6 +68,8 @@ interface FlowAnalysisProps {
   refreshing?: boolean
   /** The AI chat needs a workspace; the open demo has none. */
   aiChat?: boolean
+  /** The open demo: Steerloom AI replays recorded answers. */
+  aiReplay?: AiReplay
   /** Pull requests from the dashboard's GitHub repositories, when connected. */
   pullRequests?: PullRequestRecord[]
   /** Branches that name the board's items, with their last commit. */
@@ -109,212 +80,6 @@ interface FlowAnalysisProps {
   pullRequestsLoading?: boolean
   /** A closing line for the code view, such as where to get it for real. */
   codeHint?: ReactNode
-}
-
-// Every number on the dashboard is derived here, once per snapshot and filter
-// set, so interaction state (modals, filters) never re-runs the statistics or
-// restarts chart animations.
-function computeReport(snapshot: FlowBoardSnapshot, filters: AnalysisFilters) {
-  const loadedAt = new Date(snapshot.loadedAt)
-  const reportNow = Number.isFinite(loadedAt.getTime()) ? loadedAt : new Date()
-  const currentPeriod = resolveExitPeriod(filters.windowDays, reportNow)
-  const scopedSnapshot = filterBoardSnapshot(snapshot, filters, reportNow)
-  const selectedColumns = scopedSnapshot.board.columns.filter((column) =>
-    filters.selectedColumnIds.includes(column.id),
-  )
-  const completedMetrics = calculateBoardMetrics(
-    scopedSnapshot,
-    filters.selectedColumnIds,
-  )
-  const baseMetrics: FlowMetrics = completedMetrics ?? {
-    uniqueItemCount: scopedSnapshot.issues.length,
-    validTransitionCount: scopedSnapshot.transitions.length,
-    workItemCount: 0,
-    cycleTimeItemCount: 0,
-    medianCycleTime: null,
-    percentile85CycleTime: null,
-    weeklyThroughput: [],
-    cycleTimes: [],
-    distribution: [],
-    explanation:
-      'No completed observations in this scope. Cycle-time estimates and the P85 baseline are unavailable. Current-work signals use the observed board history.',
-  }
-  const metrics: FlowMetrics = {
-    ...baseMetrics,
-    weeklyThroughput: weeklyThroughputForPeriod(
-      baseMetrics.cycleTimes,
-      currentPeriod,
-    ),
-  }
-  const fullWindowThroughput = throughputRateForWindow(
-    metrics.workItemCount,
-    filters.windowDays,
-  )
-  const metricEvidence = buildMetricEvidence(
-    snapshot,
-    filters,
-    metrics,
-    currentPeriod,
-  )
-  const periodComparison = buildFlowPeriodComparison(
-    snapshot,
-    filters,
-    reportNow,
-  )
-  const cycleTimeTrend = rollingCycleTimeTrend(metrics.cycleTimes)
-  const completedOutliers = metrics.cycleTimes
-    .filter(
-      ({ cycleTime }) =>
-        metrics.percentile85CycleTime !== null &&
-        cycleTime > metrics.percentile85CycleTime,
-    )
-    .sort((left, right) => right.cycleTime - left.cycleTime)
-  const workInProgressSnapshot = filterBoardSnapshot(snapshot, {
-    ...filters,
-    windowDays: null,
-  })
-  // Where finished work in this period spent its time, per measured stage.
-  const timeShares = stageTimeShares(scopedSnapshot, filters.selectedColumnIds)
-  const focusNow = buildFocusNowSummary({
-    snapshot: workInProgressSnapshot,
-    selectedColumnIds: filters.selectedColumnIds,
-    metrics,
-    windowDays: filters.windowDays,
-    timeShares,
-  })
-  const agingWork = collectAgingWork(
-    workInProgressSnapshot,
-    filters.selectedColumnIds,
-  )
-  const beyondLimit = agingWork.filter(
-    (item) =>
-      agingBaselineState(
-        item.ageInSelectedColumns,
-        metrics.percentile85CycleTime,
-      ) === 'beyond',
-  ).length
-  // The forecast samples its own recent window (last 8 weeks), independent of
-  // the selected report period, so it always reflects the latest pace.
-  const forecast = forecastThroughput({
-    completedExits:
-      calculateBoardMetrics(
-        workInProgressSnapshot,
-        filters.selectedColumnIds,
-      )?.cycleTimes.map(({ cycleEnd }) => cycleEnd) ?? [],
-    asOf: reportNow.toISOString(),
-    currentWorkInProgress: agingWork.length,
-    historyStart: earliestTransition(workInProgressSnapshot),
-  })
-  const dataQuality = assessDataQuality(
-    snapshot,
-    filters,
-    reportNow,
-    new Date(),
-  )
-  // What the briefing named a week ago and what happened to it since.
-  const flagged = replayFlaggedItems(snapshot, filters, reportNow)
-  const briefing = buildBriefing({
-    completedCount: metrics.workItemCount,
-    medianDays: metrics.medianCycleTime,
-    p85Days: metrics.percentile85CycleTime,
-    signals: focusNow.signals,
-    activeCount: agingWork.length,
-    beyondLimitCount: beyondLimit,
-    reenteredCount: focusNow.reenteredWorkInProgress.length,
-    comparison: periodComparison,
-    dataQuality: dataQuality.status,
-  })
-  const isLate = (item: (typeof agingWork)[number]) =>
-    agingBaselineState(
-      item.ageInSelectedColumns,
-      metrics.percentile85CycleTime,
-    ) === 'beyond'
-  const loads = stageLoads(
-    snapshot.board.columns,
-    filters.selectedColumnIds,
-    agingWork,
-    isLate,
-  ).map((load) => {
-    const share = timeShares.get(load.id)
-    return share === undefined ? load : { ...load, timeShare: share }
-  })
-  const balance = startFinishBalance(
-    workInProgressSnapshot,
-    filters.selectedColumnIds,
-  )
-  const partialWeeks = new Set(
-    metrics.weeklyThroughput
-      .filter(({ week }) => isPartialWeek(week, currentPeriod, reportNow))
-      .map(({ week }) => week),
-  )
-  const comparisonDays = periodComparison?.previous.period.days ?? 0
-  const trends = {
-    completed: describeTrend(
-      periodComparison?.current.completedObservations ?? null,
-      periodComparison?.previous.completedObservations ?? null,
-      'count',
-      'higher',
-      comparisonDays,
-    ),
-    median: describeTrend(
-      periodComparison?.current.medianCycleTimeDays ?? null,
-      periodComparison?.previous.medianCycleTimeDays ?? null,
-      'days',
-      'lower',
-      comparisonDays,
-    ),
-    p85: describeTrend(
-      periodComparison?.current.percentile85CycleTimeDays ?? null,
-      periodComparison?.previous.percentile85CycleTimeDays ?? null,
-      'days',
-      'lower',
-      comparisonDays,
-    ),
-    throughput: describeTrend(
-      periodComparison?.current.exitThroughputPerWeek ?? null,
-      periodComparison?.previous.exitThroughputPerWeek ?? null,
-      'throughput',
-      'higher',
-      comparisonDays,
-    ),
-  }
-
-  return {
-    loadedAt,
-    reportNow,
-    currentPeriod,
-    scopedSnapshot,
-    selectedColumns,
-    completedMetrics,
-    metrics,
-    fullWindowThroughput,
-    metricEvidence,
-    periodComparison,
-    cycleTimeTrend,
-    completedOutliers,
-    focusNow,
-    agingWork,
-    beyondLimit,
-    forecast,
-    dataQuality,
-    flagged,
-    briefing,
-    loads,
-    balance,
-    partialWeeks,
-    trends,
-  }
-}
-
-function earliestTransition(snapshot: FlowBoardSnapshot): string | undefined {
-  let earliest = Number.POSITIVE_INFINITY
-  snapshot.transitions.forEach(({ enteredAt }) => {
-    const time = Date.parse(enteredAt)
-    if (Number.isFinite(time) && time < earliest) earliest = time
-  })
-  return Number.isFinite(earliest)
-    ? new Date(earliest).toISOString()
-    : undefined
 }
 
 export function FlowAnalysis({
@@ -329,6 +94,7 @@ export function FlowAnalysis({
   aiConfigurationKey,
   refreshing = false,
   aiChat = true,
+  aiReplay,
   pullRequests,
   branches,
   pullRequestError,
@@ -390,53 +156,12 @@ export function FlowAnalysis({
     partialWeeks,
     trends,
   } = report
-  // Where each item's stage sits against the review stage (the first
-  // measured stage named like Review), so board and code can be compared.
-  const stageOf = useMemo(() => {
-    const order = selectedColumns.map((column) => column.id)
-    const reviewAt = selectedColumns.findIndex((column) =>
-      /review/i.test(column.name),
-    )
-    const byItem = new Map(
-      agingWork.map((item) => [item.item, order.indexOf(item.columnId)]),
-    )
-    return (item: string) => {
-      const at = byItem.get(item) ?? -1
-      if (reviewAt < 0 || at < 0) return undefined
-      return at < reviewAt ? 'early' : at === reviewAt ? 'review' : 'late'
-    }
-  }, [selectedColumns, agingWork])
-  // What the code adds: one code trail per active item (branch, commits,
-  // pull request, review, merge), the review timing and two signals. Timing
-  // only, never per person.
   const review = useMemo(
-    () =>
-      pullRequests
-        ? pullRequestInsight({
-            pullRequests,
-            branches: branches ?? [],
-            active: agingWork,
-            finished: completedMetrics?.cycleTimes ?? [],
-            now: Number.isFinite(loadedAt.getTime()) ? loadedAt : new Date(),
-            stageOf,
-          })
-        : undefined,
-    [pullRequests, branches, agingWork, completedMetrics, loadedAt, stageOf],
+    () => codeReview(report, pullRequests, branches),
+    [report, pullRequests, branches],
   )
   const activeItems = useMemo(
-    () =>
-      review
-        ? agingWork.map((item) => {
-            const state = review.states.get(item.item.trim().toUpperCase())
-            return state
-              ? {
-                  ...item,
-                  currentStatus: `${item.currentStatus} · ${state.short}`,
-                  statusDetail: state.full,
-                }
-              : item
-          })
-        : agingWork,
+    () => activeItemsWithCode(agingWork, review),
     [review, agingWork],
   )
   // Says what GitHub added to this load, so "nothing shows" has an answer.
@@ -470,43 +195,10 @@ export function FlowAnalysis({
   }, [pullRequestsLoading, pullRequests, branches, agingWork, completedMetrics])
   // Code: every active item, grouped by what its code says, ringed where
   // the board says otherwise.
-  const codeTrail = useMemo(() => {
-    if (!review || !agingWork.length) return undefined
-    const labels: Array<[CodeReviewGroup['id'], string]> = [
-      ['nocode', 'no linked code'],
-      ['coding', 'coding'],
-      ['review', 'in review'],
-      ['approved', 'approved'],
-      ['merged', 'merged'],
-    ]
-    const entry = (item: string) => review.groups.get(item)
-    const groups = labels.map(([id, label]) => ({
-      id,
-      label,
-      items: agingWork
-        .filter((item) => (entry(item.item)?.id ?? 'nocode') === id)
-        .sort((a, b) => b.ageInSelectedColumns - a.ageInSelectedColumns)
-        .map((item) => {
-          const found = entry(item.item)
-          return {
-            key: item.item,
-            detail: `${item.column} on the board. ${found?.detail ?? 'No linked code.'}`,
-            ...(item.browseUrl ? { browseUrl: item.browseUrl } : {}),
-            ...(found?.tone ? { tone: found.tone } : {}),
-            ...(found?.mismatch ? { mismatch: true } : {}),
-          }
-        }),
-    }))
-    const all = groups.flatMap((group) => group.items)
-    const mismatches = all.filter((item) => item.mismatch).length
-    const quiet = all.filter((item) => item.tone === 'quiet').length
-    const headline = mismatches
-      ? `Board and code disagree on ${mismatches} ${mismatches === 1 ? 'item' : 'items'}`
-      : quiet
-        ? `${quiet} ${quiet === 1 ? 'item has' : 'items have'} gone quiet`
-        : 'Board and code agree'
-    return { groups, headline, total: all.length }
-  }, [review, agingWork])
+  const codeTrail = useMemo(
+    () => codeTrailGroups(report, review),
+    [report, review],
+  )
   const delayedItems = useMemo(
     () =>
       review
@@ -553,59 +245,14 @@ export function FlowAnalysis({
       />
     </GlassModal>
   )
-  const aiReportContext = buildAiReportContext({
-    generatedAt: snapshot.loadedAt,
-    sourceLabel: reportSourceLabel,
-    boardName: snapshot.board.name,
+  const aiReportContext = dashboardAiContext({
+    snapshot,
     filters,
-    selectedColumnNames: selectedColumns.map((column) => column.name),
-    metrics,
-    exitThroughputPerWeek: fullWindowThroughput,
-    focusSignals: focusNow.signals,
-    weeklyCycleTimeTrend: cycleTimeTrend,
-    delayedWorkInProgress: focusNow.delayedWorkInProgress,
-    completedOutliers,
-    reenteredWorkInProgress: focusNow.reenteredWorkInProgress,
-    periodComparison,
-    forecast,
-    currentWork: agingWork,
-    dataQuality,
+    report,
+    review,
+    pullRequests,
+    branches,
     teamNotes,
-    ...(pullRequests && review
-      ? {
-          pullRequests: buildPullRequestEvidence({
-            pullRequests,
-            branches: branches ?? [],
-            trail: review.groups,
-            repositories: new Set(pullRequests.map((record) => record.repo))
-              .size,
-            active: agingWork,
-            delayedKeys: focusNow.delayedWorkInProgress.map(
-              (item) => item.item,
-            ),
-            finished: completedMetrics?.cycleTimes ?? [],
-            inside: review.inside,
-            finishedCount: metrics.workItemCount,
-            now: Number.isFinite(loadedAt.getTime()) ? loadedAt : new Date(),
-          }),
-          codeLookup: buildPullRequestEvidence({
-            pullRequests,
-            branches: branches ?? [],
-            trail: review.groups,
-            repositories: new Set(pullRequests.map((record) => record.repo))
-              .size,
-            active: agingWork,
-            delayedKeys: focusNow.delayedWorkInProgress.map(
-              (item) => item.item,
-            ),
-            finished: completedMetrics?.cycleTimes ?? [],
-            inside: review.inside,
-            finishedCount: metrics.workItemCount,
-            now: Number.isFinite(loadedAt.getTime()) ? loadedAt : new Date(),
-            limit: CODE_LOOKUP_LIMIT,
-          }).items,
-        }
-      : {}),
   })
   const aiJiraScope =
     (snapshot.source.kind === 'jira-data-center' ||
@@ -1065,6 +712,7 @@ export function FlowAnalysis({
           configurationKey={aiConfigurationKey}
           teamNotes={teamNotes}
           onTeamNotesChange={onTeamNotesChange}
+          replay={aiReplay}
         />
       )}
 
