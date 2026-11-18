@@ -587,3 +587,36 @@
   margin: 0 auto;
   padding: 0 var(--space-5) var(--space-8);
 }
+
+/* The planning check's cases, side by side (?review=sprint). */
+.review-plans h2 {
+  margin: var(--space-8) 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-title, 1.25rem);
+}
+
+.review-plans > p {
+  margin: 0 0 var(--space-4);
+  color: var(--text-secondary);
+}
+
+.review-plans__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-4);
+}
+
+.review-plans__grid > div {
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--radius-card);
+  background: var(--surface-raised);
+}
+
+.review-plans__case {
+  margin: 0 0 var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

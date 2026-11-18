@@ -9,7 +9,7 @@ import { parseSprintContext } from './sprint-parse'
 
 const NOW = new Date('2026-11-18T12:00:00.000Z')
 const snapshot = scrumDemoSnapshot(NOW)
-const sprint = toAiSprintContext(buildSprintBriefing(snapshot)!, NOW.getTime())!
+const sprint = toAiSprintContext(buildSprintBriefing(snapshot)!)!
 
 const context: AiReportContext = {
   generatedAt: NOW.toISOString(),
@@ -43,7 +43,7 @@ describe('the Sprint tab for Steerloom AI', () => {
     expect(running.goal).toBeTruthy()
     expect(running.items.length).toBe(13)
     expect(running.scopeChange.added).toHaveLength(3)
-    expect(sprint.planning?.planned).toBe(40)
+    expect(sprint.planning?.planned).toBe(52)
     expect(sprint.lastSprints).toHaveLength(5)
     const json = JSON.stringify(sprint)
     for (const issue of snapshot.issues)

@@ -6,6 +6,7 @@ import {
   type DemoAiRecording,
 } from './demo-ai'
 import recorded from './demo-ai-answers.json'
+import recordedScrum from './demo-ai-answers-scrum.json'
 
 const recording = recorded as DemoAiRecording
 const DAY = 86_400_000
@@ -40,7 +41,7 @@ describe("the demo's recorded Steerloom AI answers", () => {
     for (const answer of recording.answers) {
       const text = `${answer.message} ${JSON.stringify(answer.card ?? {})}`
       expect(text, answer.label).not.toMatch(
-        /\b\d{4}-\d\d-\d\d\b|\b\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}\b/,
+        /\b\d{4}-\d\d-\d\d\b|\b\d{1,2} (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b|\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b \d{1,2}\b/,
       )
     }
   })
@@ -59,5 +60,46 @@ describe("the demo's recorded Steerloom AI answers", () => {
     }
     expect(recordedAnswer(fake, 'Why is DEMO-36 late?')?.message).toBe('A')
     expect(recordedAnswer(fake, 'Why is DEMO-35 late?')).toBeUndefined()
+  })
+})
+
+describe("the Scrum demo's recorded Steerloom AI answers", () => {
+  const scrum = recordedScrum as DemoAiRecording
+  const HOUR = 3_600_000
+
+  it('answer every Sprint tab question, recorded on today’s Scrum board', () => {
+    const boardNow = new Date(scrum.boardNow)
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(boardNow)
+    const { context, questions } = demoAiSetup(boardNow, 'scrum')
+    vi.useRealTimers()
+    // A changed demo team, Sprint tab question or AI context needs a new
+    // recording: npm run ai:demo-record -- scrum
+    expect(contextFingerprint(context)).toBe(scrum.fingerprint)
+    expect(questions.length).toBeGreaterThanOrEqual(6)
+    for (const question of questions)
+      expect(
+        recordedAnswer(scrum, question.question),
+        question.label,
+      ).toBeDefined()
+  })
+
+  it('ask the same questions at any day and hour: the sprint is pinned to today', () => {
+    const start = Date.parse(scrum.boardNow)
+    const first = demoAiSetup(new Date(start), 'scrum').questions
+    for (let hours = 5; hours < 24 * 8; hours += 7)
+      expect(
+        demoAiSetup(new Date(start + hours * HOUR), 'scrum').questions,
+      ).toEqual(first)
+  })
+
+  it('name no dates and no weekdays, which would go stale', () => {
+    for (const answer of scrum.answers) {
+      const text = `${answer.message} ${JSON.stringify(answer.card ?? {})}`
+      expect(text, answer.label).not.toMatch(
+        /\b\d{4}-\d\d-\d\d\b|\b\d{1,2} (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b|\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b \d{1,2}\b|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/,
+      )
+      expect(text, answer.label).not.toMatch(/stand-?up/i)
+    }
   })
 })

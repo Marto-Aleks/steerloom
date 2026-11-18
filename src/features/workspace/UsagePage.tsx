@@ -21,6 +21,7 @@ const LABELS: Record<string, string> = {
   film_played: 'Film plays',
   demo_opened: 'Open demo views',
   demo_ai_asked: 'Asked the demo AI',
+  demo_scrum_opened: 'Opened the Scrum demo',
   signed_in: 'Signed in',
   workspace_created: 'Created a workspace',
   board_connected: 'Connected a board',
@@ -38,6 +39,7 @@ const LABELS: Record<string, string> = {
 const SOURCE_STEPS = [
   'landing_view',
   'demo_opened',
+  'demo_scrum_opened',
   'demo_ai_asked',
   'film_played',
   'briefing_built',

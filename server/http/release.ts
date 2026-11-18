@@ -7,8 +7,10 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.18.5',
+  version: '2026.11.18.6',
   notes: [
+    'The open demo has two teams: a Kanban team and a Scrum team, with a switch at the top (or steerloom.app/?demo=1&team=scrum). The Scrum team’s Sprint tab answers its questions with recorded Steerloom AI answers, as the Kanban demo does',
+    'Sprint tab: sprint days are calendar days, like every other number in Steerloom (“day 10 of 14”), and items added mid-sprint say on which day',
     'Steerloom AI chat accepts item keys from every project on the board, as the assistant already reads them',
     'Sprint tab: “What to raise today”, the same wording as the briefing',
     'Sprint tab: the next sprint’s plan sits under the chart of the last sprints, and shows only when the next sprint is planned in Jira',

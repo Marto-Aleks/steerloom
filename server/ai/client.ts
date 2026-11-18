@@ -1146,7 +1146,9 @@ This board runs sprints, and the reader sees a Sprint tab. sprint in the report 
 - Planned means in the sprint by the end of its first day; addedMidSprint items came later. Added work is scope change to name and decide on, not a failure. sprintsSoFar above 1 means the item rolled over from earlier sprints.
 - Points and velocity are the team's own planning tools. finishedPoints per sprint is a range to plan with, never a target, and never compare teams or people with it. When pointsPredictTime.verdict is "no", do not reason as if a small estimate means little work: say that estimates here do not predict time when it matters to the answer. When it is "partly" or "yes", size can explain a slow item.
 - The sprint goal is free text. Judge it by reading which items serve it (their titles and descriptions, with your tools) and say which ones you counted and how sure you are. For a running sprint, say whether the goal is likely met, partly met or not met by the end, from those items' states and chances; for a closed sprint, from whether they finished.
+- planning.items lists what the next sprint holds now, with each item's estimate: choose what to leave out from those items, and read them with your tools when their content matters.
 - Descoping is a team decision with the product owner: offer what to move out and what it frees, never decide it for them.
+- Say how long ago something happened ("2 days ago", "on day 3 of the sprint"); never work out a calendar date from it.
 END_SPRINT
 
 `

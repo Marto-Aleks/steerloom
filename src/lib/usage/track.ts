@@ -10,6 +10,7 @@ export type TrackedStep =
   | 'landing_view'
   | 'demo_opened'
   | 'demo_ai_asked'
+  | 'demo_scrum_opened'
   | 'film_played'
   | 'briefing_built'
   | 'briefing_useful'

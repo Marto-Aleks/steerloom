@@ -7,7 +7,6 @@ import type { AiSprintContext, AiSprintItemState } from './report-context'
  * assistant reads them from the board when it needs them.
  */
 
-const DAY = 86_400_000
 /** Enough for a large sprint; the rest is counted, not listed. */
 const ITEM_LIMIT = 80
 
@@ -23,7 +22,6 @@ const round = (value: number) => Math.round(value * 10) / 10
 
 export function toAiSprintContext(
   briefing: SprintBriefing,
-  now: number,
 ): AiSprintContext | undefined {
   if (briefing.unavailable) return undefined
   const { active, planning, pointsTime, history, unit } = briefing
@@ -37,8 +35,9 @@ export function toAiSprintContext(
             ...(active.sprint.goal ? { goal: active.sprint.goal } : {}),
             day: active.day,
             days: active.days,
+            // Whole days, as the Sprint tab shows them.
             daysLeft: Number.isFinite(end)
-              ? Math.max(0, round((end - now) / DAY))
+              ? Math.max(0, active.days - active.day)
               : 0,
             ...(active.sample
               ? {
@@ -74,6 +73,10 @@ export function toAiSprintContext(
       ? {
           planning: {
             sprint: planning.sprint.name,
+            items: planning.items.slice(0, ITEM_LIMIT).map((item) => ({
+              key: item.key,
+              ...(item.points !== undefined ? { points: item.points } : {}),
+            })),
             planned: planning.planned,
             unestimatedItems: planning.unestimated,
             lastSprints: planning.sprints,

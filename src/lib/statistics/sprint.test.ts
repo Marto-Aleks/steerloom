@@ -12,7 +12,7 @@ import {
   pointsAt,
   spearman,
   sprintsAt,
-  workdays,
+  sprintDay,
 } from './sprint'
 
 const NOW = new Date('2026-11-18T12:00:00.000Z') // a Wednesday
@@ -74,13 +74,16 @@ describe('the forecast’s arithmetic', () => {
     expect(spearman([3, 3, 3], [1, 2, 3])).toBe(0)
   })
 
-  it('counts working days and ordinals', () => {
-    // Monday 9 Nov to Wednesday 18 Nov: 8 working days.
+  it('counts sprint days in calendar days, and ordinals', () => {
+    // Started Monday 9 Nov 09:00; Wednesday 18 Nov noon is day 10.
     expect(
-      workdays(at('2026-11-09T09:00:00Z'), at('2026-11-18T12:00:00Z')),
-    ).toBe(8)
+      sprintDay(at('2026-11-09T09:00:00Z'), at('2026-11-18T12:00:00Z')),
+    ).toBe(10)
     expect(
-      workdays(at('2026-11-14T09:00:00Z'), at('2026-11-15T12:00:00Z')),
+      sprintDay(at('2026-11-09T09:00:00Z'), at('2026-11-09T10:00:00Z')),
+    ).toBe(1)
+    expect(
+      sprintDay(at('2026-11-09T09:00:00Z'), at('2026-11-08T10:00:00Z')),
     ).toBe(0)
     expect([1, 2, 3, 4, 11, 12, 13, 21, 22].map(ordinal)).toEqual([
       '1st',
@@ -102,7 +105,8 @@ describe('the Sprint tab on a fictional Scrum team', () => {
 
   it('answers whether the running sprint lands, with its sample', () => {
     expect(active.sprint.name).toBe('Sprint 24')
-    expect([active.day, active.days]).toEqual([8, 10])
+    // Pinned to today: always day 10 of 14, whatever the weekday.
+    expect([active.day, active.days]).toEqual([10, 14])
     expect(active.sample).toBeGreaterThanOrEqual(20)
     expect(active.likely).toBeLessThan(active.items.length)
     expect(active.atLeast).toBeLessThanOrEqual(active.likely)
@@ -151,7 +155,10 @@ describe('the Sprint tab on a fictional Scrum team', () => {
   it('checks the next sprint’s plan against what the team usually finishes', () => {
     const planning = briefing.planning!
     expect(planning.sprint.name).toBe('Sprint 25')
-    expect(planning.planned).toBe(40)
+    // Planned above what the team finishes, two items not estimated.
+    expect(planning.planned).toBe(52)
+    expect(planning.planned).toBeGreaterThan(planning.high)
+    expect(planning.unestimated).toBe(2)
     expect(planning.low).toBeLessThanOrEqual(planning.usual)
     expect(planning.usual).toBeLessThanOrEqual(planning.high)
     expect(planning.sprints).toBe(5)

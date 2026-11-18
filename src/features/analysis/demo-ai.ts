@@ -10,6 +10,19 @@ import { demoCodeTrail } from '../../lib/workspace/demo-github'
 import { DEMO_FILTERS, demoSnapshot } from '../../lib/workspace/demo'
 import { focusSignalAgentPrompt } from '../../lib/statistics/focus-now'
 import {
+  buildSprintBriefing,
+  sprintDescopePrompt,
+  sprintGoalPrompt,
+  sprintHistoryPrompt,
+  sprintPlanningPrompt,
+  sprintTodayPrompt,
+} from '../../lib/statistics/sprint'
+import {
+  SCRUM_DEMO_FILTERS,
+  scrumDemoCode,
+  scrumDemoSnapshot,
+} from '../../lib/workspace/demo-scrum'
+import {
   activeItemsWithCode,
   codeReview,
   codeTrailGroups,
@@ -52,8 +65,11 @@ export interface DemoAiRecording {
   answers: RecordedAnswer[]
 }
 
+export type DemoTeam = 'kanban' | 'scrum'
+
 /** The demo board as the dashboard computes it, and its AI questions. */
-export function demoAiSetup(now = new Date()) {
+export function demoAiSetup(now = new Date(), team: DemoTeam = 'kanban') {
+  if (team === 'scrum') return scrumAiSetup(now)
   const snapshot = demoSnapshot('demo-product', now)
   const code = demoCodeTrail(snapshot)
   const report = computeReport(snapshot, DEMO_FILTERS)
@@ -130,6 +146,64 @@ export function demoAiSetup(now = new Date()) {
   // Only questions about items: their ages and code read the same every
   // day, while weekly totals move with the day of the week, so a recorded
   // period summary could contradict the screen.
+  return { snapshot, context, questions }
+}
+
+/**
+ * The Scrum team: the Sprint tab's questions, exactly as its buttons send
+ * them. Its sprint is pinned to today (always day 10 of 14), so they read
+ * the same on every day.
+ */
+function scrumAiSetup(now: Date) {
+  const snapshot = scrumDemoSnapshot(now)
+  const code = scrumDemoCode(snapshot)
+  const report = computeReport(snapshot, SCRUM_DEMO_FILTERS)
+  const review = codeReview(report, code.pullRequests, code.branches)
+  const sprint = buildSprintBriefing(snapshot)!
+  const context = dashboardAiContext({
+    snapshot,
+    filters: SCRUM_DEMO_FILTERS,
+    report,
+    review,
+    pullRequests: code.pullRequests,
+    branches: code.branches,
+    sprint,
+  })
+  const active = sprint.active!
+  const questions: DemoAiQuestion[] = [
+    {
+      label: 'What to raise today',
+      question: sprintTodayPrompt(active),
+      starter: true,
+    },
+    {
+      label: 'Will we meet the goal?',
+      question: sprintGoalPrompt(active),
+      starter: true,
+    },
+    {
+      label: 'What to descope',
+      question: sprintDescopePrompt(active, sprint.unit),
+      starter: true,
+    },
+    {
+      label: 'What do the last sprints tell us?',
+      question: sprintHistoryPrompt(sprint.history, sprint.unit),
+      starter: true,
+    },
+    ...(sprint.planning && sprint.planning.planned > sprint.planning.high
+      ? [
+          {
+            label: 'Choose what to leave out',
+            question: sprintPlanningPrompt(sprint.planning, sprint.unit),
+          },
+        ]
+      : []),
+    ...sprint.signals.map((signal) => ({
+      label: signal.title,
+      question: focusSignalAgentPrompt(signal),
+    })),
+  ]
   return { snapshot, context, questions }
 }
 

@@ -11,7 +11,11 @@ import type { BoardReader } from '../board-reader'
  * days ago: the demo board moves with today, so a date in a recorded answer
  * would go stale.
  */
-export function demoBoardReader(snapshot: FlowBoardSnapshot): BoardReader {
+export function demoBoardReader(
+  snapshot: FlowBoardSnapshot,
+  /** Comments and blockers by key; the Kanban demo's by default. */
+  notesByKey: typeof DEMO_ITEM_NOTES = DEMO_ITEM_NOTES,
+): BoardReader {
   const now = Date.parse(snapshot.loadedAt)
   const ago = (iso: string) => {
     const days = Math.round((now - Date.parse(iso)) / 86_400_000)
@@ -29,7 +33,7 @@ export function demoBoardReader(snapshot: FlowBoardSnapshot): BoardReader {
       .filter((transition) => transition.issueId === issue.id)
       .sort((a, b) => a.enteredAt.localeCompare(b.enteredAt))
     const status = columnOf.get(moves.at(-1)?.statusId ?? '') ?? 'Backlog'
-    const notes = DEMO_ITEM_NOTES[issue.key]
+    const notes = notesByKey[issue.key]
     return {
       key: issue.key,
       summary: issue.title ?? issue.key,
@@ -88,9 +92,12 @@ export function demoBoardReader(snapshot: FlowBoardSnapshot): BoardReader {
   }
   return {
     label: 'Jira',
-    keyExample: 'DEMO-36',
-    normaliseKey: (raw) =>
-      /^DEMO-\d+$/i.test(raw.trim()) ? raw.trim().toUpperCase() : null,
+    keyExample: items[0]?.key ?? 'DEMO-36',
+    // Keys of this board only, whatever its project.
+    normaliseKey: (raw) => {
+      const key = raw.trim().toUpperCase()
+      return /^[A-Z][A-Z0-9_]*-\d+$/.test(key) ? key : null
+    },
     items: (keys, detail) =>
       Promise.resolve({
         items: keys.flatMap((key) => {

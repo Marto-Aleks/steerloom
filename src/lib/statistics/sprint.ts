@@ -56,7 +56,8 @@ export interface SprintItemView extends SprintRef {
 
 export interface ActiveSprintView {
   sprint: SprintRecord
-  /** Working day of the sprint (Mon–Fri), and how many it has. */
+  /** Day of the sprint and how many it has, in calendar days like every
+   * other number in Steerloom: day 1 is the day it started. */
   day: number
   days: number
   items: SprintItemView[]
@@ -94,6 +95,8 @@ export interface ClosedSprintView {
 
 export interface PlanningView {
   sprint: SprintRecord
+  /** What the next sprint holds now, with each item's estimate. */
+  items: SprintRef[]
   planned: number
   unestimated: number
   low: number
@@ -264,7 +267,7 @@ export function buildSprintBriefing(
           : sprints >= 2
             ? `${ordinal(sprints)} sprint`
             : added
-              ? `added ${weekday(record, sprint)}`
+              ? `added on day ${dayAdded(record, sprint)}`
               : age !== undefined
                 ? formatDays(age)
                 : undefined
@@ -308,8 +311,8 @@ export function buildSprintBriefing(
       list.reduce((sum, item) => sum + (item.points ?? 0), 0)
     return {
       sprint,
-      day: Math.min(workdays(start, now), workdays(start, end)),
-      days: workdays(start, end),
+      day: Math.min(sprintDay(start, now), sprintDay(start, end)),
+      days: sprintDay(start, end),
       items,
       likely,
       // Never above the headline: several items at 50–69% can make a higher
@@ -351,6 +354,7 @@ export function buildSprintBriefing(
     next && queued.length && done.length >= 3
       ? {
           sprint: next,
+          items: queued.map((id) => ref(id)),
           planned:
             unit === 'points'
               ? queued.reduce(
@@ -717,7 +721,7 @@ function sprintSignals(
       severity: unlikely ? 'warning' : 'info',
       title: `${sprint.name} changed after it started`,
       evidence: [
-        `${planned.length} planned${sprint.startAt ? ` on ${dateLabel(sprint.startAt)}` : ''}.`,
+        `${planned.length} planned when it started.`,
         added.length ? `Added since: ${keyList(added)}.` : '',
         removed.length ? `Removed: ${keyList(removed)}.` : '',
         unlikely
@@ -785,12 +789,12 @@ export function sprintDescopePrompt(
     (item) =>
       `- ${item.key}: ${item.status}${item.chance !== undefined ? `, ${Math.round(item.chance * 100)}% likely by the sprint's end` : ''}${unit === 'points' ? `, ${item.points !== undefined ? `${item.points} points` : 'no estimate'}` : ''}`,
   )
-  return `${active.sprint.name} is on working day ${active.day} of ${active.days}${active.sprint.goal ? `; its goal: "${active.sprint.goal}"` : ''}. ${active.likely} of ${active.items.length} items are likely done by the end. These are unlikely to finish:\n${lines.join('\n')}\n\nHelp me decide what to descope, swarm or finish first now, not at the review. Check each item's history, comments and code, say which protects the sprint goal best, and end with a checkpoint for tomorrow. Never blame anyone.`
+  return `${active.sprint.name} is on day ${active.day} of ${active.days}${active.sprint.goal ? `; its goal: "${active.sprint.goal}"` : ''}. ${active.likely} of ${active.items.length} items are likely done by the end. These are unlikely to finish:\n${lines.join('\n')}\n\nHelp me decide what to descope, swarm or finish first now, not at the review. Check each item's history, comments and code, say which protects the sprint goal best, and end with a checkpoint for tomorrow. Never blame anyone.`
 }
 
 /** What needs raising today in the running sprint. No meeting assumed. */
 export function sprintTodayPrompt(active: ActiveSprintView): string {
-  return `What should we raise today in ${active.sprint.name}, on working day ${active.day} of ${active.days}? Look at the sprint's items at risk, not started, rolled over or added mid-sprint, read the ones that matter with detail, and give at most four points, each with the question for its owner.`
+  return `What should we raise today in ${active.sprint.name}, on day ${active.day} of ${active.days}? Look at the sprint's items at risk, not started, rolled over or added mid-sprint, read the ones that matter with detail, and give at most four points, each with the question for its owner.`
 }
 
 /** The sprint goal, judged from the items that serve it. */
@@ -822,42 +826,22 @@ export function sprintPlanningPrompt(
  * Small helpers.
  * ------------------------------------------------------------------------- */
 
-/** Working days (Mon–Fri) from start to end, both counted. */
-export function workdays(start: number, end: number): number {
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return 0
-  let count = 0
-  const day = new Date(start)
-  day.setUTCHours(0, 0, 0, 0)
-  for (; day.getTime() <= end; day.setUTCDate(day.getUTCDate() + 1)) {
-    const weekday = day.getUTCDay()
-    if (weekday !== 0 && weekday !== 6) count++
-    if (count > 400) break
-  }
-  return count
+/** The sprint day a moment falls on: day 1 starts when the sprint does. */
+export function sprintDay(start: number, at: number): number {
+  if (!Number.isFinite(start) || !Number.isFinite(at) || at < start) return 0
+  return Math.floor((at - start) / DAY) + 1
 }
 
-function weekday(record: SprintItemRecord, sprint: SprintRecord): string {
+/** The sprint day the item joined, when it came after the start. */
+function dayAdded(record: SprintItemRecord, sprint: SprintRecord): number {
   const joined = [...record.sprintChanges]
     .reverse()
     .find(
       (change) =>
         change.to.includes(sprint.id) && !change.from.includes(sprint.id),
     )
-  return joined
-    ? new Date(joined.at).toLocaleDateString('en-US', {
-        weekday: 'short',
-        timeZone: 'UTC',
-      })
-    : 'later'
-}
-
-function dateLabel(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
+  const start = Date.parse(sprint.activatedAt ?? sprint.startAt ?? '')
+  return joined ? Math.max(1, sprintDay(start, Date.parse(joined.at))) : 1
 }
 
 export function ordinal(value: number): string {

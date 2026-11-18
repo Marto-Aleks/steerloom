@@ -176,6 +176,22 @@ function parseItem(value: unknown) {
 function parsePlanning(value: unknown): AiSprintContext['planning'] | null {
   if (!isRecord(value)) return null
   const sprint = text(value.sprint, 80)
+  const items =
+    Array.isArray(value.items) && value.items.length <= ITEM_LIMIT
+      ? value.items.map((item) => {
+          if (!isRecord(item)) return null
+          const points = optional(item.points, count)
+          return typeof item.key === 'string' &&
+            KEY.test(item.key) &&
+            points !== null
+            ? {
+                key: item.key,
+                ...(points !== undefined ? { points } : {}),
+              }
+            : null
+        })
+      : null
+  if (!items || items.some((item) => item === null)) return null
   const numbers = [
     'planned',
     'unestimatedItems',
@@ -189,6 +205,7 @@ function parsePlanning(value: unknown): AiSprintContext['planning'] | null {
     numbers as number[]
   return {
     sprint,
+    items: items as Array<{ key: string; points?: number }>,
     planned: planned!,
     unestimatedItems: unestimatedItems!,
     lastSprints: lastSprints!,

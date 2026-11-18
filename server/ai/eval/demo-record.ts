@@ -5,6 +5,7 @@ import {
   contextFingerprint,
   demoAiSetup,
   type DemoAiRecording,
+  type DemoTeam,
   type RecordedAnswer,
 } from '../../../src/features/analysis/demo-ai'
 import { finishAnswer } from '../answer-card'
@@ -12,6 +13,8 @@ import { runAgent } from '../agent'
 import { AiClient } from '../client'
 import { aiConfigFromKey, DEFAULT_ANTHROPIC_MODEL } from '../workspace-key'
 import { demoBoardReader } from './demo-board'
+import { DEMO_ITEM_NOTES } from '../../../src/lib/workspace/demo'
+import { SCRUM_DEMO_NOTES } from '../../../src/lib/workspace/demo-scrum'
 
 /*
  * Records Steerloom AI's answers to the open demo's questions, on the demo
@@ -25,7 +28,13 @@ import { demoBoardReader } from './demo-board'
  * Uses Steerloom's default Claude model, the one most people will pick.
  */
 
-const OUT = resolve('src/features/analysis/demo-ai-answers.json')
+/** Which demo team: npm run ai:demo-record -- scrum (Kanban by default). */
+const TEAM: DemoTeam = process.argv[2] === 'scrum' ? 'scrum' : 'kanban'
+const OUT = resolve(
+  TEAM === 'scrum'
+    ? 'src/features/analysis/demo-ai-answers-scrum.json'
+    : 'src/features/analysis/demo-ai-answers.json',
+)
 
 function anthropicKey(): string {
   const fromEnv = process.env.ANTHROPIC_API_KEY?.trim()
@@ -52,15 +61,20 @@ async function main() {
     aiConfigFromKey({ provider: 'anthropic', apiKey: anthropicKey(), model }),
   )
   const boardNow = new Date()
-  const { snapshot, context, questions } = demoAiSetup(boardNow)
+  const { snapshot, context, questions } = demoAiSetup(boardNow, TEAM)
   const answers: RecordedAnswer[] = []
-  console.log(`Recording ${questions.length} demo answers with ${model}\n`)
+  console.log(
+    `Recording ${questions.length} ${TEAM} demo answers with ${model}\n`,
+  )
   for (const question of questions) {
     const started = Date.now()
     const trail: RecordedAnswer['trail'] = []
     const result = await runAgent({
       client,
-      reader: demoBoardReader(snapshot),
+      reader: demoBoardReader(
+        snapshot,
+        TEAM === 'scrum' ? SCRUM_DEMO_NOTES : DEMO_ITEM_NOTES,
+      ),
       context,
       messages: [{ role: 'user', content: question.question }],
       boardAllowed: true,

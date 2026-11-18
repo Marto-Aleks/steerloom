@@ -115,10 +115,10 @@ export interface AiSprintContext {
   running?: {
     name: string
     goal?: string
-    /** Working day of the sprint and how many it has. */
+    /** Day of the sprint and how many it has, in calendar days. */
     day: number
     days: number
-    /** Calendar days until the planned end. */
+    /** Whole days until the planned end, as the Sprint tab says. */
     daysLeft: number
     /** Absent when too few items finished in the last 90 days to forecast. */
     forecast?: { likelyDone: number; atLeast85: number; sampleItems: number }
@@ -144,6 +144,8 @@ export interface AiSprintContext {
   /** The next sprint's plan against what the last sprints finished. */
   planning?: {
     sprint: string
+    /** The next sprint's items: keys and estimates, no titles. */
+    items: Array<{ key: string; points?: number }>
     planned: number
     unestimatedItems: number
     lastSprints: number

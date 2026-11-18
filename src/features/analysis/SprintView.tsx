@@ -184,12 +184,13 @@ function SprintHero({
   const share = items.length ? active.likely / items.length : 1
   const status = !forecast ? 'info' : share >= 0.85 ? 'ok' : 'risk'
   const end = sprint.endAt ? new Date(sprint.endAt) : undefined
-  const endsToday = end && end.toDateString() === new Date().toDateString()
+  // Days left, not a weekday: the same on every board and every day.
+  const left = active.days - active.day
   const byWhen = !end
     ? 'by the end'
-    : endsToday
+    : left <= 0
       ? 'by today’s end'
-      : `by ${end.toLocaleDateString('en-US', { weekday: 'long' })}`
+      : `in the ${left} ${left === 1 ? 'day' : 'days'} left`
   const sprintLink = sprintJiraLink(items, sprint.id)
   return (
     <article
@@ -210,7 +211,9 @@ function SprintHero({
         <p className="sprint-hero__when">
           Day {active.day} of {active.days}
           {end
-            ? ` · ends ${end.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
+            ? left > 0
+              ? ` · ${left} ${left === 1 ? 'day' : 'days'} left`
+              : ' · last day'
             : ''}
         </p>
       </div>
@@ -394,7 +397,7 @@ function chipSize(largest: number) {
  * The next sprint's plan, under the chart of the last sprints it is
  * measured against. Shown only when the next sprint has items in Jira.
  */
-function PlanningCheck({
+export function PlanningCheck({
   planning,
   unit,
   onAsk,

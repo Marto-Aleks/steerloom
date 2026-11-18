@@ -407,9 +407,7 @@ export function dashboardAiContext({
   const reportSourceLabel = snapshot.source.projectKey
     ? `${snapshot.source.projectKey} · ${snapshot.source.label}`
     : snapshot.source.label
-  const sprintContext = sprint
-    ? toAiSprintContext(sprint, Date.parse(snapshot.loadedAt))
-    : undefined
+  const sprintContext = sprint ? toAiSprintContext(sprint) : undefined
   const context = buildAiReportContext({
     generatedAt: snapshot.loadedAt,
     sourceLabel: reportSourceLabel,
