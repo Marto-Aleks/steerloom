@@ -1,13 +1,10 @@
 import type {
-  AnalysisFilters,
   FlowBoardSnapshot,
   SprintItemRecord,
   SprintRecord,
 } from '../../types'
-import { collectAgingWork } from './aging-work'
 import { buildJiraFilter, type FocusSignal } from './focus-now'
-import { calculateBoardMetrics, percentile } from './index'
-import { filterBoardSnapshot } from './snapshot-filter'
+import { percentile } from './index'
 
 /*
  * Scrum boards: will the running sprint land, what changed in it, what keeps
@@ -18,15 +15,21 @@ import { filterBoardSnapshot } from './snapshot-filter'
  */
 
 const DAY = 86_400_000
-/** Items added in the first minutes still count as planned. */
-const START_GRACE = 15 * 60_000
+/**
+ * Items in the sprint by the end of its first day count as planned: teams
+ * often start the sprint, then finish planning or close the last one.
+ */
+const PLAN_GRACE = DAY
 /** Finished items the forecast learns from. */
 const SAMPLE_DAYS = 90
 /** A chance at or above this reads "on track". */
 export const LIKELY = 0.7
 const HISTORY_SPRINTS = 5
+/** Finished items with an estimate needed to say whether points predict time. */
+const POINTS_SAMPLE = 15
 
-export type SprintItemState = 'done' | 'track' | 'risk' | 'todo'
+/** open: in progress, when there is too little history to forecast. */
+export type SprintItemState = 'done' | 'track' | 'risk' | 'todo' | 'open'
 
 /** An item as a sprint list shows it: key, title on hover, link. */
 export interface SprintRef {
@@ -63,6 +66,8 @@ export interface ActiveSprintView {
   atLeast: number
   /** Finished items the forecast learned from; 0 means no forecast. */
   sample: number
+  /** Items finished in the last 90 days, forecast or not. */
+  finishedRecently: number
   points?: {
     likely: number
     total: number
@@ -119,13 +124,16 @@ export interface SprintBriefing {
   active?: ActiveSprintView
   history: ClosedSprintView[]
   planning?: PlanningView
+  /** Why there is no planning check, in one line, when there is none. */
+  planningGap?: string
   pointsTime?: PointsTimeView
+  /** Points boards without the check: how many estimated items finished. */
+  pointsTimeGap?: { estimated: number; needed: number }
   signals: FocusSignal[]
 }
 
 export function buildSprintBriefing(
   snapshot: FlowBoardSnapshot,
-  filters: AnalysisFilters,
 ): SprintBriefing | undefined {
   const data = snapshot.sprints
   if (!data) return undefined
@@ -133,7 +141,16 @@ export function buildSprintBriefing(
   if (data.unavailable)
     return { unit, unavailable: data.unavailable, history: [], signals: [] }
   const now = Date.parse(snapshot.loadedAt)
-  const board = boardModel(snapshot, filters)
+  const board = boardModel(snapshot)
+  /** When the plan is read: the first day after the sprint really started. */
+  const planFrom = (sprint: SprintRecord) => {
+    const start = Math.max(
+      Date.parse(sprint.startAt ?? '') || 0,
+      Date.parse(sprint.activatedAt ?? '') || 0,
+    )
+    const end = Date.parse(sprint.completedAt ?? sprint.endAt ?? '') || now
+    return Math.min(start + PLAN_GRACE, end, now)
+  }
   const records = new Map(
     data.items
       .filter((record) => board.issues.has(record.issueId))
@@ -166,7 +183,7 @@ export function buildSprintBriefing(
     .filter((sprint) => sprint.state === 'closed' && sprint.startAt)
     .slice(-HISTORY_SPRINTS)
     .map((sprint): ClosedSprintView => {
-      const start = Date.parse(sprint.startAt!) + START_GRACE
+      const start = planFrom(sprint)
       const end = Date.parse(sprint.completedAt ?? sprint.endAt ?? '') || now
       const planned = membersAt(sprint.id, start)
       const atEnd = membersAt(sprint.id, end)
@@ -209,7 +226,7 @@ export function buildSprintBriefing(
     const current = [...records.values()]
       .filter((record) => record.sprintIds.includes(sprint.id))
       .map((record) => record.issueId)
-    const planned = membersAt(sprint.id, start + START_GRACE)
+    const planned = membersAt(sprint.id, planFrom(sprint))
     const plannedSet = new Set(planned)
     const currentSet = new Set(current)
     const left = Math.max(0, (end - now) / DAY)
@@ -220,25 +237,26 @@ export function buildSprintBriefing(
       const stage = board.stageNow(issueId)
       const sprints = record.sprintIds.filter((id) => !future.has(id)).length
       const added = !plannedSet.has(issueId)
-      const age = board.ages.get(issueId)
+      const age = stage === 'active' ? board.age(issueId, now) : undefined
       const learnFrom = sizedSample(sample, sized, points)
       const chance =
         stage === 'done' || !forecast
           ? undefined
-          : stage === 'after'
-            ? undefined
-            : stage === 'active'
-              ? chanceStarted(learnFrom, age ?? 0, left)
-              : chanceNotStarted(learnFrom, left)
+          : stage === 'active'
+            ? chanceStarted(learnFrom, age ?? 0, left)
+            : chanceNotStarted(learnFrom, left)
+      // Without a forecast nothing is called on track or at risk.
       const state: SprintItemState =
         stage === 'done'
           ? 'done'
-          : stage === 'after' || (chance !== undefined && chance >= LIKELY)
-            ? 'track'
-            : stage === 'todo'
+          : chance === undefined
+            ? stage === 'todo'
               ? 'todo'
-              : chance === undefined
-                ? 'track'
+              : 'open'
+            : chance >= LIKELY
+              ? 'track'
+              : stage === 'todo'
+                ? 'todo'
                 : 'risk'
       const detail =
         stage === 'done'
@@ -266,17 +284,19 @@ export function buildSprintBriefing(
     const order: Record<SprintItemState, number> = {
       done: 0,
       track: 1,
-      risk: 2,
-      todo: 3,
+      open: 2,
+      risk: 3,
+      todo: 4,
     }
     items.sort(
       (a, b) =>
         order[a.state] - order[b.state] || (b.chance ?? 1) - (a.chance ?? 1),
     )
     const done = items.filter((item) => item.state === 'done').length
-    const likely = items.filter(
-      (item) => item.state === 'done' || item.state === 'track',
-    ).length
+    const likely = forecast
+      ? items.filter((item) => item.state === 'done' || item.state === 'track')
+          .length
+      : done
     const open = items.filter((item) => item.state !== 'done')
     const atLeast =
       done +
@@ -296,6 +316,7 @@ export function buildSprintBriefing(
       // count 85% safe, but the card must not read "3 likely, at least 4".
       atLeast: forecast ? Math.min(atLeast, likely) : done,
       sample: forecast ? sample.length : 0,
+      finishedRecently: sample.length,
       ...(unit === 'points'
         ? {
             points: {
@@ -348,13 +369,26 @@ export function buildSprintBriefing(
           sprints: done.length,
         }
       : undefined
+  const planningGap = planning
+    ? undefined
+    : !next
+      ? 'Create the next sprint in Jira to check its plan against what the team usually finishes.'
+      : !queued.length
+        ? `${next.name} has no items yet.`
+        : `This compares with the last 3 finished sprints; ${done.length ? `${done.length} found so far` : 'none found yet'}.`
+  const estimated = sample.filter(
+    (point) => typeof point.points === 'number',
+  ).length
 
   return {
     unit,
     ...(active ? { active } : {}),
     history,
-    ...(planning ? { planning } : {}),
+    ...(planning ? { planning } : { planningGap }),
     ...(pointsTime ? { pointsTime } : {}),
+    ...(unit === 'points' && !pointsTime
+      ? { pointsTimeGap: { estimated, needed: POINTS_SAMPLE } }
+      : {}),
     signals: active ? sprintSignals(active, board.p85(sample)) : [],
   }
 }
@@ -363,7 +397,7 @@ export function buildSprintBriefing(
  * The board: columns, finishing, ages and the finished sample.
  * ------------------------------------------------------------------------- */
 
-function boardModel(snapshot: FlowBoardSnapshot, filters: AnalysisFilters) {
+function boardModel(snapshot: FlowBoardSnapshot) {
   const columns = snapshot.board.columns
   const columnIndex = new Map<string, number>()
   columns.forEach((column, index) =>
@@ -372,13 +406,6 @@ function boardModel(snapshot: FlowBoardSnapshot, filters: AnalysisFilters) {
   const category = new Map(
     snapshot.board.statuses.map((status) => [status.id, status.category]),
   )
-  const selected = columns
-    .map((column, index) =>
-      filters.selectedColumnIds.includes(column.id) ? index : -1,
-    )
-    .filter((index) => index >= 0)
-  const firstMeasured = Math.min(...selected)
-  const lastMeasured = Math.max(...selected)
   const last = columns.length - 1
   // Parts and containers of other work are not sprint items.
   const issues = new Map(
@@ -401,32 +428,43 @@ function boardModel(snapshot: FlowBoardSnapshot, filters: AnalysisFilters) {
       .get(issueId)
       ?.filter((move) => move.at <= at)
       .at(-1)?.statusId
+  // Sprint terms, as Jira's sprint report: done is the board's last column,
+  // not started is its first; the flow briefing's measured stages do not
+  // matter here.
   const isDone = (statusId: string | undefined) =>
     statusId !== undefined &&
     (columnIndex.has(statusId)
       ? columnIndex.get(statusId) === last
       : category.get(statusId) === 'done')
-  const ages = new Map(
-    collectAgingWork(snapshot, filters.selectedColumnIds).map((item) => [
-      item.id,
-      item.ageInSelectedColumns,
-    ]),
-  )
+  const isWaiting = (statusId: string | undefined) =>
+    statusId === undefined ||
+    (columnIndex.has(statusId)
+      ? columnIndex.get(statusId) === 0
+      : category.get(statusId) === 'todo')
+  /** When work first started: the first move out of the first column. */
+  const startedAt = (issueId: string) =>
+    moves
+      .get(issueId)
+      ?.find((move) => !isWaiting(move.statusId) && !isDone(move.statusId))?.at
+  /** When it reached the last column for good. */
+  const finishedAt = (issueId: string) => {
+    const list = moves.get(issueId) ?? []
+    if (!isDone(list.at(-1)?.statusId)) return undefined
+    let index = list.length - 1
+    while (index > 0 && isDone(list[index - 1]!.statusId)) index--
+    return list[index]!.at
+  }
   return {
     issues,
-    ages,
     doneAt: (issueId: string, at: number) => isDone(statusAt(issueId, at)),
-    /** todo before the measured stages, done in the last column. */
-    stageNow(issueId: string): 'todo' | 'active' | 'after' | 'done' {
+    stageNow(issueId: string): 'todo' | 'active' | 'done' {
       const statusId = moves.get(issueId)?.at(-1)?.statusId
-      if (isDone(statusId)) return 'done'
-      const index =
-        statusId === undefined ? undefined : columnIndex.get(statusId)
-      if (index === undefined)
-        return category.get(statusId ?? '') === 'todo' ? 'todo' : 'active'
-      if (Number.isFinite(firstMeasured) && index < firstMeasured) return 'todo'
-      if (Number.isFinite(lastMeasured) && index > lastMeasured) return 'after'
-      return 'active'
+      return isDone(statusId) ? 'done' : isWaiting(statusId) ? 'todo' : 'active'
+    },
+    /** Days since work started, for items in progress. */
+    age(issueId: string, at: number) {
+      const start = startedAt(issueId)
+      return start === undefined ? undefined : Math.max(0, (at - start) / DAY)
     },
     columnName(issueId: string) {
       const statusId = moves.get(issueId)?.at(-1)?.statusId
@@ -434,20 +472,15 @@ function boardModel(snapshot: FlowBoardSnapshot, filters: AnalysisFilters) {
         statusId === undefined ? undefined : columnIndex.get(statusId)
       return index === undefined ? 'Off the board' : columns[index]!.name
     },
-    /** Finished items of the last 90 days: cycle time and key. */
-    sample(at: number) {
-      const recent = filterBoardSnapshot(
-        snapshot,
-        { ...filters, windowDays: SAMPLE_DAYS },
-        new Date(at),
-      )
-      return (
-        calculateBoardMetrics(recent, filters.selectedColumnIds)?.cycleTimes ??
-        []
-      ).map((point): Sample[number] => ({
-        key: point.item,
-        days: point.cycleTime,
-      }))
+    /** Items finished in the last 90 days: days from start to done. */
+    sample(at: number): Sample {
+      return [...issues.values()].flatMap((issue) => {
+        const end = finishedAt(issue.id)
+        const start = startedAt(issue.id)
+        if (end === undefined || start === undefined || end < start) return []
+        if (end > at || end < at - SAMPLE_DAYS * DAY) return []
+        return [{ key: issue.key, days: (end - start) / DAY }]
+      })
     },
     p85: (sample: Array<{ days: number }>) =>
       sample.length
@@ -459,7 +492,7 @@ function boardModel(snapshot: FlowBoardSnapshot, filters: AnalysisFilters) {
   }
 }
 
-/** A finished item: its key, cycle time, and estimate once known. */
+/** A finished item: its key, days from start to done, and estimate once known. */
 type Sample = Array<{ key: string; days: number; points?: number | null }>
 
 /* ---------------------------------------------------------------------------
@@ -575,7 +608,7 @@ function pointsTimeView(
     (point): point is { key: string; days: number; points: number } =>
       typeof point.points === 'number',
   )
-  if (estimated.length < 15) return undefined
+  if (estimated.length < POINTS_SAMPLE) return undefined
   const rho = spearman(
     estimated.map((point) => point.points),
     estimated.map((point) => point.days),

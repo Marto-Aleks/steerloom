@@ -39,6 +39,7 @@ function sprint(value: unknown): SprintRecord | undefined {
     ...(time(raw.startAt) ? { startAt: time(raw.startAt) } : {}),
     ...(time(raw.endAt) ? { endAt: time(raw.endAt) } : {}),
     ...(time(raw.completedAt) ? { completedAt: time(raw.completedAt) } : {}),
+    ...(time(raw.activatedAt) ? { activatedAt: time(raw.activatedAt) } : {}),
     ...(text(raw.goal) ? { goal: text(raw.goal) } : {}),
   }
 }

@@ -39,9 +39,11 @@ const SprintHistoryChart = lazy(() => import('./SprintHistoryChart'))
 const stateLabel: Record<SprintItemState, string> = {
   done: 'done',
   track: 'on track',
+  open: 'in progress',
   risk: 'at risk',
   todo: 'not started',
 }
+const STATES = ['done', 'track', 'open', 'risk', 'todo'] as const
 
 export function SprintView({
   briefing,
@@ -61,20 +63,42 @@ export function SprintView({
         have, and nothing is duplicated.
       </StatusMessage>
     )
-  const { active, planning, pointsTime, history, unit } = briefing
+  const {
+    active,
+    planning,
+    planningGap,
+    pointsTime,
+    pointsTimeGap,
+    history,
+    unit,
+  } = briefing
   // Beside the forecast: the code behind it, the next plan, and whether
   // points predict time, so the column ends with the forecast.
   const side = [
     code && <Fragment key="code">{code}</Fragment>,
-    planning && (
+    planning ? (
       <PlanningCheck
         key="planning"
         planning={planning}
         unit={unit}
         onAsk={onAsk}
       />
-    ),
-    pointsTime && <PointsTime key="points" view={pointsTime} />,
+    ) : planningGap ? (
+      <NotYet
+        key="planning"
+        title="Planning the next sprint"
+        why={planningGap}
+      />
+    ) : null,
+    pointsTime ? (
+      <PointsTime key="points" view={pointsTime} />
+    ) : pointsTimeGap ? (
+      <NotYet
+        key="points"
+        title="Do your points predict time?"
+        why={`${pointsTimeGap.estimated} finished ${pointsTimeGap.estimated === 1 ? 'item had' : 'items had'} an estimate in the last 90 days; this needs ${pointsTimeGap.needed}.`}
+      />
+    ) : null,
   ].filter(Boolean)
   return (
     <div className="sprint-view">
@@ -125,11 +149,14 @@ function SprintHero({
     (item) => item.state === 'risk' || item.state === 'todo',
   )
   const [showAll, setShowAll] = useState(false)
-  const listed = showAll
-    ? items.filter((item) => item.state !== 'done')
-    : unlikely
+  const forecast = active.sample > 0
+  // Without a forecast, list what is still open: nothing is called late.
+  const listed =
+    showAll || !forecast
+      ? items.filter((item) => item.state !== 'done')
+      : unlikely
   const share = items.length ? active.likely / items.length : 1
-  const status = share >= 0.85 ? 'ok' : 'risk'
+  const status = !forecast ? 'info' : share >= 0.85 ? 'ok' : 'risk'
   const end = sprint.endAt ? new Date(sprint.endAt) : undefined
   const endsToday = end && end.toDateString() === new Date().toDateString()
   const byWhen = !end
@@ -148,7 +175,11 @@ function SprintHero({
       <div className="hero-signal__head">
         <StatusSpot status={status} />
         <p className="hero-signal__status">
-          {status === 'ok' ? 'On track' : 'At risk'}
+          {status === 'info'
+            ? 'Sprint so far'
+            : status === 'ok'
+              ? 'On track'
+              : 'At risk'}
         </p>
         <p className="sprint-hero__when">
           Day {active.day} of {active.days}
@@ -161,13 +192,13 @@ function SprintHero({
         <span className="hero-signal__number">{active.likely}</span>
         <span className="hero-signal__unit">
           of {items.length} sprint {items.length === 1 ? 'item' : 'items'}{' '}
-          likely done {byWhen}
+          {forecast ? `likely done ${byWhen}` : 'done'}
         </span>
       </h2>
       <p className="sprint-hero__basis">
         {active.sample
           ? `85% confident of at least ${active.atLeast} · from ${active.sample} items finished in the last 90 days`
-          : 'Too few finished items to forecast yet: showing where each item stands.'}
+          : `No forecast yet: ${active.finishedRecently} ${active.finishedRecently === 1 ? 'item' : 'items'} finished in the last 90 days, and it needs 5.`}
       </p>
       {sprint.goal && (
         <p className="sprint-hero__goal">
@@ -179,8 +210,8 @@ function SprintHero({
           <strong>
             {formatNumber(points.likely)} of {formatNumber(points.total)} points
           </strong>{' '}
-          likely.
-          {points.atRisk / points.total >= 0.5
+          {forecast ? 'likely' : 'done'}.
+          {forecast && points.atRisk / points.total >= 0.5
             ? ' Most points sit in the items at risk.'
             : ''}
           {points.unestimated
@@ -192,22 +223,20 @@ function SprintHero({
       <div
         className="sprint-hero__strip"
         role="img"
-        aria-label={(['done', 'track', 'risk', 'todo'] as const)
-          .map((state) => `${count(state)} ${stateLabel[state]}`)
-          .join(', ')}
+        aria-label={STATES.map(
+          (state) => `${count(state)} ${stateLabel[state]}`,
+        ).join(', ')}
       >
         {items.map((item) => (
           <span key={item.key} data-state={item.state} title={item.key} />
         ))}
       </div>
       <ul className="sprint-hero__legend">
-        {(['done', 'track', 'risk', 'todo'] as const)
-          .filter((state) => count(state))
-          .map((state) => (
-            <li key={state} data-state={state}>
-              <strong>{count(state)}</strong> {stateLabel[state]}
-            </li>
-          ))}
+        {STATES.filter((state) => count(state)).map((state) => (
+          <li key={state} data-state={state}>
+            <strong>{count(state)}</strong> {stateLabel[state]}
+          </li>
+        ))}
       </ul>
       {listed.length > 0 ? (
         <ul
@@ -258,7 +287,11 @@ function SprintHero({
           ))}
         </ul>
       ) : (
-        <p className="sprint-hero__basis">Everything still open is on track.</p>
+        <p className="sprint-hero__basis">
+          {forecast
+            ? 'Everything still open is on track.'
+            : 'Everything in the sprint is done.'}
+        </p>
       )}
       <div className="hero-signal__actions">
         {unlikely.length > 0 && (
@@ -272,7 +305,7 @@ function SprintHero({
             <span aria-hidden="true">→</span>
           </button>
         )}
-        {items.some((item) => item.state === 'track') && (
+        {forecast && items.some((item) => item.state === 'track') && (
           <button
             type="button"
             className="briefing-link"
@@ -443,6 +476,19 @@ function PointsTime({ view }: { view: PointsTimeView }) {
         <span>{scale / 2}</span>
         <span>{scale} days</span>
       </div>
+    </section>
+  )
+}
+
+/** A card that cannot say anything yet, and says why in one line. */
+function NotYet({ title, why }: { title: string; why: string }) {
+  return (
+    <section className="work-stages sprint-not-yet sl-rise">
+      <div className="work-stages__header">
+        <h2 className="work-stages__title">{title}</h2>
+        <span className="work-stages__total">not yet</span>
+      </div>
+      <p className="code-review__sub">{why}</p>
     </section>
   )
 }

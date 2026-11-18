@@ -378,7 +378,7 @@ export class JiraClient {
           signal,
         ),
         this.get<JiraStatusRecord[]>('/rest/api/2/status', signal),
-        this.getBoardKeysWithinLimit(projectKey, boardId, signal, onProgress),
+        this.getBoardKeysWithinLimit(boardId, signal, onProgress),
         sprintBoard
           ? this.sprintSetup(boardId, selectedBoard.type === 'scrum', signal)
           : undefined,
@@ -416,11 +416,9 @@ export class JiraClient {
       statusLookup,
       boardId,
     )
-    const { issues, changes } = normaliseIssues(
-      issueResponses,
-      statusLookup,
-      projectKey,
-    )
+    // Everything on the board, whichever project it belongs to: a board's
+    // filter may span projects, and its sprints do too.
+    const { issues, changes } = normaliseIssues(issueResponses, statusLookup)
     const linkedIssues = issues.map((issue) => ({
       ...issue,
       browseUrl: `${this.config.siteUrl ?? this.root}/browse/${encodeURIComponent(issue.key)}`,
@@ -522,14 +520,12 @@ export class JiraClient {
   }
 
   private async getBoardKeysWithinLimit(
-    projectKey: string,
     boardId: string,
     signal?: AbortSignal,
     onProgress?: ProgressReporter,
   ): Promise<{ keys: string[]; recentOnly: boolean }> {
     try {
       const keys = await this.getBoardIssueKeys(
-        projectKey,
         boardId,
         signal,
         undefined,
@@ -542,7 +538,6 @@ export class JiraClient {
     }
     onProgress?.({ ...BOARD_PROGRESS.items, detail: LARGE_BOARD_DETAIL })
     const keys = await this.getBoardIssueKeys(
-      projectKey,
       boardId,
       signal,
       RECENT_HISTORY_JQL,
@@ -741,7 +736,6 @@ export class JiraClient {
   }
 
   private async getBoardIssueKeys(
-    projectKey: string,
     boardId: string,
     signal?: AbortSignal,
     restriction?: string,
@@ -756,9 +750,10 @@ export class JiraClient {
 
     for (let pages = 0; ; pages++) {
       if (pages >= MAX_PAGES) throw tooManyPages()
-      const jql = `project = "${escapeJql(projectKey)}"${restriction ? ` AND ${restriction}` : ''}`
+      // The board's own filter decides what is on it.
+      const jql = restriction ? `jql=${encodeURIComponent(restriction)}&` : ''
       const page = await this.get<JiraIssuePage>(
-        `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/issue?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=100&fields=issuetype,created,status`,
+        `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/issue?${jql}startAt=${startAt}&maxResults=100&fields=issuetype,created,status`,
         signal,
         maxKeys,
       )

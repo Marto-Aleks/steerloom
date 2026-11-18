@@ -113,6 +113,8 @@ export interface SprintRecord {
   endAt?: string
   /** When the sprint was actually closed. */
   completedAt?: string
+  /** When someone pressed Start, which can be after the start date set. */
+  activatedAt?: string
   goal?: string
 }
 

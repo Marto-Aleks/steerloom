@@ -204,8 +204,8 @@ export function FlowAnalysis({
   )
   // Scrum boards open on the Sprint tab; the briefing is one click away.
   const sprintBriefing = useMemo(
-    () => buildSprintBriefing(snapshot, filters),
-    [snapshot, filters],
+    () => buildSprintBriefing(snapshot),
+    [snapshot],
   )
   const [tab, setTab] = useState<'sprint' | 'briefing'>('sprint')
   const sprintTab = sprintBriefing !== undefined && tab === 'sprint'

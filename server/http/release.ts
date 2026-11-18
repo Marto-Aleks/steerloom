@@ -7,8 +7,12 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.18',
+  version: '2026.11.18.2',
   notes: [
+    'Boards that show work from several Jira projects now load all of it, not only the connected project’s items',
+    'Sprint tab: items added on a sprint’s first day count as planned, and the plan is read from when the sprint was really started',
+    'Sprint tab: the forecast learns from items that went from started to done, whatever the briefing’s measured stages; with too little history it shows what is done instead of calling open work on track',
+    'Sprint tab: the planning check and “Do your points predict time?” always show on boards that estimate in points, and say what they still need when there is not enough to go on yet',
     'Scrum boards open on a Sprint tab: how many sprint items are likely done by the end, each open item’s chance, and the code behind them from GitHub. Kanban boards keep the flow briefing; it stays one click away on Scrum boards too',
     'Sprint decisions: work added or removed after the sprint started, and items that keep rolling into the next sprint',
     'Planning check: the next sprint’s points against what the team finished in its last sprints, and whether the board’s story points actually predict how long work takes',

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { FlowBoardSnapshot, SprintItemRecord } from '../../types'
 import { readSprintData } from '../data-source/sprint-data'
-import { scrumDemoSnapshot, SCRUM_DEMO_FILTERS } from '../workspace/demo-scrum'
-import { demoSnapshot, DEMO_FILTERS } from '../workspace/demo'
+import { scrumDemoSnapshot } from '../workspace/demo-scrum'
+import { demoSnapshot } from '../workspace/demo'
 import {
   buildSprintBriefing,
   chanceNotStarted,
@@ -97,10 +97,7 @@ describe('the forecast’s arithmetic', () => {
 })
 
 describe('the Sprint tab on a fictional Scrum team', () => {
-  const briefing = buildSprintBriefing(
-    scrumDemoSnapshot(NOW),
-    SCRUM_DEMO_FILTERS,
-  )!
+  const briefing = buildSprintBriefing(scrumDemoSnapshot(NOW))!
   const active = briefing.active!
 
   it('answers whether the running sprint lands, with its sample', () => {
@@ -177,11 +174,138 @@ describe('the Sprint tab on a fictional Scrum team', () => {
   })
 })
 
+describe('real boards: planning day, late start, little history', () => {
+  const HOUR = 3_600_000
+  const withActive = (
+    change: (
+      snapshot: FlowBoardSnapshot,
+      active: NonNullable<FlowBoardSnapshot['sprints']>['sprints'][number],
+    ) => FlowBoardSnapshot,
+  ) => {
+    const snapshot = scrumDemoSnapshot(NOW)
+    const active = snapshot.sprints!.sprints.find((s) => s.state === 'active')!
+    return buildSprintBriefing(change(snapshot, active))!.active!
+  }
+
+  it('counts items added on the sprint’s first day as planned', () => {
+    const before = buildSprintBriefing(scrumDemoSnapshot(NOW))!.active!
+    const active = withActive((snapshot, sprint) => {
+      // Everything joins three hours after the start, as when a team
+      // presses Start and then drags the plan in.
+      const joined = new Date(Date.parse(sprint.startAt!) + 3 * HOUR)
+      const data = snapshot.sprints!
+      return {
+        ...snapshot,
+        sprints: {
+          ...data,
+          items: data.items.map((item) =>
+            item.sprintIds.includes(sprint.id) &&
+            item.sprintChanges.at(-1)?.to.includes(sprint.id) &&
+            !item.sprintChanges.at(-1)?.from.includes(sprint.id) &&
+            Date.parse(item.sprintChanges.at(-1)!.at) <
+              Date.parse(sprint.startAt!)
+              ? {
+                  ...item,
+                  sprintChanges: [
+                    ...item.sprintChanges.slice(0, -1),
+                    { ...item.sprintChanges.at(-1)!, at: joined.toISOString() },
+                  ],
+                }
+              : item,
+          ),
+        },
+      }
+    })
+    expect(active.planned.length).toBe(before.planned.length)
+    expect(active.added.length).toBe(before.added.length)
+  })
+
+  it('reads the plan from when Start was pressed, if later than the start date', () => {
+    const active = withActive((snapshot, sprint) => ({
+      ...snapshot,
+      sprints: {
+        ...snapshot.sprints!,
+        sprints: snapshot.sprints!.sprints.map((s) =>
+          s.id === sprint.id
+            ? {
+                ...s,
+                // Started two days late: the items added on day 2 were
+                // there when the team pressed Start.
+                activatedAt: new Date(
+                  Date.parse(sprint.startAt!) + 2 * 24 * HOUR,
+                ).toISOString(),
+              }
+            : s,
+        ),
+      },
+    }))
+    expect(active.added.length).toBeLessThan(3)
+  })
+
+  it('says how much is done, not what is likely, without enough history', () => {
+    const active = withActive((snapshot) => {
+      // Only the running sprint's work has ever finished.
+      const running = new Set(
+        snapshot
+          .sprints!.items.filter((item) => item.sprintIds.includes('124'))
+          .map((item) => item.issueId),
+      )
+      return {
+        ...snapshot,
+        transitions: snapshot.transitions.filter(
+          (t) => t.statusId !== 'done' || running.has(t.issueId),
+        ),
+      }
+    })
+    expect(active.sample).toBe(0)
+    expect(active.finishedRecently).toBeLessThan(5)
+    const states = new Set(active.items.map((item) => item.state))
+    expect(states.has('track')).toBe(false)
+    expect(states.has('risk')).toBe(false)
+    const done = active.items.filter((item) => item.state === 'done').length
+    expect(active.likely).toBe(done)
+    expect(active.atLeast).toBe(done)
+  })
+})
+
+describe('cards that cannot say anything yet say why', () => {
+  it('explains a missing planning check and points check', () => {
+    const snapshot = scrumDemoSnapshot(NOW)
+    const data = snapshot.sprints!
+    // No next sprint in Jira, and estimates on only a few items.
+    const kept = data.sprints.filter((sprint) => sprint.state !== 'future')
+    const items = data.items.map((item, index) =>
+      index % 6 ? { ...item, points: undefined } : item,
+    )
+    const briefing = buildSprintBriefing({
+      ...snapshot,
+      sprints: { ...data, sprints: kept, items },
+    })!
+    expect(briefing.planning).toBeUndefined()
+    expect(briefing.planningGap).toMatch(/Create the next sprint in Jira/)
+    expect(briefing.pointsTime).toBeUndefined()
+    expect(briefing.pointsTimeGap!.estimated).toBeLessThan(15)
+    expect(briefing.pointsTimeGap!.needed).toBe(15)
+  })
+
+  it('names an empty next sprint', () => {
+    const snapshot = scrumDemoSnapshot(NOW)
+    const data = snapshot.sprints!
+    const next = data.sprints.find((sprint) => sprint.state === 'future')!
+    const items = data.items.map((item) => ({
+      ...item,
+      sprintIds: item.sprintIds.filter((id) => id !== next.id),
+    }))
+    expect(
+      buildSprintBriefing({ ...snapshot, sprints: { ...data, items } })!
+        .planningGap,
+    ).toBe('Sprint 25 has no items yet.')
+  })
+})
+
 describe('boards without sprints', () => {
   it('leave Kanban boards to the flow briefing', () => {
-    expect(buildSprintBriefing(demoSnapshot('demo', NOW), DEMO_FILTERS)).toBe(
-      undefined,
-    )
+    expect(buildSprintBriefing(demoSnapshot('demo', NOW))).toBe(undefined)
   })
 
   it('say so when the connection may not read sprints', () => {
@@ -194,7 +318,7 @@ describe('boards without sprints', () => {
         unavailable: 'permission',
       },
     }
-    expect(buildSprintBriefing(snapshot, DEMO_FILTERS)).toMatchObject({
+    expect(buildSprintBriefing(snapshot)).toMatchObject({
       unavailable: 'permission',
       history: [],
       signals: [],

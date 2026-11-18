@@ -21,6 +21,7 @@ export interface JiraSprintResponse {
   startDate?: string
   endDate?: string
   completeDate?: string
+  activatedDate?: string
   goal?: string
 }
 
@@ -125,6 +126,9 @@ export function keptSprints(values: JiraSprintResponse[]): SprintRecord[] {
           : {}),
         ...(isoOrUndefined(value.completeDate)
           ? { completedAt: isoOrUndefined(value.completeDate) }
+          : {}),
+        ...(isoOrUndefined(value.activatedDate)
+          ? { activatedAt: isoOrUndefined(value.activatedDate) }
           : {}),
         ...(value.goal?.trim()
           ? { goal: value.goal.trim().slice(0, 300) }
