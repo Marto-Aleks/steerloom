@@ -13,7 +13,7 @@ import {
   StatusMessage,
 } from '../../components/ui'
 import { buildSprintBriefing } from '../../lib/statistics/sprint'
-import { SprintView } from './SprintView'
+import { NotYet, SprintView } from './SprintView'
 import {
   activeItemsWithCode,
   codeReview,
@@ -457,7 +457,16 @@ export function FlowAnalysis({
             briefing={sprintBriefing}
             onAsk={requestAiDraft}
             code={
-              sprintCode ? (
+              sprintCode &&
+              sprintCode.groups.every(
+                (group) => group.id === 'nocode' || !group.items.length,
+              ) ? (
+                <NotYet
+                  title={`Code behind ${sprintName ?? 'the sprint'}`}
+                  tag="from GitHub"
+                  why={`No branch or pull request in the connected repositories names ${sprintName ? `${sprintName}’s` : 'these'} items.`}
+                />
+              ) : sprintCode ? (
                 <CodeReviewPanel
                   title={`Code behind ${sprintName ?? 'the sprint'}`}
                   stage="the sprint"

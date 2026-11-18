@@ -242,6 +242,28 @@ describe('real boards: planning day, late start, little history', () => {
     expect(active.added.length).toBeLessThan(3)
   })
 
+  it('ages work from its latest pick-up, not a start months before', () => {
+    const snapshot = scrumDemoSnapshot(NOW)
+    const before = buildSprintBriefing(snapshot)!.active!
+    const item = before.items.find((i) => i.ageDays !== undefined)!
+    const issueId = snapshot.issues.find((i) => i.key === item.key)!.id
+    const ago = (days: number) =>
+      new Date(NOW.getTime() - days * 24 * HOUR).toISOString()
+    // Started 60 days ago, back to the backlog 50 days ago, then picked up
+    // again where the fixture has it.
+    const active = buildSprintBriefing({
+      ...snapshot,
+      transitions: [
+        { issueId, statusId: 'progress', enteredAt: ago(60) },
+        { issueId, statusId: 'todo', enteredAt: ago(50) },
+        ...snapshot.transitions,
+      ],
+    })!.active!
+    expect(active.items.find((i) => i.key === item.key)!.ageDays).toBeCloseTo(
+      item.ageDays!,
+    )
+  })
+
   it('says how much is done, not what is likely, without enough history', () => {
     const active = withActive((snapshot) => {
       // Only the running sprint's work has ever finished.

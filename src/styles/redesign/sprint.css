@@ -33,120 +33,6 @@
   font-size: var(--text-caption);
 }
 
-.sprint-hero__strip {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  gap: 4px;
-  height: 14px;
-}
-
-.sprint-hero__strip span,
-.sprint-hero__legend li::before {
-  border-radius: var(--radius-pill);
-  background: var(--state-fill);
-  box-shadow: inset 0 0 0 1.5px var(--state-edge, transparent);
-}
-
-.sprint-hero [data-state='done'] {
-  --state-fill: var(--status-ok-line);
-}
-
-.sprint-hero [data-state='track'] {
-  --state-fill: var(--chart-primary);
-}
-
-.sprint-hero [data-state='open'] {
-  --state-fill: color-mix(in srgb, var(--chart-primary) 35%, transparent);
-}
-
-.sprint-hero [data-state='risk'] {
-  --state-fill: var(--chart-alert);
-}
-
-.sprint-hero [data-state='todo'] {
-  --state-fill: transparent;
-  --state-edge: var(--chart-alert);
-}
-
-.sprint-hero__legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  margin: 0;
-  padding: 0;
-  color: var(--text-secondary);
-  font-size: var(--text-caption);
-  list-style: none;
-}
-
-.sprint-hero__legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.sprint-hero__legend li::before {
-  width: 10px;
-  height: 10px;
-  content: '';
-}
-
-.sprint-hero__legend strong {
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.sprint-hero__items {
-  display: grid;
-  gap: var(--space-3);
-  margin: var(--space-1) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.sprint-hero__items li {
-  display: grid;
-  grid-template-columns: minmax(5.5rem, 10rem) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.sprint-hero__bar {
-  position: relative;
-  display: block;
-  height: 12px;
-  border-radius: var(--radius-pill);
-  background: var(--separator-soft);
-}
-
-.sprint-hero__fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: block;
-  border-radius: inherit;
-  background: var(--chart-alert);
-}
-
-.sprint-hero__chance {
-  display: grid;
-  gap: 2px;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.sprint-hero__chance strong {
-  color: var(--tone-ink);
-  font-family: var(--font-display);
-  font-weight: var(--font-weight-bold);
-  font-variant-numeric: tabular-nums;
-}
-
-.sprint-hero__chance small {
-  color: var(--text-tertiary);
-  font-size: var(--text-caption);
-}
-
 /* Last sprints chart: the legend's colours match its stacked bars. */
 .sprint-history-chart .chart-legend {
   flex-wrap: wrap;
@@ -171,13 +57,24 @@
     margin-left: 0;
   }
 
-  .sprint-hero__items li {
-    grid-template-columns: minmax(0, 1fr) auto;
+  /* Phones have one column: the list shows in full instead of scrolling. */
+  .sprint-hero__list {
+    max-height: none;
   }
 
-  .sprint-hero__bar {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  /* Phones: each item's details sit under its key, one row per item. */
+  .sprint-hero__list .code-review__items li {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 2px;
+  }
+
+  .sprint-hero__list .code-review__items li > span:last-child {
+    grid-column: 2;
+  }
+
+  /* Too narrow for a middle tick: 0 and the end are enough. */
+  .points-time__axis span:nth-child(2) {
+    display: none;
   }
 }
 
@@ -344,4 +241,50 @@
 .points-time__axis span:last-child {
   right: 0;
   transform: none;
+}
+
+/* Forecast card groups: the code card's chips, coloured by sprint state. */
+.sprint-hero__groups {
+  margin-top: var(--space-1);
+}
+
+[data-group='sprint-done'] .code-review__chip {
+  background: var(--status-ok-line);
+}
+
+[data-group='sprint-track'] .code-review__chip {
+  background: var(--chart-primary);
+}
+
+[data-group='sprint-open'] .code-review__chip {
+  background: color-mix(in srgb, var(--chart-primary) 35%, transparent);
+}
+
+[data-group='sprint-risk'] .code-review__chip {
+  background: var(--chart-alert);
+}
+
+[data-group='sprint-todo'] .code-review__chip {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--chart-alert);
+}
+
+/* The list under the groups: at risk and not started unless a group is chosen. */
+.sprint-hero__list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sprint-hero__list-title {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* The usual mark is labelled above the bar, the plan below: never on top of
+   each other when they are close. */
+.planning-check__usual small {
+  top: auto;
+  bottom: calc(100% + 4px);
 }

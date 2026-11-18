@@ -7,8 +7,11 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.18.2',
+  version: '2026.11.18.3',
   notes: [
+    'Sprint tab: the forecast card groups items like the code card, one chip each: at risk, not started, in progress, on track, done. Items at risk and not started are listed under it; choose a group to list its items instead',
+    'Sprint tab: work that went back to the backlog is aged from when it was picked up again, so ages and the forecast are not stretched by an old start',
+    'Sprint tab: “Do your points predict time?” scales to what most items take, and the code card says so plainly when no branch or pull request names the sprint’s items',
     'Boards that show work from several Jira projects now load all of it, not only the connected project’s items',
     'Sprint tab: items added on a sprint’s first day count as planned, and the plan is read from when the sprint was really started',
     'Sprint tab: the forecast learns from items that went from started to done, whatever the briefing’s measured stages; with too little history it shows what is done instead of calling open work on track',

@@ -2,6 +2,7 @@ import {
   Fragment,
   lazy,
   Suspense,
+  useId,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -16,6 +17,7 @@ import {
   type PointsTimeView,
   type SprintBriefing,
   type SprintItemState,
+  type SprintItemView,
   type SprintRef,
 } from '../../lib/statistics/sprint'
 import { formatNumber } from './format'
@@ -43,7 +45,8 @@ const stateLabel: Record<SprintItemState, string> = {
   risk: 'at risk',
   todo: 'not started',
 }
-const STATES = ['done', 'track', 'open', 'risk', 'todo'] as const
+/** Groups on the card, the ones that need a decision first. */
+const GROUPS = ['risk', 'todo', 'open', 'track', 'done'] as const
 
 export function SprintView({
   briefing,
@@ -74,6 +77,18 @@ export function SprintView({
   } = briefing
   // Beside the forecast: the code behind it, the next plan, and whether
   // points predict time, so the column ends with the forecast.
+  // Two balanced columns: the forecast with "points vs time" under it, the
+  // code behind the sprint with the next plan beside them. The last card of
+  // each column takes up the slack, never the forecast.
+  const pointsCard = pointsTime ? (
+    <PointsTime key="points" view={pointsTime} />
+  ) : pointsTimeGap ? (
+    <NotYet
+      key="points"
+      title="Do your points predict time?"
+      why={`${pointsTimeGap.estimated} finished ${pointsTimeGap.estimated === 1 ? 'item had' : 'items had'} an estimate in the last 90 days; this needs ${pointsTimeGap.needed}.`}
+    />
+  ) : null
   const side = [
     code && <Fragment key="code">{code}</Fragment>,
     planning ? (
@@ -90,15 +105,6 @@ export function SprintView({
         why={planningGap}
       />
     ) : null,
-    pointsTime ? (
-      <PointsTime key="points" view={pointsTime} />
-    ) : pointsTimeGap ? (
-      <NotYet
-        key="points"
-        title="Do your points predict time?"
-        why={`${pointsTimeGap.estimated} finished ${pointsTimeGap.estimated === 1 ? 'item had' : 'items had'} an estimate in the last 90 days; this needs ${pointsTimeGap.needed}.`}
-      />
-    ) : null,
   ].filter(Boolean)
   return (
     <div className="sprint-view">
@@ -107,16 +113,19 @@ export function SprintView({
         data-hero="signal"
         data-layout={side.length ? 'split' : 'single'}
       >
-        {active ? (
-          <SprintHero active={active} unit={unit} onAsk={onAsk} />
-        ) : (
-          <section className="work-stages sprint-none sl-rise">
-            <p className="code-review__headline">No sprint is running</p>
-            <p className="code-review__sub">
-              Start one in Jira and refresh. The last sprints are below.
-            </p>
-          </section>
-        )}
+        <div className="briefing-stage__side">
+          {active ? (
+            <SprintHero active={active} unit={unit} onAsk={onAsk} />
+          ) : (
+            <section className="work-stages sprint-none sl-rise">
+              <p className="code-review__headline">No sprint is running</p>
+              <p className="code-review__sub">
+                Start one in Jira and refresh. The last sprints are below.
+              </p>
+            </section>
+          )}
+          {pointsCard}
+        </div>
         {side.length > 0 && <div className="briefing-stage__side">{side}</div>}
       </div>
       {briefing.signals.length > 0 && (
@@ -148,13 +157,15 @@ function SprintHero({
   const unlikely = items.filter(
     (item) => item.state === 'risk' || item.state === 'todo',
   )
-  const [showAll, setShowAll] = useState(false)
+  const [opened, setOpened] = useState<SprintItemState>()
+  const listId = useId()
   const forecast = active.sample > 0
-  // Without a forecast, list what is still open: nothing is called late.
-  const listed =
-    showAll || !forecast
-      ? items.filter((item) => item.state !== 'done')
-      : unlikely
+  // Without a forecast nothing is called late: the list is what is open.
+  const listed = opened
+    ? items.filter((item) => item.state === opened)
+    : forecast
+      ? unlikely
+      : items.filter((item) => item.state !== 'done')
   const share = items.length ? active.likely / items.length : 1
   const status = !forecast ? 'info' : share >= 0.85 ? 'ok' : 'risk'
   const end = sprint.endAt ? new Date(sprint.endAt) : undefined
@@ -219,79 +230,67 @@ function SprintHero({
             : ''}
         </p>
       )}
-      {/* One segment per sprint item, in forecast order. */}
-      <div
-        className="sprint-hero__strip"
-        role="img"
-        aria-label={STATES.map(
-          (state) => `${count(state)} ${stateLabel[state]}`,
-        ).join(', ')}
+      {/* The code card's model: one chip per item, grouped, decisions
+          first; a group opens its items. */}
+      <ul
+        className="code-review__groups sprint-hero__groups"
+        style={chipSize(Math.max(...GROUPS.map(count)))}
       >
-        {items.map((item) => (
-          <span key={item.key} data-state={item.state} title={item.key} />
-        ))}
-      </div>
-      <ul className="sprint-hero__legend">
-        {STATES.filter((state) => count(state)).map((state) => (
-          <li key={state} data-state={state}>
-            <strong>{count(state)}</strong> {stateLabel[state]}
+        {GROUPS.filter((state) => count(state)).map((state, groupIndex) => (
+          <li key={state} data-group={`sprint-${state}`}>
+            <button
+              type="button"
+              className="code-review__group"
+              aria-expanded={opened === state}
+              aria-controls={listId}
+              data-open={opened === state ? 'true' : undefined}
+              onClick={() => setOpened(opened === state ? undefined : state)}
+            >
+              <span className="code-review__chips" aria-hidden="true">
+                {items
+                  .filter((item) => item.state === state)
+                  .map((item, index) => (
+                    <span
+                      key={item.key}
+                      className="code-review__chip sl-grow-y"
+                      style={{
+                        animationDelay: `${120 + groupIndex * 80 + index * 20}ms`,
+                      }}
+                    />
+                  ))}
+              </span>
+              <span className="code-review__label">
+                <strong>{count(state)}</strong> {stateLabel[state]}
+              </span>
+            </button>
           </li>
         ))}
       </ul>
-      {listed.length > 0 ? (
-        <ul
-          className="sprint-hero__items"
-          aria-label={
-            showAll ? 'Open sprint items' : 'Sprint items unlikely to finish'
-          }
-        >
-          {listed.map((item, index) => (
-            <li key={item.key} data-state={item.state}>
-              <span className="hero-signal__key">
+      {/* What needs a decision is listed without a click; another group
+          swaps the list to its items. */}
+      {listed.length > 0 && (
+        <div id={listId} className="code-review__open sprint-hero__list">
+          <p className="sprint-hero__list-title">
+            {opened
+              ? `${count(opened)} ${stateLabel[opened]}`
+              : forecast
+                ? 'At risk and not started'
+                : 'Still open'}
+          </p>
+          <ul className="code-review__items" aria-label="Sprint items">
+            {listed.map((item) => (
+              <li key={item.key} data-group={`sprint-${item.state}`}>
+                <span className="code-review__chip" aria-hidden="true" />
                 <ItemKey
                   itemKey={item.key}
                   title={item.title}
                   browseUrl={item.browseUrl}
                 />
-                <small>
-                  {item.status}
-                  {unit === 'points'
-                    ? ` · ${item.points !== undefined ? `${formatNumber(item.points)}\u00a0pts` : 'no\u00a0estimate'}`
-                    : ''}
-                </small>
-              </span>
-              <span className="sprint-hero__bar" aria-hidden="true">
-                {item.chance !== undefined && (
-                  <span
-                    className="sprint-hero__fill sl-grow-x"
-                    style={
-                      {
-                        width: `${Math.round(item.chance * 100)}%`,
-                        ...stagger(index, undefined, 160),
-                      } as CSSProperties
-                    }
-                  />
-                )}
-              </span>
-              <span className="sprint-hero__chance">
-                {item.chance !== undefined ? (
-                  <>
-                    <strong>{Math.round(item.chance * 100)}%</strong>
-                    <small>likely</small>
-                  </>
-                ) : (
-                  <small>{stateLabel[item.state]}</small>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="sprint-hero__basis">
-          {forecast
-            ? 'Everything still open is on track.'
-            : 'Everything in the sprint is done.'}
-        </p>
+                <span>{itemDetail(item, unit)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <div className="hero-signal__actions">
         {unlikely.length > 0 && (
@@ -303,18 +302,6 @@ function SprintHero({
           >
             <AskAiTag /> · Decide what to descope{' '}
             <span aria-hidden="true">→</span>
-          </button>
-        )}
-        {forecast && items.some((item) => item.state === 'track') && (
-          <button
-            type="button"
-            className="briefing-link"
-            aria-expanded={showAll}
-            onClick={() => setShowAll((value) => !value)}
-          >
-            {showAll
-              ? 'Show only the items at risk'
-              : `Show all ${items.length - count('done')} open items`}
           </button>
         )}
         {sprintLink && (
@@ -330,6 +317,38 @@ function SprintHero({
       </div>
     </article>
   )
+}
+
+/** One line per item: where it stands, its size, its chance. */
+function itemDetail(item: SprintItemView, unit: 'points' | 'items') {
+  return [
+    item.status,
+    unit === 'points'
+      ? item.points !== undefined
+        ? `${formatNumber(item.points)} pts`
+        : 'no estimate'
+      : '',
+    item.chance !== undefined ? `${Math.round(item.chance * 100)}% likely` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/** Chips thin out as the biggest group grows, as on the code card. */
+function chipSize(largest: number) {
+  const [width, gap, height] =
+    largest <= 12
+      ? [10, 4, 24]
+      : largest <= 24
+        ? [7, 3, 22]
+        : largest <= 48
+          ? [5, 2, 20]
+          : [3, 1, 18]
+  return {
+    '--chip-width': `${width}px`,
+    '--chip-gap': `${gap}px`,
+    '--chip-height': `${height}px`,
+  } as CSSProperties
 }
 
 function PlanningCheck({
@@ -412,9 +431,14 @@ function PlanningCheck({
 }
 
 function PointsTime({ view }: { view: PointsTimeView }) {
-  const max = Math.max(...view.rows.map((row) => row.to), 1)
-  const scale = Math.max(4, Math.ceil(max / 2) * 2)
-  const at = (days: number) => `${(days / scale) * 100}%`
+  // The axis fits what most items take: a few very long items would squeeze
+  // every row into the first millimetres. Longer ranges run off the end.
+  const longest = Math.max(...view.rows.map((row) => row.to), 1)
+  const typical = Math.max(...view.rows.map((row) => row.median), 1) * 3
+  const span = Math.min(longest, typical)
+  const step = span > 20 ? 10 : 2
+  const scale = Math.max(4, Math.ceil(span / step) * step)
+  const at = (days: number) => `${(Math.min(days, scale) / scale) * 100}%`
   const days = (value: number) => formatNumber(Math.round(value * 10) / 10)
   const sub =
     view.verdict === 'yes'
@@ -456,7 +480,12 @@ function PointsTime({ view }: { view: PointsTimeView }) {
                 style={
                   {
                     left: at(row.from),
-                    width: at(Math.max(row.to - row.from, 0.1)),
+                    width: at(
+                      Math.max(
+                        Math.min(row.to, scale) - Math.min(row.from, scale),
+                        0.1,
+                      ),
+                    ),
                   } as CSSProperties
                 }
               />
@@ -481,12 +510,20 @@ function PointsTime({ view }: { view: PointsTimeView }) {
 }
 
 /** A card that cannot say anything yet, and says why in one line. */
-function NotYet({ title, why }: { title: string; why: string }) {
+export function NotYet({
+  title,
+  why,
+  tag = 'not yet',
+}: {
+  title: string
+  why: string
+  tag?: string
+}) {
   return (
     <section className="work-stages sprint-not-yet sl-rise">
       <div className="work-stages__header">
         <h2 className="work-stages__title">{title}</h2>
-        <span className="work-stages__total">not yet</span>
+        <span className="work-stages__total">{tag}</span>
       </div>
       <p className="code-review__sub">{why}</p>
     </section>

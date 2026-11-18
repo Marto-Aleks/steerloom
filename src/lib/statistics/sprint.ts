@@ -441,11 +441,21 @@ function boardModel(snapshot: FlowBoardSnapshot) {
     (columnIndex.has(statusId)
       ? columnIndex.get(statusId) === 0
       : category.get(statusId) === 'todo')
-  /** When work first started: the first move out of the first column. */
-  const startedAt = (issueId: string) =>
-    moves
-      .get(issueId)
-      ?.find((move) => !isWaiting(move.statusId) && !isDone(move.statusId))?.at
+  /**
+   * When the latest attempt started: the first move out of the first column
+   * after the item last sat there. Work that went back to the backlog and
+   * was picked up again counts from the pick-up, not from months before.
+   */
+  const startedAt = (issueId: string, before = Infinity) => {
+    const list = (moves.get(issueId) ?? []).filter((move) => move.at <= before)
+    let from = 0
+    list.forEach((move, index) => {
+      if (isWaiting(move.statusId)) from = index + 1
+    })
+    return list
+      .slice(from)
+      .find((move) => !isWaiting(move.statusId) && !isDone(move.statusId))?.at
+  }
   /** When it reached the last column for good. */
   const finishedAt = (issueId: string) => {
     const list = moves.get(issueId) ?? []
@@ -476,7 +486,7 @@ function boardModel(snapshot: FlowBoardSnapshot) {
     sample(at: number): Sample {
       return [...issues.values()].flatMap((issue) => {
         const end = finishedAt(issue.id)
-        const start = startedAt(issue.id)
+        const start = end === undefined ? undefined : startedAt(issue.id, end)
         if (end === undefined || start === undefined || end < start) return []
         if (end > at || end < at - SAMPLE_DAYS * DAY) return []
         return [{ key: issue.key, days: (end - start) / DAY }]
