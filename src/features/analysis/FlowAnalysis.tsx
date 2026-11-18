@@ -280,6 +280,17 @@ export function FlowAnalysis({
     teamNotes,
     sprint: sprintBriefing,
   })
+  // Projects with items on the board, for the chat's key check.
+  const boardProjects = useMemo(
+    () => [
+      ...new Set(
+        snapshot.issues
+          .map((issue) => /^([A-Z][A-Z0-9_]{1,29})-\d+$/.exec(issue.key)?.[1])
+          .filter((key): key is string => Boolean(key)),
+      ),
+    ],
+    [snapshot],
+  )
   const aiJiraScope =
     (snapshot.source.kind === 'jira-data-center' ||
       snapshot.source.kind === 'jira-cloud') &&
@@ -819,6 +830,7 @@ export function FlowAnalysis({
         <AiChatPanel
           context={aiReportContext}
           jiraScope={aiJiraScope}
+          boardProjects={boardProjects}
           draftRequest={aiDraftRequest}
           itemLinks={itemLinks}
           itemTitles={itemTitles}

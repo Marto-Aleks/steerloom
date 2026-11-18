@@ -12,8 +12,9 @@ import { StatusMessage } from '../../components/ui'
 import {
   sprintDescopePrompt,
   sprintGoalPrompt,
+  sprintHistoryPrompt,
   sprintPlanningPrompt,
-  sprintStandupPrompt,
+  sprintTodayPrompt,
   type ActiveSprintView,
   type PlanningView,
   type PointsTimeView,
@@ -91,22 +92,11 @@ export function SprintView({
       why={`${pointsTimeGap.estimated} finished ${pointsTimeGap.estimated === 1 ? 'item had' : 'items had'} an estimate in the last 90 days; this needs ${pointsTimeGap.needed}.`}
     />
   ) : null
+  // Beside the forecast: the code behind the sprint, and whether points
+  // predict time. The next sprint's plan sits under the last sprints' chart.
   const side = [
     code && <Fragment key="code">{code}</Fragment>,
-    planning ? (
-      <PlanningCheck
-        key="planning"
-        planning={planning}
-        unit={unit}
-        onAsk={onAsk}
-      />
-    ) : planningGap ? (
-      <NotYet
-        key="planning"
-        title="Planning the next sprint"
-        why={planningGap}
-      />
-    ) : null,
+    pointsCard,
   ].filter(Boolean)
   return (
     <div className="sprint-view">
@@ -126,7 +116,6 @@ export function SprintView({
               </p>
             </section>
           )}
-          {pointsCard}
         </div>
         {side.length > 0 && <div className="briefing-stage__side">{side}</div>}
       </div>
@@ -137,7 +126,31 @@ export function SprintView({
         <Suspense
           fallback={<div className="chart-card__plot" aria-hidden="true" />}
         >
-          <SprintHistoryChart history={history} unit={unit} />
+          <SprintHistoryChart
+            history={history}
+            unit={unit}
+            footer={
+              <div className="sprint-history-footer">
+                {planning ? (
+                  <PlanningCheck
+                    planning={planning}
+                    unit={unit}
+                    onAsk={onAsk}
+                  />
+                ) : planningGap ? (
+                  <p className="planning-check__sub">{planningGap}</p>
+                ) : null}
+                <button
+                  type="button"
+                  className="briefing-link"
+                  onClick={() => onAsk(sprintHistoryPrompt(history, unit))}
+                >
+                  <AskAiTag /> · What do the last sprints tell us?{' '}
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            }
+          />
         </Suspense>
       )}
     </div>
@@ -307,9 +320,9 @@ function SprintHero({
           <button
             type="button"
             className="briefing-link"
-            onClick={() => onAsk(sprintStandupPrompt(active))}
+            onClick={() => onAsk(sprintTodayPrompt(active))}
           >
-            What to raise at stand-up <span aria-hidden="true">→</span>
+            What to raise today <span aria-hidden="true">→</span>
           </button>
           {sprint.goal && (
             <button
@@ -377,6 +390,10 @@ function chipSize(largest: number) {
   } as CSSProperties
 }
 
+/**
+ * The next sprint's plan, under the chart of the last sprints it is
+ * measured against. Shown only when the next sprint has items in Jira.
+ */
 function PlanningCheck({
   planning,
   unit,
@@ -398,20 +415,15 @@ function PlanningCheck({
       : `${formatNumber(planned)} ${word} planned so far; the team usually finishes ${formatNumber(usual)}`
   return (
     <section
-      className="work-stages planning-check sl-rise"
+      className="planning-check"
       data-status={over ? 'risk' : 'ok'}
       aria-labelledby="planning-check-title"
     >
-      <div className="work-stages__header">
-        <h2 id="planning-check-title" className="work-stages__title">
-          Planning {planning.sprint.name}
-        </h2>
-        <span className="work-stages__total">
-          from the last {planning.sprints} sprints
-        </span>
-      </div>
-      <p className="code-review__headline">{headline}</p>
-      <p className="code-review__sub">
+      <h3 id="planning-check-title" className="planning-check__title">
+        Planning {planning.sprint.name}
+      </h3>
+      <p className="planning-check__headline">{headline}</p>
+      <p className="planning-check__sub">
         The last {planning.sprints} sprints finished {formatNumber(low)}–
         {formatNumber(high)} {word}.
         {over ? ` None finished more than ${formatNumber(high)}.` : ''}
@@ -440,17 +452,15 @@ function PlanningCheck({
         </span>
       </div>
       {over && (
-        <div className="hero-signal__actions">
-          <button
-            type="button"
-            className="briefing-link"
-            aria-label="Choose what to leave out, with Steerloom AI"
-            onClick={() => onAsk(sprintPlanningPrompt(planning, unit))}
-          >
-            <AskAiTag /> · Choose what to leave out{' '}
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          className="briefing-link"
+          aria-label="Choose what to leave out, with Steerloom AI"
+          onClick={() => onAsk(sprintPlanningPrompt(planning, unit))}
+        >
+          <AskAiTag /> · Choose what to leave out{' '}
+          <span aria-hidden="true">→</span>
+        </button>
       )}
     </section>
   )

@@ -785,17 +785,29 @@ export function sprintDescopePrompt(
     (item) =>
       `- ${item.key}: ${item.status}${item.chance !== undefined ? `, ${Math.round(item.chance * 100)}% likely by the sprint's end` : ''}${unit === 'points' ? `, ${item.points !== undefined ? `${item.points} points` : 'no estimate'}` : ''}`,
   )
-  return `${active.sprint.name} is on working day ${active.day} of ${active.days}${active.sprint.goal ? `; its goal: "${active.sprint.goal}"` : ''}. ${active.likely} of ${active.items.length} items are likely done by the end. These are unlikely to finish:\n${lines.join('\n')}\n\nHelp me decide what to descope, swarm or finish first now, not at the review. Check each item's history, comments and code, say which protects the sprint goal best, and end with a checkpoint for the next stand-up. Never blame anyone.`
+  return `${active.sprint.name} is on working day ${active.day} of ${active.days}${active.sprint.goal ? `; its goal: "${active.sprint.goal}"` : ''}. ${active.likely} of ${active.items.length} items are likely done by the end. These are unlikely to finish:\n${lines.join('\n')}\n\nHelp me decide what to descope, swarm or finish first now, not at the review. Check each item's history, comments and code, say which protects the sprint goal best, and end with a checkpoint for tomorrow. Never blame anyone.`
 }
 
-/** Stand-up, for the running sprint: what needs saying today. */
-export function sprintStandupPrompt(active: ActiveSprintView): string {
-  return `What should we raise at today's stand-up for ${active.sprint.name}, on working day ${active.day} of ${active.days}? Look at the sprint's items at risk, not started, rolled over or added mid-sprint, read the ones that matter with detail, and give at most four points, each with the question for its owner.`
+/** What needs raising today in the running sprint. No meeting assumed. */
+export function sprintTodayPrompt(active: ActiveSprintView): string {
+  return `What should we raise today in ${active.sprint.name}, on working day ${active.day} of ${active.days}? Look at the sprint's items at risk, not started, rolled over or added mid-sprint, read the ones that matter with detail, and give at most four points, each with the question for its owner.`
 }
 
 /** The sprint goal, judged from the items that serve it. */
 export function sprintGoalPrompt(active: ActiveSprintView): string {
   return `Will ${active.sprint.name} meet its goal: "${active.sprint.goal ?? ''}"? Read the sprint's items to decide which ones serve the goal, then say whether it is likely met, partly met or not met by the end, which items decide it, and what would change the outcome.`
+}
+
+/** What the last sprints say, for the next planning. */
+export function sprintHistoryPrompt(
+  history: ClosedSprintView[],
+  unit: 'points' | 'items',
+): string {
+  const lines = history.map(
+    (view) =>
+      `- ${view.sprint.name}: ${view.finishedPlanned} of ${view.planned.length} planned items finished, ${view.added.length} added mid-sprint, ${view.removed.length} removed${unit === 'points' ? `, ${view.finishedPoints} points finished` : ''}`,
+  )
+  return `What do the last ${history.length} sprints tell us?\n${lines.join('\n')}\n\nName the one pattern that matters most for the next planning, such as committing more than the team finishes, work added mid-sprint or items that keep rolling over, with its numbers, and the one change that would address it. The numbers describe the team's planning, never anyone's performance.`
 }
 
 export function sprintPlanningPrompt(

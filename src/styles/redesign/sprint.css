@@ -288,3 +288,44 @@
   top: auto;
   bottom: calc(100% + 4px);
 }
+
+/* Under the last sprints' chart: the next sprint's plan, then the question. */
+.sprint-history-footer {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+}
+
+.sprint-history-footer > .briefing-link {
+  justify-self: start;
+}
+
+.planning-check {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.planning-check__title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.planning-check__headline {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.planning-check__sub {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.planning-check > .briefing-link {
+  justify-self: start;
+}

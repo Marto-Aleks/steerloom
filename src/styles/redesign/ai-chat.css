@@ -433,3 +433,9 @@ span.ai-chat__ticket.item-key {
   color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
 }
+
+/* A long plain answer: its opening, the rest one click away. */
+.ai-chat__more {
+  margin-top: var(--space-1);
+  color: var(--accent);
+}

@@ -192,6 +192,58 @@ describe('Steerloom AI contextual drafts', () => {
     expect(screen.queryByText('Fictional key form')).toBeNull()
   })
 
+  it('folds a long plain answer to its opening, the rest one click away', () => {
+    const paragraph = (n: number) =>
+      `Paragraph ${n} ${'with enough words to count '.repeat(6)}`
+    const content = [1, 2, 3, 4, 5].map(paragraph).join('\n\n')
+    render(
+      <AiMessageContent message={{ role: 'assistant', content }} collapsible />,
+    )
+    expect(screen.getByText(/Paragraph 1/)).toBeInTheDocument()
+    expect(screen.queryByText(/Paragraph 5/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Show more' }))
+    expect(screen.getByText(/Paragraph 5/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show less' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+  })
+
+  it('keeps a short answer whole', () => {
+    render(
+      <AiMessageContent
+        message={{ role: 'assistant', content: 'One line.\n\nTwo lines.' }}
+        collapsible
+      />,
+    )
+    expect(screen.queryByRole('button', { name: 'Show more' })).toBeNull()
+  })
+
+  it('accepts keys from every project on the board, and names them when one is not', async () => {
+    const scope = { connectionId: 'jira-1', projectKey: 'WEB', boardId: '42' }
+    const { rerender } = render(
+      <AiChatPanel
+        context={context}
+        jiraScope={scope}
+        boardProjects={['WEB', 'KIT']}
+        draftRequest={{ id: 1, prompt: 'Why is KIT-31 taking so long?' }}
+      />,
+    )
+    await screen.findByLabelText('Ask a question about this report')
+    expect(screen.queryByText(/items only/)).not.toBeInTheDocument()
+    rerender(
+      <AiChatPanel
+        context={context}
+        jiraScope={scope}
+        boardProjects={['WEB', 'KIT']}
+        draftRequest={{ id: 2, prompt: 'Why is HR-7 taking so long?' }}
+      />,
+    )
+    expect(
+      await screen.findByText(/This report can check WEB and KIT items only/),
+    ).toBeInTheDocument()
+  })
+
   it('opens a named non-modal panel and preserves the draft when dismissed and reopened', async () => {
     render(
       <AiChatPanel

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Bar,
   BarChart,
@@ -39,9 +39,12 @@ interface Row {
 export default function SprintHistoryChart({
   history,
   unit,
+  footer,
 }: {
   history: ClosedSprintView[]
   unit: 'points' | 'items'
+  /** Under the chart: the next sprint's plan and the AI question. */
+  footer?: ReactNode
 }) {
   const [pinned, setPinned] = useState<Pin | null>(null)
   const plot = useRef<HTMLDivElement>(null)
@@ -78,6 +81,7 @@ export default function SprintHistoryChart({
           ? `Finished ${Math.round((finished / planned) * 100)}% of planned work${added ? ` · about ${added} added mid-sprint` : ''}`
           : undefined
       }
+      footer={footer}
       legend={
         <>
           <span className="chart-legend__dot" data-part="finished" />

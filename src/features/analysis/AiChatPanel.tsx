@@ -79,6 +79,8 @@ function rememberBoardReading(key: string, on: boolean) {
 interface AiChatPanelProps {
   context: AiReportContext
   jiraScope?: AiJiraScope
+  /** Jira: every project with items on the board; a board may span several. */
+  boardProjects?: string[]
   draftRequest?: AiChatDraftRequest
   /** Where an item key in an answer opens; keys without a link are only highlighted. */
   itemLinks?: (key: string) => string | undefined
@@ -127,6 +129,7 @@ export interface AiChatDraftRequest {
 export function AiChatPanel({
   context,
   jiraScope,
+  boardProjects,
   draftRequest,
   itemLinks,
   itemTitles,
@@ -286,8 +289,11 @@ export function AiChatPanel({
         ? 'Azure DevOps'
         : 'Jira'
   const draftTicketKeys = extractTicketKeys(draft)
+  const projects = jiraScope
+    ? [...new Set([jiraScope.projectKey, ...(boardProjects ?? [])])]
+    : []
   const draftJiraKeys = jiraScope
-    ? extractProjectTicketKeys(draft, jiraScope.projectKey, 25)
+    ? extractProjectTicketKeys(draft, projects, 25)
     : []
   // Trello and Azure DevOps keys (CARD-12, #123) need no project match.
   const jiraDraftProblem =
@@ -296,7 +302,7 @@ export function AiChatPanel({
       : !jiraScope || jiraScope.provider
         ? ''
         : draftJiraKeys.length === 0
-          ? `This report can check ${jiraScope.projectKey} items only. Use a matching key or load the correct project.`
+          ? `This report can check ${projects.length > 1 ? `${projects.slice(0, -1).join(', ')} and ${projects.at(-1)}` : jiraScope.projectKey} items only. Use a matching key or load the correct project.`
           : ''
 
   const requestChat = async (
@@ -751,6 +757,7 @@ export function AiChatPanel({
                       links={itemLinks}
                       titles={titleOf}
                       azureKeys={jiraScope?.provider === 'azure-devops'}
+                      collapsible
                     />
                   )}
                   {message.role === 'assistant' &&
@@ -1000,24 +1007,48 @@ function jiraLookupSummary(lookup: AiJiraLookup, provider = 'Jira'): string {
   return `Read-only ${provider} ${lookup.mode}: ${lookup.availableCount} ${lookup.source} (${selection}). Checking ${evidence}.${lookup.omittedCount ? ` This check is limited to the first ${lookup.keys.length}.` : ''}`
 }
 
+/** Plain answers longer than this fold to their opening lines. */
+const LONG_ANSWER_WORDS = 110
+const OPENING_WORDS = 60
+
 export function AiMessageContent({
   message,
   links,
   titles,
   azureKeys = false,
+  collapsible = false,
 }: {
   message: AiConversationMessage
   links?: (key: string) => string | undefined
   titles?: (key: string) => string | undefined
   /** Azure DevOps boards: #1234 is an item key too. */
   azureKeys?: boolean
+  /** A finished answer: long ones show their opening, the rest on demand. */
+  collapsible?: boolean
 }) {
+  const [expanded, setExpanded] = useState(false)
   if (message.role === 'user') {
     return <p className="ai-chat__message-content">{message.content}</p>
   }
+  const blocks = formatAiResponse(message.content)
+  const words = (block: (typeof blocks)[number]) =>
+    (block.type === 'list' ? block.items.join(' ') : block.text).split(/\s+/)
+      .length
+  const total = blocks.reduce((sum, block) => sum + words(block), 0)
+  // The opening: whole blocks up to about 60 words, never less than one.
+  let shown = blocks.length
+  if (collapsible && total > LONG_ANSWER_WORDS && blocks.length > 1) {
+    let count = 0
+    shown = 0
+    while (shown < blocks.length && (shown === 0 || count < OPENING_WORDS)) {
+      count += words(blocks[shown]!)
+      shown++
+    }
+  }
+  const folded = shown < blocks.length && !expanded
   return (
     <div className="ai-chat__message-content ai-chat__formatted-response">
-      {formatAiResponse(message.content).map((block, index) => {
+      {(folded ? blocks.slice(0, shown) : blocks).map((block, index) => {
         if (block.type === 'heading') {
           return (
             <p
@@ -1055,6 +1086,16 @@ export function AiMessageContent({
           </p>
         )
       })}
+      {shown < blocks.length && (
+        <button
+          type="button"
+          className="answer__more ai-chat__more"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
     </div>
   )
 }
