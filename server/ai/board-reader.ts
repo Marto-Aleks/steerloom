@@ -118,16 +118,21 @@ const jqlString = (value: string) =>
   `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
 
 /**
- * JQL for a search, inside one project. Text is reduced to words so JQL's
+ * JQL for a search, inside the board's projects. Text is reduced to words so JQL's
  * reserved characters cannot break or widen the query. Assignee names are
  * matched afterwards (Jira wants account ids or user names, not names).
  */
 export function jiraSearchJql(
-  projectKey: string,
+  projectKey: string | readonly string[],
   query: BoardSearch,
   cloud: boolean,
 ): string {
-  const clauses = [`project = ${jqlString(projectKey)}`]
+  const projects = typeof projectKey === 'string' ? [projectKey] : projectKey
+  const clauses = [
+    projects.length === 1
+      ? `project = ${jqlString(projects[0]!)}`
+      : `project in (${projects.map(jqlString).join(', ')})`,
+  ]
   const words = (query.text ?? '')
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')

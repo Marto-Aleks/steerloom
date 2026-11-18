@@ -1,3 +1,5 @@
+import { toAiSprintContext } from '../../lib/ai/sprint-context'
+import type { SprintBriefing } from '../../lib/statistics/sprint'
 import type { AiReportContext } from '../../lib/ai/report-context'
 import { buildAiReportContext } from '../../lib/ai/report-context'
 import {
@@ -376,6 +378,7 @@ export function dashboardAiContext({
   pullRequests,
   branches,
   teamNotes,
+  sprint,
 }: {
   snapshot: FlowBoardSnapshot
   filters: AnalysisFilters
@@ -384,6 +387,8 @@ export function dashboardAiContext({
   pullRequests?: PullRequestRecord[]
   branches?: BranchRecord[]
   teamNotes?: string
+  /** Scrum boards: the Sprint tab, so the assistant can answer about it. */
+  sprint?: SprintBriefing
 }): AiReportContext {
   const {
     loadedAt,
@@ -402,7 +407,10 @@ export function dashboardAiContext({
   const reportSourceLabel = snapshot.source.projectKey
     ? `${snapshot.source.projectKey} · ${snapshot.source.label}`
     : snapshot.source.label
-  return buildAiReportContext({
+  const sprintContext = sprint
+    ? toAiSprintContext(sprint, Date.parse(snapshot.loadedAt))
+    : undefined
+  const context = buildAiReportContext({
     generatedAt: snapshot.loadedAt,
     sourceLabel: reportSourceLabel,
     boardName: snapshot.board.name,
@@ -456,4 +464,5 @@ export function dashboardAiContext({
         }
       : {}),
   })
+  return sprintContext ? { ...context, sprint: sprintContext } : context
 }

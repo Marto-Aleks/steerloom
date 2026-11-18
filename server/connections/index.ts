@@ -379,5 +379,6 @@ export function boardReader(
   return jiraReader(
     new JiraClient(jiraConnection(connectionId, secret, runtime)),
     scope.projectKey,
+    scope.boardId,
   )
 }

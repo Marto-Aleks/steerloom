@@ -11,7 +11,9 @@ import { AskAiTag } from '../../components/AskAiTag'
 import { StatusMessage } from '../../components/ui'
 import {
   sprintDescopePrompt,
+  sprintGoalPrompt,
   sprintPlanningPrompt,
+  sprintStandupPrompt,
   type ActiveSprintView,
   type PlanningView,
   type PointsTimeView,
@@ -293,17 +295,41 @@ function SprintHero({
         </div>
       )}
       <div className="hero-signal__actions">
-        {unlikely.length > 0 && (
+        {/* The sprint's questions, ready to send, as in the briefing's header. */}
+        <div
+          className="report-hero__ask sprint-hero__ask"
+          role="group"
+          aria-label="Ask Steerloom AI"
+        >
+          <span>
+            <AskAiTag />
+          </span>
           <button
             type="button"
             className="briefing-link"
-            aria-label="Decide what to descope, with Steerloom AI"
-            onClick={() => onAsk(sprintDescopePrompt(active, unit))}
+            onClick={() => onAsk(sprintStandupPrompt(active))}
           >
-            <AskAiTag /> · Decide what to descope{' '}
-            <span aria-hidden="true">→</span>
+            What to raise at stand-up <span aria-hidden="true">→</span>
           </button>
-        )}
+          {sprint.goal && (
+            <button
+              type="button"
+              className="briefing-link"
+              onClick={() => onAsk(sprintGoalPrompt(active))}
+            >
+              Will we meet the goal? <span aria-hidden="true">→</span>
+            </button>
+          )}
+          {unlikely.length > 0 && (
+            <button
+              type="button"
+              className="briefing-link"
+              onClick={() => onAsk(sprintDescopePrompt(active, unit))}
+            >
+              What to descope <span aria-hidden="true">→</span>
+            </button>
+          )}
+        </div>
         {sprintLink && (
           <a
             className="briefing-link"

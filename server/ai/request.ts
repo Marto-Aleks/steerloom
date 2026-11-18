@@ -1,3 +1,4 @@
+import { parseSprintContext } from './sprint-parse'
 import { isServiceExpectation } from '../../src/lib/statistics/service-expectation'
 import {
   AI_SIGNAL_LIMIT,
@@ -161,7 +162,12 @@ function parseJiraScope(value: unknown): AiJiraScope | null | undefined {
       boardId: value.boardId,
     }
   }
-  if (value.boardId !== undefined) return null
+  // Jira: the report's board, so items from its other projects can be read.
+  if (value.boardId !== undefined) {
+    if (typeof value.boardId !== 'string' || !/^\d{1,12}$/.test(value.boardId))
+      return null
+    return { connectionId, projectKey, boardId: value.boardId }
+  }
   return { connectionId, projectKey }
 }
 
@@ -263,6 +269,7 @@ function parseContext(value: unknown): AiReportContext | null {
     value.codeLookup === undefined
       ? undefined
       : parseArray(value.codeLookup, CODE_LOOKUP_LIMIT, parseItemPullRequests)
+  const sprint = parseSprintContext(value.sprint)
 
   if (
     generatedAt === null ||
@@ -291,6 +298,7 @@ function parseContext(value: unknown): AiReportContext | null {
     dataChecks === null ||
     pullRequests === null ||
     codeLookup === null ||
+    sprint === null ||
     teamNotes === null
   ) {
     return null
@@ -331,6 +339,7 @@ function parseContext(value: unknown): AiReportContext | null {
     ...(teamNotes ? { teamNotes } : {}),
     ...(pullRequests ? { pullRequests } : {}),
     ...(codeLookup?.length ? { codeLookup } : {}),
+    ...(sprint ? { sprint } : {}),
   }
 }
 

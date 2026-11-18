@@ -497,7 +497,7 @@ function environmentReader(
       'Project is outside this connection’s scope.',
     )
   }
-  return jiraReader(new JiraClient(connection), scope.projectKey)
+  return jiraReader(new JiraClient(connection), scope.projectKey, scope.boardId)
 }
 
 /** The planner's lookups, answered by the same reader the agent uses. */

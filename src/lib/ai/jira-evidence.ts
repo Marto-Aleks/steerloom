@@ -243,15 +243,16 @@ function reportGroupKeys(items: Array<{ key: string }>, projectKey: string) {
 
 export function extractProjectTicketKeys(
   text: string,
-  projectKey: string,
+  /** One project, or every project on the board. */
+  projectKey: string | readonly string[],
   limit = AI_JIRA_TICKET_LIMIT,
 ): string[] {
-  const normalizedProject = projectKey.trim().toUpperCase()
-  if (!/^[A-Z][A-Z0-9_]{1,29}$/.test(normalizedProject) || limit <= 0) {
-    return []
-  }
+  const projects = (typeof projectKey === 'string' ? [projectKey] : projectKey)
+    .map((key) => key.trim().toUpperCase())
+    .filter((key) => /^[A-Z][A-Z0-9_]{1,29}$/.test(key))
+  if (!projects.length || limit <= 0) return []
   return extractTicketKeys(text, 50)
-    .filter((key) => key.startsWith(`${normalizedProject}-`))
+    .filter((key) => projects.some((project) => key.startsWith(`${project}-`)))
     .slice(0, limit)
 }
 

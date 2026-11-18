@@ -7,8 +7,12 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.18.3',
+  version: '2026.11.18.4',
   notes: [
+    'Steerloom AI knows the Sprint tab: the running sprint, each item’s chance, scope changes, rolled-over work, the planning check and whether points predict time',
+    'Steerloom AI reads items from every project on a board that spans several, not only the connected project',
+    'Sprint tab: ask Steerloom AI what to raise at stand-up, whether the sprint will meet its goal, and what to descope',
+    'Steerloom AI treats velocity as the team’s own planning range, never a target or a comparison, and does not read small estimates as small work where points do not predict time',
     'Sprint tab: the forecast card groups items like the code card, one chip each: at risk, not started, in progress, on track, done. Items at risk and not started are listed under it; choose a group to list its items instead',
     'Sprint tab: work that went back to the backlog is aged from when it was picked up again, so ages and the forecast are not stretched by an old start',
     'Sprint tab: “Do your points predict time?” scales to what most items take, and the code card says so plainly when no branch or pull request names the sprint’s items',

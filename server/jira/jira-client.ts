@@ -554,6 +554,32 @@ export class JiraClient {
     return { keys, recentOnly: true }
   }
 
+  /** The projects a board's filter shows: a board may span several. */
+  async boardProjects(
+    boardId: string,
+    signal?: AbortSignal,
+  ): Promise<string[]> {
+    const keys: string[] = []
+    let startAt = 0
+    for (let pages = 0; pages < 10; pages++) {
+      const page = await this.get<{
+        values?: Array<{ key?: string }>
+        isLast?: boolean
+        maxResults?: number
+      }>(
+        `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/project?startAt=${startAt}&maxResults=50`,
+        signal,
+      )
+      const found = page.values ?? []
+      for (const project of found)
+        if (project.key && /^[A-Z][A-Z0-9_]{1,29}$/i.test(project.key))
+          keys.push(project.key.toUpperCase())
+      if (page.isLast !== false || !found.length) break
+      startAt += page.maxResults ?? found.length
+    }
+    return keys
+  }
+
   /** Data Center and Cloud differ in search and in how epics link. */
   get cloud(): boolean {
     return !!this.config.cloud
@@ -565,7 +591,7 @@ export class JiraClient {
    * account ids or user names.
    */
   async aiSearch(
-    projectKey: string,
+    projectKey: string | readonly string[],
     query: BoardSearch,
     signal?: AbortSignal,
   ): Promise<BoardSearchResult> {
@@ -630,7 +656,7 @@ export class JiraClient {
 
   /** The assistant's item read: overview fields, or everything with detail. */
   async aiItems(
-    projectKey: string,
+    projectKey: string | readonly string[],
     keys: string[],
     detail: boolean,
     signal?: AbortSignal,
@@ -650,7 +676,7 @@ export class JiraClient {
   }
 
   async investigateIssues(
-    projectKey: string,
+    projectKey: string | readonly string[],
     issueKeys: string[],
     signal?: AbortSignal,
   ): Promise<AiJiraEvidenceBundle> {
@@ -672,7 +698,7 @@ export class JiraClient {
       .map((key) => `"${escapeJql(key)}"`)
       .join(',')
     const page = await this.get<JiraIssuePage>(
-      `/rest/api/2/search?jql=${encodeURIComponent(`project = "${escapeJql(projectKey)}" AND key in (${quotedKeys}) ORDER BY key`)}&startAt=0&maxResults=${requestedKeys.length}&fields=${AI_INVESTIGATION_FIELDS}&expand=changelog`,
+      `/rest/api/2/search?jql=${encodeURIComponent(`${projectClause(projectKey)} AND key in (${quotedKeys}) ORDER BY key`)}&startAt=0&maxResults=${requestedKeys.length}&fields=${AI_INVESTIGATION_FIELDS}&expand=changelog`,
       signal,
     )
     const completeIssues: JiraIssueResponse[] = []
@@ -688,7 +714,7 @@ export class JiraClient {
   }
 
   async lookupIssues(
-    projectKey: string,
+    projectKey: string | readonly string[],
     lookup: AiJiraLookup,
     signal?: AbortSignal,
   ): Promise<AiJiraEvidenceBundle> {
@@ -724,7 +750,7 @@ export class JiraClient {
       .map((key) => `"${escapeJql(key)}"`)
       .join(',')
     const page = await this.get<JiraIssuePage>(
-      `/rest/api/2/search?jql=${encodeURIComponent(`project = "${escapeJql(projectKey)}" AND key in (${quotedKeys}) ORDER BY key`)}&startAt=0&maxResults=${requestedKeys.length}&fields=${AI_OVERVIEW_FIELDS}`,
+      `/rest/api/2/search?jql=${encodeURIComponent(`${projectClause(projectKey)} AND key in (${quotedKeys}) ORDER BY key`)}&startAt=0&maxResults=${requestedKeys.length}&fields=${AI_OVERVIEW_FIELDS}`,
       signal,
     )
     return normaliseJiraOverview(
@@ -1754,6 +1780,14 @@ function resolveStatus(
 function isTruncated(changelog: JiraChangelog | undefined): boolean {
   if (!changelog || changelog.total === undefined) return false
   return changelog.total > (changelog.histories?.length ?? 0)
+}
+
+/** One project, or the board's several: `project in ("WEB", "KIT")`. */
+function projectClause(projectKey: string | readonly string[]): string {
+  const projects = typeof projectKey === 'string' ? [projectKey] : projectKey
+  return projects.length === 1
+    ? `project = "${escapeJql(projects[0]!)}"`
+    : `project in (${projects.map((key) => `"${escapeJql(key)}"`).join(', ')})`
 }
 
 function escapeJql(value: string): string {

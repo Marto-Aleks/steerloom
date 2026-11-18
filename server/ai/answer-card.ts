@@ -49,6 +49,8 @@ function knownKeys(context: AiReportContext) {
       stage.items.map((item) => item.key),
     ),
     ...(context.jiraEvidence?.issues ?? []).map((issue) => issue.key),
+    ...(context.sprint?.running?.items ?? []).map((item) => item.key),
+    ...(context.sprint?.running?.scopeChange.removed ?? []),
   ])
   return { code, board }
 }

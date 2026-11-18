@@ -278,6 +278,7 @@ export function FlowAnalysis({
     pullRequests,
     branches,
     teamNotes,
+    sprint: sprintBriefing,
   })
   const aiJiraScope =
     (snapshot.source.kind === 'jira-data-center' ||
@@ -287,6 +288,11 @@ export function FlowAnalysis({
       ? {
           connectionId: snapshot.source.connectionId,
           projectKey: snapshot.source.projectKey,
+          // Its board, so the assistant can read items from the board's
+          // other projects too.
+          ...(/^\d+$/.test(snapshot.board.id)
+            ? { boardId: snapshot.board.id }
+            : {}),
         }
       : snapshot.source.kind === 'trello' && snapshot.source.connectionId
         ? {

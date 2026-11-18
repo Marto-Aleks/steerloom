@@ -1135,6 +1135,24 @@ function evidenceGuidance(agent?: AiAgentPromptOptions): string {
 }
 
 /**
+ * Scrum boards: how to read the Sprint tab's facts, and the rules that keep
+ * sprint numbers from turning into targets or judgements.
+ */
+function sprintSection(context: AiReportContext): string {
+  if (!context.sprint) return ''
+  return `SPRINT
+This board runs sprints, and the reader sees a Sprint tab. sprint in the report context holds what it shows: the running sprint (running), the next sprint's plan (planning), whether estimates predict time (pointsPredictTime) and the last sprints (lastSprints). Use it for questions about the sprint, its goal, what to descope, carry-over and planning; the flow numbers elsewhere in the context describe the whole board.
+- An item counts as done when it reaches the board's last column, as in Jira's sprint report. chancePercent is Steerloom's estimate that an open item gets there by the sprint's end, from how long similar items took from start to done in the last 90 days. Quote it as given; never recalculate it. Without running.forecast there is too little history to forecast: say what is done and what is open, never call items on track or late.
+- Planned means in the sprint by the end of its first day; addedMidSprint items came later. Added work is scope change to name and decide on, not a failure. sprintsSoFar above 1 means the item rolled over from earlier sprints.
+- Points and velocity are the team's own planning tools. finishedPoints per sprint is a range to plan with, never a target, and never compare teams or people with it. When pointsPredictTime.verdict is "no", do not reason as if a small estimate means little work: say that estimates here do not predict time when it matters to the answer. When it is "partly" or "yes", size can explain a slow item.
+- The sprint goal is free text. Judge it by reading which items serve it (their titles and descriptions, with your tools) and say which ones you counted and how sure you are. For a running sprint, say whether the goal is likely met, partly met or not met by the end, from those items' states and chances; for a closed sprint, from whether they finished.
+- Descoping is a team decision with the product owner: offer what to move out and what it frees, never decide it for them.
+END_SPRINT
+
+`
+}
+
+/**
  * What the team wrote about how it works. Facts and wording preferences for
  * every answer; they never override the rules on people and evidence.
  */
@@ -1203,7 +1221,7 @@ END_ACTIVE_SKILL
 
 ${conversationSummary ? `EARLIER_CONVERSATION_MEMORY\n${conversationSummary}\nEND_EARLIER_CONVERSATION_MEMORY\n` : ''}
 
-${codeAndBoardSection(context)}${teamNotesSection(context.teamNotes)}REPORT_CONTEXT_JSON
+${codeAndBoardSection(context)}${sprintSection(context)}${teamNotesSection(context.teamNotes)}REPORT_CONTEXT_JSON
 ${JSON.stringify({ ...context, teamNotes: undefined, codeLookup: undefined, codeByItem: codeByItem(context) })}
 END_REPORT_CONTEXT_JSON`
 }

@@ -57,23 +57,60 @@ export function plainText(html: unknown, max: number): string {
 
 // ---- Jira ----------------------------------------------------------------
 
+/**
+ * Jira, read-only: the connected project, plus the other projects on the
+ * report's board when it spans several. The board must be one of the
+ * project's own boards, so a board id cannot widen access beyond what the
+ * connection's board list shows; the projects come from Jira, never from
+ * the request.
+ */
 export function jiraReader(
   client: JiraClient,
   projectKey: string,
+  boardId?: string,
 ): BoardReader {
-  const pattern = new RegExp(`^${projectKey}-\\d{1,9}$`)
+  let projects: Promise<string[]> | undefined
+  const allowed = (signal?: AbortSignal) => {
+    if (!boardId) return Promise.resolve([projectKey])
+    if (!projects) {
+      const loading = (async () => {
+        const boards = await client.listBoards(projectKey, signal)
+        if (!boards.some((board) => board.id === boardId)) return [projectKey]
+        const onBoard = await client.boardProjects(boardId, signal)
+        return [...new Set([projectKey, ...onBoard])]
+      })()
+      projects = loading
+      // A failed read is not kept: the next call tries again.
+      loading.catch(() => {
+        if (projects === loading) projects = undefined
+      })
+    }
+    return projects.catch(() => [projectKey])
+  }
+  const outside = (keys: string[], list: string[]) =>
+    keys.filter((key) => !list.some((project) => key.startsWith(`${project}-`)))
   return {
     label: 'Jira',
     keyExample: `${projectKey}-123`,
     normaliseKey(raw) {
       const key = raw.trim().toUpperCase()
-      if (pattern.test(key)) return key
-      // A bare number means an item in this project.
+      if (/^[A-Z][A-Z0-9_]{1,29}-\d{1,9}$/.test(key)) return key
+      // A bare number means an item in the connected project.
       return /^\d{1,9}$/.test(key) ? `${projectKey}-${key}` : null
     },
-    items: (keys, detail, signal) =>
-      client.aiItems(projectKey, keys, detail, signal),
-    search: (query, signal) => client.aiSearch(projectKey, query, signal),
+    async items(keys, detail, signal) {
+      const list = await allowed(signal)
+      const result = await client.aiItems(list, keys, detail, signal)
+      const elsewhere = outside(keys, list)
+      return elsewhere.length
+        ? {
+            ...result,
+            unavailable: [...new Set([...result.unavailable, ...elsewhere])],
+          }
+        : result
+    },
+    search: async (query, signal) =>
+      client.aiSearch(await allowed(signal), query, signal),
   }
 }
 

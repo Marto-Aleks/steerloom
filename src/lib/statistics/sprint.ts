@@ -788,6 +788,16 @@ export function sprintDescopePrompt(
   return `${active.sprint.name} is on working day ${active.day} of ${active.days}${active.sprint.goal ? `; its goal: "${active.sprint.goal}"` : ''}. ${active.likely} of ${active.items.length} items are likely done by the end. These are unlikely to finish:\n${lines.join('\n')}\n\nHelp me decide what to descope, swarm or finish first now, not at the review. Check each item's history, comments and code, say which protects the sprint goal best, and end with a checkpoint for the next stand-up. Never blame anyone.`
 }
 
+/** Stand-up, for the running sprint: what needs saying today. */
+export function sprintStandupPrompt(active: ActiveSprintView): string {
+  return `What should we raise at today's stand-up for ${active.sprint.name}, on working day ${active.day} of ${active.days}? Look at the sprint's items at risk, not started, rolled over or added mid-sprint, read the ones that matter with detail, and give at most four points, each with the question for its owner.`
+}
+
+/** The sprint goal, judged from the items that serve it. */
+export function sprintGoalPrompt(active: ActiveSprintView): string {
+  return `Will ${active.sprint.name} meet its goal: "${active.sprint.goal ?? ''}"? Read the sprint's items to decide which ones serve the goal, then say whether it is likely met, partly met or not met by the end, which items decide it, and what would change the outcome.`
+}
+
 export function sprintPlanningPrompt(
   planning: PlanningView,
   unit: 'points' | 'items',

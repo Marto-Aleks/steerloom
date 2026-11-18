@@ -98,6 +98,76 @@ export interface AiReportContext {
    * written into the prompt: only what the assistant asks for is read.
    */
   codeLookup?: AiItemPullRequests[]
+  /** Scrum boards: the Sprint tab's facts. Keys and numbers only, no titles. */
+  sprint?: AiSprintContext
+}
+
+export type AiSprintItemState =
+  | 'done'
+  | 'on track'
+  | 'in progress'
+  | 'at risk'
+  | 'not started'
+
+export interface AiSprintContext {
+  /** "points" when the board estimates in story points, else "items". */
+  unit: 'points' | 'items'
+  running?: {
+    name: string
+    goal?: string
+    /** Working day of the sprint and how many it has. */
+    day: number
+    days: number
+    /** Calendar days until the planned end. */
+    daysLeft: number
+    /** Absent when too few items finished in the last 90 days to forecast. */
+    forecast?: { likelyDone: number; atLeast85: number; sampleItems: number }
+    finishedLast90Days: number
+    points?: {
+      likely: number
+      total: number
+      atRisk: number
+      unestimated: number
+    }
+    items: Array<{
+      key: string
+      state: AiSprintItemState
+      /** Column, then what matters: age, "3rd sprint" or when it was added. */
+      status: string
+      chancePercent?: number
+      points?: number
+      sprintsSoFar: number
+      addedMidSprint: boolean
+    }>
+    scopeChange: { plannedItems: number; added: string[]; removed: string[] }
+  }
+  /** The next sprint's plan against what the last sprints finished. */
+  planning?: {
+    sprint: string
+    planned: number
+    unestimatedItems: number
+    lastSprints: number
+    low: number
+    high: number
+    usual: number
+  }
+  /** Whether bigger estimates took longer on this board, last 90 days. */
+  pointsPredictTime?: {
+    verdict: 'yes' | 'partly' | 'no'
+    estimatedItems: number
+    smallUpToPoints: number
+    smallMedianDays: number
+    largeMedianDays: number
+  }
+  lastSprints: Array<{
+    name: string
+    goal?: string
+    planned: number
+    finishedPlanned: number
+    added: number
+    removed: number
+    finishedPoints?: number
+  }>
 }
 
 export interface AiDataChecks {
