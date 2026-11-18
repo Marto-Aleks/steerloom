@@ -99,6 +99,42 @@ export interface FlowBoardSnapshot {
   transitions: FlowTransition[]
   loadedAt: string
   historyWarnings?: string[]
+  /** Scrum boards only: their sprints and each item's sprint history. */
+  sprints?: SprintData
+}
+
+/** One sprint as Jira reports it. Times are ISO strings. */
+export interface SprintRecord {
+  id: string
+  name: string
+  state: 'active' | 'closed' | 'future'
+  startAt?: string
+  /** The planned end. */
+  endAt?: string
+  /** When the sprint was actually closed. */
+  completedAt?: string
+  goal?: string
+}
+
+/** An item's sprints and estimates, now and every change to them. */
+export interface SprintItemRecord {
+  issueId: string
+  /** The sprints the item belongs to now, closed ones included. */
+  sprintIds: string[]
+  /** The estimate now, in story points; absent when not estimated. */
+  points?: number
+  sprintChanges: Array<{ at: string; from: string[]; to: string[] }>
+  pointChanges: Array<{ at: string; from: number | null; to: number | null }>
+}
+
+export interface SprintData {
+  /** Points when the board estimates in a story points field, else items. */
+  estimate: { kind: 'points'; field: string } | { kind: 'items' }
+  /** The running sprint, the last closed ones and the next planned ones. */
+  sprints: SprintRecord[]
+  items: SprintItemRecord[]
+  /** Set when the board has sprints Steerloom may not read. */
+  unavailable?: 'permission'
 }
 
 export interface JiraBoardOption {

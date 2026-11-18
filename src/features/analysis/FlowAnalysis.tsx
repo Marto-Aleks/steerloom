@@ -9,8 +9,11 @@ import {
   GlassButton,
   GlassModal,
   GlassPanel,
+  SegmentedControl,
   StatusMessage,
 } from '../../components/ui'
+import { buildSprintBriefing } from '../../lib/statistics/sprint'
+import { SprintView } from './SprintView'
 import {
   activeItemsWithCode,
   codeReview,
@@ -199,6 +202,28 @@ export function FlowAnalysis({
     () => codeTrailGroups(report, review),
     [report, review],
   )
+  // Scrum boards open on the Sprint tab; the briefing is one click away.
+  const sprintBriefing = useMemo(
+    () => buildSprintBriefing(snapshot, filters),
+    [snapshot, filters],
+  )
+  const [tab, setTab] = useState<'sprint' | 'briefing'>('sprint')
+  const sprintTab = sprintBriefing !== undefined && tab === 'sprint'
+  const sprintName = sprintBriefing?.active?.sprint.name
+  // The code behind the running sprint: its active items only.
+  const sprintCode = useMemo(() => {
+    const active = sprintBriefing?.active
+    if (!active || !review) return undefined
+    const keys = new Set(active.items.map((item) => item.key))
+    const trail = codeTrailGroups(
+      {
+        ...report,
+        agingWork: agingWork.filter((item) => keys.has(item.item)),
+      },
+      review,
+    )
+    return trail?.total ? trail : undefined
+  }, [sprintBriefing, review, report, agingWork])
   const delayedItems = useMemo(
     () =>
       review
@@ -392,293 +417,367 @@ export function FlowAnalysis({
 
   return (
     <section aria-labelledby="insights-title" className="screen-stack report">
-      <header className="report-hero" data-tone={briefing.tone}>
-        <div className="report-hero__copy">
-          <div className="report-hero__intro">
-            <div className="report-hero__text">
-              <h1 id="insights-title" className="report-hero__headline">
-                {briefing.headline}
-              </h1>
-              <p className="report-hero__summary">
-                {briefing.summary}
-                {beyondLimit > 0 && (
-                  <>
-                    {' '}
-                    <button
-                      type="button"
-                      className="report-hero__link"
-                      onClick={() => setAgingOpen(true)}
-                    >
-                      Show {beyondLimit === 1 ? 'it' : `these ${beyondLimit}`}
-                    </button>
-                  </>
-                )}
-              </p>
-              <MeasureScope
-                snapshot={snapshot}
-                filters={filters}
-                onChange={onFiltersChange}
-                onMoreOptions={onAdjust}
-              />
-              {githubLine && !pullRequestError && (
-                <p
-                  className="metadata-copy"
-                  role="status"
-                  title={githubLine.detail}
-                >
-                  {githubLine.text}
-                </p>
-              )}
-              {pullRequestError && (
-                <StatusMessage variant="warning">
-                  {pullRequestError}
-                </StatusMessage>
-              )}
-            </div>
-            <div className="report-hero__actions">
-              {/* Both open the chat with the question ready to send, so the
-                  group says where they go. */}
-              <div
-                className="report-hero__ask"
-                role="group"
-                aria-labelledby="report-hero-ask-label"
-              >
-                <span id="report-hero-ask-label">
-                  <AskAiTag />
-                </span>
-                <button
-                  type="button"
-                  className="briefing-link"
-                  title="Opens Steerloom AI with this question, ready to send"
-                  onClick={() =>
-                    requestAiDraft(
-                      standupPrompt(agingWork, metrics.percentile85CycleTime),
-                    )
-                  }
-                >
-                  What to raise today <span aria-hidden="true">→</span>
-                </button>
-                <button
-                  type="button"
-                  className="briefing-link"
-                  title="Opens Steerloom AI with this question, ready to send"
-                  onClick={() => requestAiDraft(periodSummaryPrompt)}
-                >
-                  Summarise this period <span aria-hidden="true">→</span>
-                </button>
-              </div>
-              <ReportMenu
-                items={[
-                  ...(onRefresh
-                    ? [
-                        {
-                          label: refreshing ? 'Refreshing…' : 'Refresh board',
-                          onSelect: onRefresh,
-                          disabled: refreshing,
-                        },
-                      ]
-                    : []),
-                  ...(onAdjust
-                    ? [{ label: 'Adjust report', onSelect: onAdjust }]
-                    : []),
-                  {
-                    label: showMethod
-                      ? 'Hide how this was measured'
-                      : 'How this was measured',
-                    onSelect: () => setShowMethod((value) => !value),
-                  },
-                ]}
-              />
-            </div>
-          </div>
-          {briefing.caveats.map((caveat) => (
-            <p className="report-hero__caveat" key={caveat}>
-              {caveat}
-            </p>
-          ))}
-          {showMethod && (
-            <section
-              className="report-data-details"
-              aria-label="How this was measured"
-            >
-              <p className="report-hero__meta metadata-copy">
-                <span>{measuredColumnsLabel}</span>
-                {' · '}
-                <span>{analysisScopeLabel(filters)}</span>
-                {' · '}
-                <span>Refreshed {refreshedLabel}</span>
-                {' · '}
-                <span>{reportSourceLabel}</span>
-              </p>
-              <div className="report-header__metadata surface-inset">
-                <span>
-                  <strong>{metrics.uniqueItemCount.toLocaleString()}</strong>{' '}
-                  {metrics.uniqueItemCount === 1 ? 'item' : 'items'} in this
-                  report
-                  {dataQuality.uniqueIssueCount !== metrics.uniqueItemCount &&
-                    ` (of ${dataQuality.uniqueIssueCount.toLocaleString()} on the board)`}
-                </span>
-                <span>
-                  <strong>{selectedColumns.length.toLocaleString()}</strong>{' '}
-                  {selectedColumns.length === 1 ? 'stage' : 'stages'} measured
-                </span>
-                <span>Time in calendar days</span>
-              </div>
-              <p className="metadata-copy">
-                An item counts as finished when it leaves the measured stages
-                for the last time within the period. Its cycle time adds up
-                every visit to those stages, including when work comes back, and
-                leaves out time spent elsewhere. Work in progress uses all
-                loaded history. The usual limit (P85) is the time within which
-                85% of finished items were done: a reference, separate from any
-                target your team sets.
-              </p>
-              <details className="report-method">
-                <summary>Exact calculation</summary>
-                <p className="metadata-copy">
-                  Each finished item contributes one observation, on its latest
-                  exit from the measured stages. Cycle time sums all observed
-                  visits to those stages. P85 uses linear interpolation at index
-                  0.85 × (n − 1) in the sorted sample. Days are calendar days of
-                  24 hours.
-                </p>
-              </details>
-              <DataQualityPanel
-                report={dataQuality}
-                fixes={onRefresh ? ['refresh'] : []}
-                onFix={(fix) => {
-                  if (fix.kind === 'refresh') onRefresh?.()
-                }}
-              />
-            </section>
+      {sprintBriefing && (
+        <div className="report-tabs">
+          <SegmentedControl
+            label="Dashboard view"
+            options={[
+              { value: 'sprint', label: sprintName ?? 'Sprint' },
+              { value: 'briefing', label: 'Flow briefing' },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+          {sprintTab && (
+            <ReportMenu
+              items={[
+                ...(onRefresh
+                  ? [
+                      {
+                        label: refreshing ? 'Refreshing…' : 'Refresh board',
+                        onSelect: onRefresh,
+                        disabled: refreshing,
+                      },
+                    ]
+                  : []),
+                ...(onAdjust
+                  ? [{ label: 'Adjust report', onSelect: onAdjust }]
+                  : []),
+              ]}
+            />
           )}
         </div>
-      </header>
-
-      <div
-        className="briefing-stage"
-        data-hero={heroSignal ? 'signal' : 'forecast'}
-        data-layout={loads.length ? 'split' : 'single'}
-      >
-        {heroSignal ? (
-          <HeroSignal
-            signal={heroSignal}
-            items={delayedItems}
-            activeCount={agingWork.length}
-            limitDays={p85}
+      )}
+      {sprintTab && sprintBriefing ? (
+        <>
+          <h1 id="insights-title" className="sr-only">
+            {sprintName ? `${sprintName}: will it land` : 'Sprints'}
+          </h1>
+          <SprintView
+            briefing={sprintBriefing}
             onAsk={requestAiDraft}
-            onShowAll={() => setAgingOpen(true)}
-          />
-        ) : (
-          <ForecastPanel result={forecast} onAsk={requestAiDraft} hero />
-        )}
-        {loads.length ? (
-          <WorkStagesPanel
-            loads={loads}
-            limitDays={p85}
-            flow={
-              balance
-                ? {
-                    started: balance.started,
-                    finished: balance.finished,
-                    days: balance.days,
-                  }
-                : undefined
+            code={
+              sprintCode ? (
+                <CodeReviewPanel
+                  title={`Code behind ${sprintName ?? 'the sprint'}`}
+                  stage="the sprint"
+                  headline={sprintCode.headline}
+                  sub={`${sprintCode.total} active sprint ${sprintCode.total === 1 ? 'item' : 'items'}, grouped by what the code says.`}
+                  legend={[
+                    { tone: 'alive', label: 'moving' },
+                    { tone: 'quiet', label: 'quiet a week+' },
+                    { tone: 'waiting', label: 'waiting for a first look' },
+                  ]}
+                  groups={sprintCode.groups}
+                  onAsk={requestAiDraft}
+                />
+              ) : undefined
             }
-            finishedCount={metrics.workItemCount}
-            style={stagger(1)}
           />
-        ) : null}
-      </div>
-      {codeTrail && (
-        <CodeReviewPanel
-          title="Code"
-          stage="the board"
-          headline={codeTrail.headline}
-          sub={`${codeTrail.total} active ${codeTrail.total === 1 ? 'item' : 'items'}, grouped by what the code says.`}
-          legend={[
-            { tone: 'alive', label: 'moving' },
-            { tone: 'quiet', label: 'quiet a week+' },
-            { tone: 'waiting', label: 'waiting for a first look' },
-          ]}
-          groups={codeTrail.groups}
-          readyToMergedDays={review?.inside?.pullRequestDays}
-          finishedLinked={review?.inside?.linked}
-          onAsk={requestAiDraft}
-          hint={codeHint}
-        />
-      )}
+        </>
+      ) : (
+        <>
+          <header className="report-hero" data-tone={briefing.tone}>
+            <div className="report-hero__copy">
+              <div className="report-hero__intro">
+                <div className="report-hero__text">
+                  <h1 id="insights-title" className="report-hero__headline">
+                    {briefing.headline}
+                  </h1>
+                  <p className="report-hero__summary">
+                    {briefing.summary}
+                    {beyondLimit > 0 && (
+                      <>
+                        {' '}
+                        <button
+                          type="button"
+                          className="report-hero__link"
+                          onClick={() => setAgingOpen(true)}
+                        >
+                          Show{' '}
+                          {beyondLimit === 1 ? 'it' : `these ${beyondLimit}`}
+                        </button>
+                      </>
+                    )}
+                  </p>
+                  <MeasureScope
+                    snapshot={snapshot}
+                    filters={filters}
+                    onChange={onFiltersChange}
+                    onMoreOptions={onAdjust}
+                  />
+                  {githubLine && !pullRequestError && (
+                    <p
+                      className="metadata-copy"
+                      role="status"
+                      title={githubLine.detail}
+                    >
+                      {githubLine.text}
+                    </p>
+                  )}
+                  {pullRequestError && (
+                    <StatusMessage variant="warning">
+                      {pullRequestError}
+                    </StatusMessage>
+                  )}
+                </div>
+                <div className="report-hero__actions">
+                  {/* Both open the chat with the question ready to send, so the
+                  group says where they go. */}
+                  <div
+                    className="report-hero__ask"
+                    role="group"
+                    aria-labelledby="report-hero-ask-label"
+                  >
+                    <span id="report-hero-ask-label">
+                      <AskAiTag />
+                    </span>
+                    <button
+                      type="button"
+                      className="briefing-link"
+                      title="Opens Steerloom AI with this question, ready to send"
+                      onClick={() =>
+                        requestAiDraft(
+                          standupPrompt(
+                            agingWork,
+                            metrics.percentile85CycleTime,
+                          ),
+                        )
+                      }
+                    >
+                      What to raise today <span aria-hidden="true">→</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="briefing-link"
+                      title="Opens Steerloom AI with this question, ready to send"
+                      onClick={() => requestAiDraft(periodSummaryPrompt)}
+                    >
+                      Summarise this period <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                  <ReportMenu
+                    items={[
+                      ...(onRefresh
+                        ? [
+                            {
+                              label: refreshing
+                                ? 'Refreshing…'
+                                : 'Refresh board',
+                              onSelect: onRefresh,
+                              disabled: refreshing,
+                            },
+                          ]
+                        : []),
+                      ...(onAdjust
+                        ? [{ label: 'Adjust report', onSelect: onAdjust }]
+                        : []),
+                      {
+                        label: showMethod
+                          ? 'Hide how this was measured'
+                          : 'How this was measured',
+                        onSelect: () => setShowMethod((value) => !value),
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+              {briefing.caveats.map((caveat) => (
+                <p className="report-hero__caveat" key={caveat}>
+                  {caveat}
+                </p>
+              ))}
+              {showMethod && (
+                <section
+                  className="report-data-details"
+                  aria-label="How this was measured"
+                >
+                  <p className="report-hero__meta metadata-copy">
+                    <span>{measuredColumnsLabel}</span>
+                    {' · '}
+                    <span>{analysisScopeLabel(filters)}</span>
+                    {' · '}
+                    <span>Refreshed {refreshedLabel}</span>
+                    {' · '}
+                    <span>{reportSourceLabel}</span>
+                  </p>
+                  <div className="report-header__metadata surface-inset">
+                    <span>
+                      <strong>
+                        {metrics.uniqueItemCount.toLocaleString()}
+                      </strong>{' '}
+                      {metrics.uniqueItemCount === 1 ? 'item' : 'items'} in this
+                      report
+                      {dataQuality.uniqueIssueCount !==
+                        metrics.uniqueItemCount &&
+                        ` (of ${dataQuality.uniqueIssueCount.toLocaleString()} on the board)`}
+                    </span>
+                    <span>
+                      <strong>{selectedColumns.length.toLocaleString()}</strong>{' '}
+                      {selectedColumns.length === 1 ? 'stage' : 'stages'}{' '}
+                      measured
+                    </span>
+                    <span>Time in calendar days</span>
+                  </div>
+                  <p className="metadata-copy">
+                    An item counts as finished when it leaves the measured
+                    stages for the last time within the period. Its cycle time
+                    adds up every visit to those stages, including when work
+                    comes back, and leaves out time spent elsewhere. Work in
+                    progress uses all loaded history. The usual limit (P85) is
+                    the time within which 85% of finished items were done: a
+                    reference, separate from any target your team sets.
+                  </p>
+                  <details className="report-method">
+                    <summary>Exact calculation</summary>
+                    <p className="metadata-copy">
+                      Each finished item contributes one observation, on its
+                      latest exit from the measured stages. Cycle time sums all
+                      observed visits to those stages. P85 uses linear
+                      interpolation at index 0.85 × (n − 1) in the sorted
+                      sample. Days are calendar days of 24 hours.
+                    </p>
+                  </details>
+                  <DataQualityPanel
+                    report={dataQuality}
+                    fixes={onRefresh ? ['refresh'] : []}
+                    onFix={(fix) => {
+                      if (fix.kind === 'refresh') onRefresh?.()
+                    }}
+                  />
+                </section>
+              )}
+            </div>
+          </header>
 
-      {snapshot.historyWarnings?.map((warning) => (
-        <StatusMessage variant="warning" key={warning}>
-          {warning}
-        </StatusMessage>
-      ))}
-      {!completedMetrics && (
-        <StatusMessage variant="warning" title="No completed sample yet">
-          Current work is available, but cycle-time and service-level estimates
-          need items that have exited your measured stages. Try a broader period
-          or refresh after work completes.
-        </StatusMessage>
-      )}
-      {otherSignals.length > 0 && (
-        <TodayPanel
-          signals={otherSignals}
-          heroSignal={heroSignal}
-          onAsk={requestAiDraft}
-          baseDelay={2 * 60}
-        />
-      )}
-      {flagged && <FlaggedPanel replay={flagged} onAsk={requestAiDraft} />}
-      {heroSignal && (
-        <ForecastPanel
-          result={forecast}
-          onAsk={requestAiDraft}
-          style={stagger(forecastStep)}
-        />
-      )}
-      {serviceExpectation && serviceSummary && (
-        <GlassPanel
-          className="panel-body sl-rise"
-          style={stagger(2)}
-          aria-labelledby="service-expectation-title"
-        >
-          <h2 id="service-expectation-title" className="section-title">
-            Team service expectation
-          </h2>
-          <p className="body-copy mt-2">
-            Target: {serviceExpectation.targetPercent}% of completed work within{' '}
-            {serviceExpectation.days} calendar days in measured stages.
-          </p>
-          <p className="body-copy mt-2">
-            {serviceSummary.attainmentPercent === null
-              ? 'Attainment unavailable: no completed observations in this scope.'
-              : `${formatNumber(serviceSummary.attainmentPercent)}% within threshold (${serviceSummary.within} of ${serviceSummary.sampleCount}). ${serviceSummary.meetsTarget ? 'Meeting' : 'Below'} target.`}
-          </p>
-          <p className="metadata-copy mt-2">
-            {serviceSummary.beyond.length} active items already exceed{' '}
-            {serviceExpectation.days} days. Active items are excluded from
-            completed attainment; this is not a forecast of remaining time.
-            {serviceSummary.sampleCount > 0 && serviceSummary.sampleCount < 10
-              ? ' Small completed sample: interpret attainment cautiously.'
-              : ''}
-          </p>
-          <button
-            type="button"
-            className="briefing-link"
-            onClick={() =>
-              requestAiDraft(
-                `Review the team service expectation: ${serviceExpectation.targetPercent}% within ${serviceExpectation.days} calendar days of accumulated measured-stage time. Completed attainment: ${serviceSummary.within} of ${serviceSummary.sampleCount}. Active items beyond threshold: ${serviceSummary.beyond.length}. Cite report evidence, distinguish this target from historical P85, and suggest a concrete team decision.`,
-                'Review active items beyond the agreed threshold and discuss whether workflow policies or the expectation need attention.',
-              )
-            }
+          <div
+            className="briefing-stage"
+            data-hero={heroSignal ? 'signal' : 'forecast'}
+            data-layout={loads.length ? 'split' : 'single'}
           >
-            <AskAiTag /> · Investigate service expectation{' '}
-            <span aria-hidden="true">→</span>
-          </button>
-        </GlassPanel>
+            {heroSignal ? (
+              <HeroSignal
+                signal={heroSignal}
+                items={delayedItems}
+                activeCount={agingWork.length}
+                limitDays={p85}
+                onAsk={requestAiDraft}
+                onShowAll={() => setAgingOpen(true)}
+              />
+            ) : (
+              <ForecastPanel result={forecast} onAsk={requestAiDraft} hero />
+            )}
+            {loads.length ? (
+              <WorkStagesPanel
+                loads={loads}
+                limitDays={p85}
+                flow={
+                  balance
+                    ? {
+                        started: balance.started,
+                        finished: balance.finished,
+                        days: balance.days,
+                      }
+                    : undefined
+                }
+                finishedCount={metrics.workItemCount}
+                style={stagger(1)}
+              />
+            ) : null}
+          </div>
+          {codeTrail && (
+            <CodeReviewPanel
+              title="Code"
+              stage="the board"
+              headline={codeTrail.headline}
+              sub={`${codeTrail.total} active ${codeTrail.total === 1 ? 'item' : 'items'}, grouped by what the code says.`}
+              legend={[
+                { tone: 'alive', label: 'moving' },
+                { tone: 'quiet', label: 'quiet a week+' },
+                { tone: 'waiting', label: 'waiting for a first look' },
+              ]}
+              groups={codeTrail.groups}
+              readyToMergedDays={review?.inside?.pullRequestDays}
+              finishedLinked={review?.inside?.linked}
+              onAsk={requestAiDraft}
+              hint={codeHint}
+            />
+          )}
+
+          {snapshot.historyWarnings?.map((warning) => (
+            <StatusMessage variant="warning" key={warning}>
+              {warning}
+            </StatusMessage>
+          ))}
+          {!completedMetrics && (
+            <StatusMessage variant="warning" title="No completed sample yet">
+              Current work is available, but cycle-time and service-level
+              estimates need items that have exited your measured stages. Try a
+              broader period or refresh after work completes.
+            </StatusMessage>
+          )}
+          {otherSignals.length > 0 && (
+            <TodayPanel
+              signals={otherSignals}
+              heroSignal={heroSignal}
+              onAsk={requestAiDraft}
+              baseDelay={2 * 60}
+            />
+          )}
+          {flagged && <FlaggedPanel replay={flagged} onAsk={requestAiDraft} />}
+          {heroSignal && (
+            <ForecastPanel
+              result={forecast}
+              onAsk={requestAiDraft}
+              style={stagger(forecastStep)}
+            />
+          )}
+          {serviceExpectation && serviceSummary && (
+            <GlassPanel
+              className="panel-body sl-rise"
+              style={stagger(2)}
+              aria-labelledby="service-expectation-title"
+            >
+              <h2 id="service-expectation-title" className="section-title">
+                Team service expectation
+              </h2>
+              <p className="body-copy mt-2">
+                Target: {serviceExpectation.targetPercent}% of completed work
+                within {serviceExpectation.days} calendar days in measured
+                stages.
+              </p>
+              <p className="body-copy mt-2">
+                {serviceSummary.attainmentPercent === null
+                  ? 'Attainment unavailable: no completed observations in this scope.'
+                  : `${formatNumber(serviceSummary.attainmentPercent)}% within threshold (${serviceSummary.within} of ${serviceSummary.sampleCount}). ${serviceSummary.meetsTarget ? 'Meeting' : 'Below'} target.`}
+              </p>
+              <p className="metadata-copy mt-2">
+                {serviceSummary.beyond.length} active items already exceed{' '}
+                {serviceExpectation.days} days. Active items are excluded from
+                completed attainment; this is not a forecast of remaining time.
+                {serviceSummary.sampleCount > 0 &&
+                serviceSummary.sampleCount < 10
+                  ? ' Small completed sample: interpret attainment cautiously.'
+                  : ''}
+              </p>
+              <button
+                type="button"
+                className="briefing-link"
+                onClick={() =>
+                  requestAiDraft(
+                    `Review the team service expectation: ${serviceExpectation.targetPercent}% within ${serviceExpectation.days} calendar days of accumulated measured-stage time. Completed attainment: ${serviceSummary.within} of ${serviceSummary.sampleCount}. Active items beyond threshold: ${serviceSummary.beyond.length}. Cite report evidence, distinguish this target from historical P85, and suggest a concrete team decision.`,
+                    'Review active items beyond the agreed threshold and discuss whether workflow policies or the expectation need attention.',
+                  )
+                }
+              >
+                <AskAiTag /> · Investigate service expectation{' '}
+                <span aria-hidden="true">→</span>
+              </button>
+            </GlassPanel>
+          )}
+          {evidence}
+        </>
       )}
-      {evidence}
 
       {!aiChat && (
         <GlassModal
@@ -734,7 +833,7 @@ export function FlowAnalysis({
         )}
       </GlassModal>
 
-      {details}
+      {!sprintTab && details}
       {agingPanel}
     </section>
   )

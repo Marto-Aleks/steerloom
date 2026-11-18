@@ -581,3 +581,9 @@
 .reasoning-single {
   max-width: 40rem;
 }
+
+.review-sprint {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--space-5) var(--space-8);
+}

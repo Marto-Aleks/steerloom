@@ -32,6 +32,8 @@ export interface FocusSignal {
     | 'checks-failing'
     | 'approved-not-merged'
     | 'large-pull-requests'
+    | 'sprint-scope'
+    | 'sprint-carry-over'
   severity: FocusSignalSeverity
   title: string
   evidence: string
@@ -129,6 +131,10 @@ export function focusSignalActionLabel(signal: FocusSignal): string {
       return 'Review the approved work'
     case 'large-pull-requests':
       return 'Investigate the large changes'
+    case 'sprint-scope':
+      return 'Review the sprint changes'
+    case 'sprint-carry-over':
+      return 'Review the carried-over work'
   }
 }
 
@@ -166,6 +172,10 @@ function focusSignalInvestigationPrompt(signal: FocusSignal): string {
       return 'Approved pull requests wait days to be merged. Check how long each has waited since approval, what the card on the board says, and what merging would unblock. Treat it as a missing team agreement about who merges, and propose one with a measurable checkpoint.'
     case 'large-pull-requests':
       return 'Large pull requests take much longer to merge than small ones. Show the comparison with the numbers, name any large one open now and where its item stands, and propose a concrete size agreement with a measurable checkpoint. Treat size as a way of slicing work, never as anyone’s fault.'
+    case 'sprint-scope':
+      return 'The sprint changed after it started. List what was added and removed and when, whether added work replaced planned work, and what the team could drop or defer to protect the sprint goal. Never blame whoever added the work.'
+    case 'sprint-carry-over':
+      return 'Work keeps rolling into the next sprint. Check each item’s history, comments and code to see whether it is too big, blocked or no longer a priority, and propose splitting, swarming or descoping before the next planning, with a measurable checkpoint.'
   }
 }
 
@@ -513,7 +523,7 @@ function formatPercentage(value: number) {
   return `${Math.round(value * 100)}%`
 }
 
-function buildJiraFilter(
+export function buildJiraFilter(
   tickets: Array<{ item: string; browseUrl?: string }>,
   label: string,
 ): JiraFilterLink | undefined {

@@ -52,6 +52,8 @@ const signalStatus: Record<FocusSignal['id'], BriefingStatus> = {
   'checks-failing': 'risk',
   'approved-not-merged': 'bottleneck',
   'large-pull-requests': 'info',
+  'sprint-scope': 'info',
+  'sprint-carry-over': 'aging',
 }
 
 function statusOf(signal: FocusSignal): BriefingStatus {

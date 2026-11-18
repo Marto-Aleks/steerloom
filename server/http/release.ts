@@ -7,8 +7,13 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.16',
+  version: '2026.11.18',
   notes: [
+    'Scrum boards open on a Sprint tab: how many sprint items are likely done by the end, each open item’s chance, and the code behind them from GitHub. Kanban boards keep the flow briefing; it stays one click away on Scrum boards too',
+    'Sprint decisions: work added or removed after the sprint started, and items that keep rolling into the next sprint',
+    'Planning check: the next sprint’s points against what the team finished in its last sprints, and whether the board’s story points actually predict how long work takes',
+    'The last five sprints, planned against finished, in the same chart as items finished each week: hover a sprint for its numbers, click it to pin its items',
+    'On steerloom.app, Jira projects connected before this release ask to be connected again once to show sprints; it updates the existing connection',
     'The open demo: Steerloom AI answers its starter questions and the dashboard’s Ask AI buttons, replaying answers the real assistant gave on the demo board, with no account or AI key needed',
     'The demo board reads like a real team: owners, comments, a blocker from another team, and work in Review',
     'Steerloom AI answers no longer slide sideways and cut off text at the panel’s edges',

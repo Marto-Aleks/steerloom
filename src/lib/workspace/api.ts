@@ -1,3 +1,4 @@
+import { readSprintData } from '../data-source/sprint-data'
 import { workspaceRequestPath } from './request-path'
 import {
   normalizeTrelloBoard,
@@ -155,7 +156,9 @@ export async function getBoardSnapshot(
     issues: Awaited<ReturnType<JiraBoardGateway['getBoardIssues']>>
     changes: Awaited<ReturnType<JiraBoardGateway['getStatusChanges']>>
     historyWarnings?: unknown
+    sprints?: unknown
   }
+  const sprints = readSprintData(payload.sprints)
   const source = new JiraBoardDataSource({
     getBoard: async () => payload.board,
     getBoardIssues: async () => payload.issues,
@@ -170,6 +173,7 @@ export async function getBoardSnapshot(
   return {
     ...snapshot,
     ...(historyWarnings.length ? { historyWarnings } : {}),
+    ...(sprints ? { sprints } : {}),
     source: {
       ...snapshot.source,
       kind:

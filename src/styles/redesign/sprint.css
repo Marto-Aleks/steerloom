@@ -1,0 +1,343 @@
+/* ---------------------------------------------------------------------------
+ * Sprint tab (Scrum boards): forecast hero, planning check, points vs time,
+ * the last sprints. Same tokens and cards as the briefing.
+ * ------------------------------------------------------------------------- */
+.report-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sprint-view {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.sprint-tabs {
+  justify-self: start;
+}
+
+.sprint-hero__when {
+  margin: 0 0 0 auto;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sprint-hero__basis {
+  margin: calc(var(--space-2) * -1) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+}
+
+.sprint-hero__strip {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  height: 14px;
+}
+
+.sprint-hero__strip span,
+.sprint-hero__legend li::before {
+  border-radius: var(--radius-pill);
+  background: var(--state-fill);
+  box-shadow: inset 0 0 0 1.5px var(--state-edge, transparent);
+}
+
+.sprint-hero [data-state='done'] {
+  --state-fill: var(--status-ok-line);
+}
+
+.sprint-hero [data-state='track'] {
+  --state-fill: var(--chart-primary);
+}
+
+.sprint-hero [data-state='risk'] {
+  --state-fill: var(--chart-alert);
+}
+
+.sprint-hero [data-state='todo'] {
+  --state-fill: transparent;
+  --state-edge: var(--chart-alert);
+}
+
+.sprint-hero__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+  list-style: none;
+}
+
+.sprint-hero__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sprint-hero__legend li::before {
+  width: 10px;
+  height: 10px;
+  content: '';
+}
+
+.sprint-hero__legend strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sprint-hero__items {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sprint-hero__items li {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 10rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.sprint-hero__bar {
+  position: relative;
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--separator-soft);
+}
+
+.sprint-hero__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  border-radius: inherit;
+  background: var(--chart-alert);
+}
+
+.sprint-hero__chance {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sprint-hero__chance strong {
+  color: var(--tone-ink);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.sprint-hero__chance small {
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+}
+
+/* Last sprints chart: the legend's colours match its stacked bars. */
+.sprint-history-chart .chart-legend {
+  flex-wrap: wrap;
+}
+
+.sprint-history-chart .chart-legend__dot[data-part='finished'] {
+  background: var(--chart-primary);
+}
+
+.sprint-history-chart .chart-legend__dot[data-part='open'] {
+  background: var(--separator);
+}
+
+.sprint-history-chart .chart-legend__dot[data-part='added'] {
+  background: color-mix(in srgb, var(--chart-orange) 22%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--chart-orange);
+}
+
+@media (max-width: 40rem) {
+  .sprint-hero__when {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .sprint-hero__items li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .sprint-hero__bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+.sprint-hero .hero-signal__head {
+  flex-wrap: wrap;
+}
+
+.sprint-hero .hero-signal__status {
+  white-space: nowrap;
+}
+
+.sprint-hero__goal {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.sprint-hero__goal strong {
+  color: var(--text-primary);
+}
+
+.sprint-hero__points {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.sprint-hero__points strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Planning check: the team's usual range, and where the plan sits. */
+.planning-check__track {
+  position: relative;
+  height: 12px;
+  margin: var(--space-6) 0 var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--separator-soft);
+}
+
+.planning-check__range {
+  position: absolute;
+  inset: 0 auto;
+  border-radius: inherit;
+  background: var(--chart-primary);
+}
+
+.planning-check__usual,
+.planning-check__plan {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  border-left: 2px dashed var(--chart-purple);
+}
+
+.planning-check__plan {
+  border-left: 3px solid var(--chart-primary-strong);
+}
+
+.planning-check__plan[data-over='true'] {
+  border-left-color: var(--chart-alert);
+}
+
+.planning-check__usual small,
+.planning-check__plan small {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.planning-check__plan small {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.planning-check__plan[data-over='true'] small {
+  color: var(--status-risk-ink);
+}
+
+/* Do points predict time: one range per estimate. */
+.points-time__rows {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.points-time__rows li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 7.5rem;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-caption);
+}
+
+.points-time__rows strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.points-time__rows small {
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.points-time__track {
+  position: relative;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--separator-soft);
+}
+
+.points-time__range {
+  position: absolute;
+  inset: 0 auto;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--chart-primary) 45%, transparent);
+}
+
+.points-time__median {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--chart-primary);
+  transform: translateX(-50%);
+}
+
+/* Under the tracks only: 0, 6 and 12 days at their true positions. */
+.points-time__axis {
+  position: relative;
+  height: 1.25rem;
+  margin: calc(var(--space-2) * -1) calc(7.5rem + var(--space-3)) 0
+    calc(2.5rem + var(--space-3));
+  color: var(--text-tertiary);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.points-time__axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.points-time__axis span:first-child {
+  left: 0;
+  transform: none;
+}
+
+.points-time__axis span:nth-child(2) {
+  left: 50%;
+}
+
+.points-time__axis span:last-child {
+  right: 0;
+  transform: none;
+}

@@ -112,6 +112,16 @@ if (import.meta.env.DEV && review !== null) {
       )
       return
     }
+    if (review === 'sprint') {
+      const { SprintPreview } = await import('./review/SprintPreview')
+      root.render(
+        <StrictMode>
+          <SpotIconSprite />
+          <SprintPreview />
+        </StrictMode>,
+      )
+      return
+    }
     if (review === 'reasoning') {
       const { ReasoningPreview } = await import('./review/ReasoningPreview')
       root.render(

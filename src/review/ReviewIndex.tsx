@@ -89,6 +89,15 @@ export function ReviewIndex() {
             </a>
           </li>
           <li>
+            <a href="/?review=sprint">
+              <strong>Sprints, in their own tab</strong>
+              <span>
+                Will the sprint land: a forecast, the code behind it, scope
+                change and carry-over.
+              </span>
+            </a>
+          </li>
+          <li>
             <a href="/?review=reasoning">
               <strong>Answers that steer a decision</strong>
               <span>

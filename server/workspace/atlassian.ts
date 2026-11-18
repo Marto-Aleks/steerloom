@@ -12,6 +12,9 @@ export const ATLASSIAN_SCOPES = [
   'read:jira-work',
   'read:board-scope:jira-software',
   'read:board-scope.admin:jira-software',
+  // Scrum boards' sprints. Connections made before it was added keep
+  // working; their Sprint tab asks them to reconnect.
+  'read:sprint:jira-software',
   'read:project:jira',
   'read:issue-details:jira',
 ] as const

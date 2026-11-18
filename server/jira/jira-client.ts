@@ -14,7 +14,22 @@ import type {
   JiraIssueRecord,
   JiraStatusChangeRecord,
 } from '../../src/lib/data-source/jira-gateway'
-import type { FlowStatus, JiraBoardOption } from '../../src/types'
+import type {
+  FlowStatus,
+  JiraBoardOption,
+  SprintData,
+  SprintRecord,
+} from '../../src/types'
+import {
+  keptSprints,
+  pointsField,
+  sprintData,
+  sprintFieldId,
+  sprintItems,
+  type JiraEstimation,
+  type JiraFieldResponse,
+  type JiraSprintResponse,
+} from './sprints'
 import type { JiraServerConfig } from './config'
 import {
   filterItems,
@@ -54,6 +69,8 @@ interface JiraBoardPage {
 interface JiraBoardConfiguration {
   id?: number
   name?: string
+  /** How the board estimates: a story points field, hours or item count. */
+  estimation?: JiraEstimation
   columnConfig?: {
     columns?: Array<{
       name?: string
@@ -170,6 +187,8 @@ export interface JiraBoardPayload {
   changes: JiraStatusChangeRecord[]
   /** Set when a large board was limited to recent activity. */
   historyWarnings?: string[]
+  /** Scrum boards: sprints and each item's sprint history. */
+  sprints?: SprintData
 }
 
 /**
@@ -349,14 +368,30 @@ export class JiraClient {
       )
     }
 
-    const [configuration, statuses, issueKeys] = await Promise.all([
-      this.get<JiraBoardConfiguration>(
-        `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/configuration`,
-        signal,
-      ),
-      this.get<JiraStatusRecord[]>('/rest/api/2/status', signal),
-      this.getBoardKeysWithinLimit(projectKey, boardId, signal, onProgress),
-    ])
+    // Scrum boards, and team-managed boards that run sprints.
+    const sprintBoard =
+      selectedBoard.type === 'scrum' || selectedBoard.type === 'simple'
+    const [configuration, statuses, issueKeys, sprintSetup] = await Promise.all(
+      [
+        this.get<JiraBoardConfiguration>(
+          `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/configuration`,
+          signal,
+        ),
+        this.get<JiraStatusRecord[]>('/rest/api/2/status', signal),
+        this.getBoardKeysWithinLimit(projectKey, boardId, signal, onProgress),
+        sprintBoard
+          ? this.sprintSetup(boardId, selectedBoard.type === 'scrum', signal)
+          : undefined,
+      ],
+    )
+    const points =
+      sprintSetup && 'sprintField' in sprintSetup
+        ? pointsField(configuration.estimation, sprintSetup.fields)
+        : undefined
+    const extraFields =
+      sprintSetup && 'sprintField' in sprintSetup
+        ? [sprintSetup.sprintField, ...(points ? [points.id] : [])]
+        : []
     const statusLookup = new Map<string, FlowStatus>()
     statuses.forEach((status) => {
       if (status.id && status.name) {
@@ -372,6 +407,7 @@ export class JiraClient {
       issueKeys.keys,
       signal,
       onProgress,
+      extraFields,
     )
     onProgress?.(BOARD_PROGRESS.done)
     const board = normaliseBoard(
@@ -390,10 +426,19 @@ export class JiraClient {
       browseUrl: `${this.config.siteUrl ?? this.root}/browse/${encodeURIComponent(issue.key)}`,
     }))
 
+    const sprints =
+      sprintSetup && 'sprintField' in sprintSetup
+        ? sprintData(
+            sprintSetup.sprints,
+            sprintItems(issueResponses, sprintSetup.sprintField, points),
+            points,
+          )
+        : sprintSetup
     return {
       board,
       issues: linkedIssues,
       changes,
+      ...(sprints ? { sprints } : {}),
       ...(issueKeys.recentOnly
         ? {
             historyWarnings: [
@@ -401,6 +446,78 @@ export class JiraClient {
             ],
           }
         : {}),
+    }
+  }
+
+  /**
+   * A sprint board's sprints and the site's Sprint field. A board that turns
+   * out to have no sprints gets none; one whose sprints this connection may
+   * not read says so, and the briefing loads without them.
+   */
+  private async sprintSetup(
+    boardId: string,
+    scrum: boolean,
+    signal?: AbortSignal,
+  ): Promise<
+    | {
+        sprints: SprintRecord[]
+        sprintField: string
+        fields: JiraFieldResponse[]
+      }
+    | {
+        estimate: { kind: 'items' }
+        sprints: []
+        items: []
+        unavailable: 'permission'
+      }
+    | undefined
+  > {
+    try {
+      const values: JiraSprintResponse[] = []
+      let startAt = 0
+      for (let pages = 0; ; pages++) {
+        if (pages >= MAX_PAGES) throw tooManyPages()
+        const page = await this.get<{
+          values?: JiraSprintResponse[]
+          isLast?: boolean
+          startAt?: number
+          maxResults?: number
+        }>(
+          `/rest/agile/1.0/board/${encodeURIComponent(boardId)}/sprint?startAt=${startAt}&maxResults=50`,
+          signal,
+        )
+        const found = page.values ?? []
+        values.push(...found)
+        if (page.isLast !== false || !found.length) break
+        startAt = (page.startAt ?? startAt) + (page.maxResults ?? found.length)
+      }
+      if (!scrum && !values.length) return undefined
+      const fields = await this.get<JiraFieldResponse[]>(
+        '/rest/api/2/field',
+        signal,
+      )
+      const sprintField = sprintFieldId(Array.isArray(fields) ? fields : [])
+      if (!sprintField) return undefined
+      return {
+        sprints: keptSprints(values),
+        sprintField,
+        fields: Array.isArray(fields) ? fields : [],
+      }
+    } catch (caught) {
+      if (signal?.aborted) throw caught
+      if (
+        caught instanceof JiraUpstreamError &&
+        (caught.status === 401 || caught.status === 403)
+      )
+        return {
+          estimate: { kind: 'items' },
+          sprints: [],
+          items: [],
+          unavailable: 'permission',
+        }
+      // Boards without sprints answer 400; anything else must not cost the
+      // whole briefing, which loads as a flow briefing instead.
+      return undefined
     }
   }
 
@@ -674,7 +791,10 @@ export class JiraClient {
     issueKeys: string[],
     signal?: AbortSignal,
     onProgress?: ProgressReporter,
+    /** Fields beyond the snapshot's own, whose history is needed too. */
+    extraFields: string[] = [],
   ): Promise<JiraIssueResponse[]> {
+    const fields = [SNAPSHOT_FIELDS, ...extraFields].join(',')
     const issues: JiraIssueResponse[] = []
     const total = issueKeys.length
     const every = progressInterval(total)
@@ -698,13 +818,16 @@ export class JiraClient {
         HISTORY_CONCURRENCY,
         (keys) =>
           this.get<JiraIssuePage>(
-            `/rest/api/2/search?jql=${encodeURIComponent(`key in (${quoteKeys(keys)}) ORDER BY key`)}&maxResults=100&fields=${SNAPSHOT_FIELDS}`,
+            `/rest/api/2/search?jql=${encodeURIComponent(`key in (${quoteKeys(keys)}) ORDER BY key`)}&maxResults=100&fields=${fields}`,
             signal,
           ),
       )
       const found = pages.flatMap((page) => page.issues ?? [])
-      const histories = await this.bulkStatusHistory(found, signal, (count) =>
-        report(false, count),
+      const histories = await this.bulkStatusHistory(
+        found,
+        signal,
+        (count) => report(false, count),
+        ['status', ...extraFields],
       )
       if (histories) {
         issues.push(
@@ -723,7 +846,7 @@ export class JiraClient {
         )
       } else {
         await mapWithLimit(found, 8, async (issue) => {
-          issues.push(await this.ensureCompleteHistory(issue, signal))
+          issues.push(await this.ensureCompleteHistory(issue, signal, fields))
           report()
         })
       }
@@ -737,12 +860,14 @@ export class JiraClient {
           for (let pages = 0; ; pages++) {
             if (pages >= MAX_PAGES) throw tooManyPages()
             const page = await this.get<JiraIssuePage>(
-              `/rest/api/2/search?jql=${encodeURIComponent(`key in (${quoteKeys(keys)}) ORDER BY key`)}&startAt=${startAt}&maxResults=40&fields=${SNAPSHOT_FIELDS}&expand=changelog`,
+              `/rest/api/2/search?jql=${encodeURIComponent(`key in (${quoteKeys(keys)}) ORDER BY key`)}&startAt=${startAt}&maxResults=40&fields=${fields}&expand=changelog`,
               signal,
             )
             const pageIssues = page.issues ?? []
             for (const issue of pageIssues) {
-              issues.push(await this.ensureCompleteHistory(issue, signal))
+              issues.push(
+                await this.ensureCompleteHistory(issue, signal, fields),
+              )
               report()
             }
             const pageSize = page.maxResults ?? pageIssues.length
@@ -769,6 +894,7 @@ export class JiraClient {
     issues: JiraIssueResponse[],
     signal: AbortSignal | undefined,
     onIssuesDone: (count: number) => void,
+    fieldIds: string[] = ['status'],
   ): Promise<Map<string, NonNullable<JiraChangelog['histories']>> | null> {
     const byIssue = new Map<string, NonNullable<JiraChangelog['histories']>>()
     const ids = issues.flatMap((issue) => (issue.id ? [issue.id] : []))
@@ -788,7 +914,7 @@ export class JiraClient {
         try {
           page = await this.request('/rest/api/3/changelog/bulkfetch', signal, {
             issueIdsOrKeys: batch,
-            fieldIds: ['status'],
+            fieldIds,
             maxResults: 10000,
             ...(nextPageToken ? { nextPageToken } : {}),
           })

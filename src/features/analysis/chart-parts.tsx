@@ -123,7 +123,8 @@ export function PinnedTooltip({
   /** What the count is, such as "finished" or "(90%)". */
   countLabel: string
   details: ReactNode[]
-  items: CycleTimePoint[]
+  /** The items behind the count: key, link and title on hover. */
+  items: Array<Pick<CycleTimePoint, 'item' | 'browseUrl' | 'title'>>
   onClose: () => void
 }) {
   const list = itemListLink(items)
@@ -169,7 +170,7 @@ export function PinnedTooltip({
       {!list && items.some((item) => item.browseUrl) && (
         <p className="chart-tooltip__detail chart-tooltip__keys">
           {items.slice(0, 8).map((item, index) => (
-            <span key={`${item.item}-${item.sequence}`}>
+            <span key={`${item.item}-${index}`}>
               {index > 0 ? ', ' : ''}
               <ItemKey
                 itemKey={item.item}

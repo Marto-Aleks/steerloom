@@ -1,3 +1,4 @@
+import { readSprintData } from './sprint-data'
 import { workspaceRequestPath } from '../workspace/request-path'
 import type { FlowBoardSnapshot, JiraBoardOption } from '../../types'
 import {
@@ -26,6 +27,7 @@ interface JiraBoardPayload {
   issues: JiraIssueRecord[]
   changes: JiraStatusChangeRecord[]
   historyWarnings?: string[]
+  sprints?: unknown
 }
 
 interface JiraBoardsResponse {
@@ -74,8 +76,10 @@ export async function loadJiraBoard(
     boardId,
     signal,
   )
+  const sprints = readSprintData(payload.sprints)
   return {
     ...snapshot,
+    ...(sprints ? { sprints } : {}),
     ...(payload.historyWarnings?.length
       ? { historyWarnings: payload.historyWarnings.slice(0, 3) }
       : {}),
