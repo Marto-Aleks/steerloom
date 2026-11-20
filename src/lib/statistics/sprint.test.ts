@@ -4,6 +4,7 @@ import { readSprintData } from '../data-source/sprint-data'
 import { scrumDemoSnapshot } from '../workspace/demo-scrum'
 import { demoSnapshot } from '../workspace/demo'
 import { AI_USER_MESSAGE_CHAR_LIMIT } from '../ai/conversation'
+import { toAiSprintContext } from '../ai/sprint-context'
 import {
   buildSprintBriefing,
   chanceNotStarted,
@@ -14,6 +15,7 @@ import {
   spearman,
   sprintsAt,
   sprintDay,
+  sprintLength,
   sprintDescopePrompt,
   sprintGoalPrompt,
   sprintHistoryPrompt,
@@ -418,5 +420,156 @@ describe('questions for Steerloom AI', () => {
       'Have reliable test reports. Get',
     )
     expect(sprintDescopePrompt(active)).toContain('…')
+  })
+})
+
+describe('how long a sprint is, from the dates Jira holds', () => {
+  it('counts four weeks as 28 days, and a part of a day at the end as a day', () => {
+    // Four weeks, ending at the time of day it started: 28 days, not 29.
+    expect(
+      sprintLength(at('2026-03-02T10:00:00Z'), at('2026-03-30T10:00:00Z')),
+    ).toBe(28)
+    expect(
+      sprintLength(at('2026-11-09T09:00:00Z'), at('2026-11-23T09:00:00Z')),
+    ).toBe(14)
+    expect(
+      sprintLength(at('2026-11-09T09:00:00Z'), at('2026-11-22T17:00:00Z')),
+    ).toBe(14)
+    expect(
+      sprintLength(at('2026-11-09T09:00:00Z'), at('2026-11-09T09:00:00Z')),
+    ).toBe(1)
+  })
+
+  it('shows a sprint that started today as day 1 of 28, and never a day past its last', () => {
+    const DAY = 86_400_000
+    const running = (startedAgo: number) => {
+      const snapshot = scrumDemoSnapshot(NOW)
+      const start = NOW.getTime() - startedAgo
+      return buildSprintBriefing({
+        ...snapshot,
+        sprints: {
+          ...snapshot.sprints!,
+          sprints: snapshot.sprints!.sprints.map((sprint) =>
+            sprint.state === 'active'
+              ? {
+                  ...sprint,
+                  startAt: new Date(start).toISOString(),
+                  endAt: new Date(start + 28 * DAY).toISOString(),
+                }
+              : sprint,
+          ),
+        },
+      })!.active!
+    }
+    expect(running(2 * 3_600_000)).toMatchObject({ day: 1, days: 28 })
+    expect(running(27.5 * DAY)).toMatchObject({ day: 28, days: 28 })
+    expect(running(28 * DAY)).toMatchObject({ day: 28, days: 28 })
+  })
+})
+
+describe('unfinished work leaves a sprint in three ways', () => {
+  const DAY = 86_400_000
+  const HOUR = 3_600_000
+  const base = scrumDemoSnapshot(NOW)
+  const sprintOf = (name: string) =>
+    base.sprints!.sprints.find((sprint) => sprint.name === name)!
+  const last = sprintOf('Sprint 23')
+  const running = sprintOf('Sprint 24')
+  const start = at(last.startAt!)
+  const end = at(last.completedAt!)
+  const iso = (time: number) => new Date(time).toISOString()
+  const joined = { at: iso(start - 2 * DAY), from: [], to: [last.id] }
+  // Three open items, rewritten as planned in Sprint 23 and never finished.
+  const histories: Record<
+    string,
+    Pick<SprintItemRecord, 'sprintIds' | 'sprintChanges'>
+  > = {
+    // Taken out in the middle of the sprint, back to the backlog.
+    'SHOP-247': {
+      sprintIds: [],
+      sprintChanges: [
+        joined,
+        { at: iso(start + 5 * DAY), from: [last.id], to: [] },
+      ],
+    },
+    // Taken out before the sprint was closed, added to the next one by hand.
+    'SHOP-248': {
+      sprintIds: [running.id],
+      sprintChanges: [
+        joined,
+        { at: iso(end - HOUR), from: [last.id], to: [] },
+        { at: iso(at(running.startAt!) + HOUR), from: [], to: [running.id] },
+      ],
+    },
+    // Moved to the next sprint at the moment the sprint was closed.
+    'SHOP-251': {
+      sprintIds: [running.id],
+      sprintChanges: [
+        joined,
+        { at: iso(end), from: [last.id], to: [running.id] },
+      ],
+    },
+  }
+  const idOf = (key: string) =>
+    base.issues.find((issue) => issue.key === key)!.id
+  const ids = new Map(Object.keys(histories).map((key) => [idOf(key), key]))
+  const snapshot: FlowBoardSnapshot = {
+    ...base,
+    issues: base.issues.map((issue) =>
+      ids.has(issue.id) ? { ...issue, createdAt: iso(start - 3 * DAY) } : issue,
+    ),
+    sprints: {
+      ...base.sprints!,
+      items: base.sprints!.items.map((item) =>
+        ids.has(item.issueId)
+          ? { ...item, ...histories[ids.get(item.issueId)!]! }
+          : item,
+      ),
+    },
+  }
+  const before = buildSprintBriefing(base)!.history.at(-1)!
+  const briefing = buildSprintBriefing(snapshot)!
+  const view = briefing.history.at(-1)!
+  const keys = (refs: Array<{ key: string }>) => refs.map((ref) => ref.key)
+
+  it('tells work carried into a later sprint from work taken out for good', () => {
+    expect(view.sprint.name).toBe('Sprint 23')
+    expect(view.planned.length).toBe(before.planned.length + 3)
+    expect(view.finishedPlanned).toBe(before.finishedPlanned)
+    // All three left before the end, so all three are "removed" in the plan.
+    expect(keys(view.removed).sort()).toEqual([
+      'SHOP-247',
+      'SHOP-248',
+      'SHOP-251',
+    ])
+    // Two of them went on into the next sprint; one went to the backlog.
+    expect(keys(view.movedOn).sort()).toEqual(['SHOP-248', 'SHOP-251'])
+    // Carried over: those two, and SHOP-231, which Jira moved on when the
+    // sprint was completed (it stays in Sprint 23 and joins Sprint 24).
+    expect(keys(view.notFinished)).toEqual(['SHOP-231'])
+    expect(keys(view.carriedOver).sort()).toEqual([
+      'SHOP-231',
+      'SHOP-248',
+      'SHOP-251',
+    ])
+  })
+
+  it('gives Steerloom AI the same split, in counts', () => {
+    const ai = toAiSprintContext(briefing)!.lastSprints.at(-1)!
+    expect(ai).toMatchObject({
+      name: 'Sprint 23',
+      removed: 3,
+      backToBacklog: 1,
+      carriedOver: 3,
+    })
+  })
+
+  it('does not call finished work carried over, wherever it went next', () => {
+    // An earlier sprint where everything finished carries nothing over.
+    const clean = briefing.history.find(
+      (closed) => closed.sprint.name === 'Sprint 21',
+    )!
+    expect(clean.carriedOver).toEqual([])
+    expect(clean.movedOn).toEqual([])
   })
 })

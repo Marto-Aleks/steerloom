@@ -167,7 +167,12 @@ export interface AiSprintContext {
     planned: number
     finishedPlanned: number
     added: number
+    /** Planned items no longer in the sprint at its end. */
     removed: number
+    /** Of the removed: taken out and not put into any later sprint. */
+    backToBacklog?: number
+    /** Unfinished here and continued in a later sprint, planned or added. */
+    carriedOver?: number
     finishedPoints?: number
   }>
 }

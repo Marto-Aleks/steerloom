@@ -57,9 +57,12 @@ function anthropicKey(): string {
 
 async function main() {
   const model = process.env.DEMO_AI_MODEL || DEFAULT_ANTHROPIC_MODEL
-  const client = new AiClient(
-    aiConfigFromKey({ provider: 'anthropic', apiKey: anthropicKey(), model }),
-  )
+  const config = aiConfigFromKey({
+    provider: 'anthropic',
+    apiKey: anthropicKey(),
+    model,
+  })
+  const total = { requests: 0, input: 0, cached: 0, written: 0, output: 0 }
   const boardNow = new Date()
   const { snapshot, context, questions } = demoAiSetup(boardNow, TEAM)
   const answers: RecordedAnswer[] = []
@@ -68,6 +71,8 @@ async function main() {
   )
   for (const question of questions) {
     const started = Date.now()
+    // One client per question, so its counts are that question's cost.
+    const client = new AiClient(config)
     const trail: RecordedAnswer['trail'] = []
     const result = await runAgent({
       client,
@@ -104,10 +109,19 @@ async function main() {
       ...(skill ? { skill } : {}),
       trail,
     })
+    const used = client.usage()
+    total.requests += used.requests
+    total.input += used.inputTokens
+    total.cached += used.cachedTokens
+    total.written += used.cacheWriteTokens
+    total.output += used.outputTokens
     console.log(
-      `✓ ${question.label} · ${Math.round((Date.now() - started) / 1000)}s · ${finished.card ? 'card' : 'text'}`,
+      `✓ ${question.label} · ${Math.round((Date.now() - started) / 1000)}s · ${finished.card ? 'card' : 'text'} · ${used.requests} calls · ${used.inputTokens} in (${used.cachedTokens} cached), ${used.outputTokens} out`,
     )
   }
+  console.log(
+    `\n${total.requests} model calls · ${total.input} tokens in (${total.cached} read from cache, ${total.written} written to it) · ${total.output} out`,
+  )
   const recording: DemoAiRecording = {
     model,
     recordedAt: new Date().toISOString(),

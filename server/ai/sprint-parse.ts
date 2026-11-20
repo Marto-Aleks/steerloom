@@ -251,6 +251,8 @@ function parseClosed(
   const finishedPlanned = count(value.finishedPlanned)
   const added = count(value.added)
   const removed = count(value.removed)
+  const backToBacklog = optional(value.backToBacklog, count)
+  const carriedOver = optional(value.carriedOver, count)
   const finishedPoints = optional(value.finishedPoints, count)
   if (
     !name ||
@@ -259,6 +261,8 @@ function parseClosed(
     finishedPlanned === null ||
     added === null ||
     removed === null ||
+    backToBacklog === null ||
+    carriedOver === null ||
     finishedPoints === null
   )
     return null
@@ -269,6 +273,8 @@ function parseClosed(
     finishedPlanned,
     added,
     removed,
+    ...(backToBacklog !== undefined ? { backToBacklog } : {}),
+    ...(carriedOver !== undefined ? { carriedOver } : {}),
     ...(finishedPoints !== undefined ? { finishedPoints } : {}),
   }
 }

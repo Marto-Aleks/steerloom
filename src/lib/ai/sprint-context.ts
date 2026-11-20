@@ -121,6 +121,8 @@ export function toAiSprintContext(
       finishedPlanned: view.finishedPlanned,
       added: view.added.length,
       removed: view.removed.length,
+      backToBacklog: view.removed.length - view.movedOn.length,
+      carriedOver: view.carriedOver.length,
       ...(unit === 'points' ? { finishedPoints: view.finishedPoints } : {}),
     })),
   }

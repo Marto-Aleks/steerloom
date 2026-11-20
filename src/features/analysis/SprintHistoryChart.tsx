@@ -274,7 +274,13 @@ function details(view: ClosedSprintView, unit: 'points' | 'items') {
     ) : null,
     keys('Not finished', view.notFinished),
     keys('Added mid-sprint', view.added),
-    keys('Removed', view.removed),
+    keys('Moved to a later sprint', view.movedOn),
+    keys(
+      'Removed',
+      view.removed.filter(
+        (ref) => !view.movedOn.some((moved) => moved.key === ref.key),
+      ),
+    ),
   ].filter(Boolean)
 }
 

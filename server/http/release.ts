@@ -7,8 +7,12 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.20.2',
+  version: '2026.11.20.3',
   notes: [
+    'Sprint tab: a sprint is as long as its dates in Jira say. Four weeks are 28 days, where Steerloom showed 29',
+    'Sprint tab: unfinished work is told apart by where it went. Work that continued in a later sprint is carried over, whether Jira moved it when the sprint was completed or someone took it out and added it to the next sprint. Only work taken out for good counts as removed. Click a sprint in the chart to see both lists',
+    'Steerloom AI reads carried-over work as a plan larger than what gets finished, not as a change of scope, and says how much of each sprint was carried over and how much went back to the backlog',
+    'The open demo’s Scrum team: its recorded Steerloom AI answers are new, with the reasons and options the Sprint tab questions now get',
     'Sprint tab: “What to descope” no longer fails with “Enter a valid AI chat request” on a large sprint or a long goal. The questions the Sprint tab asks Steerloom AI are now one sentence; the sprint’s facts travel with the briefing',
     'Steerloom AI: an answer about the last sprints keeps its reasons. They were being removed because they named sprints instead of items, which left a thin answer',
     'Steerloom AI offers changes to the next planning as options you can weigh, each with the number that should move in the next sprint',

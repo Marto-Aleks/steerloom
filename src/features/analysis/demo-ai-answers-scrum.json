@@ -1,35 +1,35 @@
 {
   "model": "claude-sonnet-5-5",
-  "recordedAt": "2026-11-18T14:20:58.280Z",
-  "boardNow": "2026-11-18T14:18:01.363Z",
-  "fingerprint": "64b9c53f",
+  "recordedAt": "2026-11-20T10:43:26.770Z",
+  "boardNow": "2026-11-20T10:40:51.330Z",
+  "fingerprint": "92625825",
   "answers": [
     {
       "label": "What to raise today",
       "question": "What should we raise today in Sprint 24, on day 10 of 14? Look at the sprint's items at risk, not started, rolled over or added mid-sprint, read the ones that matter with detail, and give at most four points, each with the question for its owner.",
       "starter": true,
-      "message": "The goal, **Checkout v2 live for 10% of shoppers**, is unlikely to be met: SHOP-231 waits on a provider fix with no date, and SHOP-247 has no owner.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- SHOP-231: Blocked by PAY-88, which has no date. Lea: can rollout go without 3-D Secure, or can PAY-88's owner give a date?\n- SHOP-247: The rollout switch is unassigned and untouched for 14 days. Who takes it today, so it is ready when SHOP-231 unblocks?\n- SHOP-249, SHOP-251: Added mid-sprint. Nina: what is failing in the build and the requested changes? Team: does SHOP-251 stay, or move to Sprint 25?\n- SHOP-246: Waiting for marketing copy. Omar: who in marketing owns it, and by when? If there is no date, what moves instead?\nNext step: Ask Lea whether the 10% rollout can start with the 3-D Secure step switched off. If it can, SHOP-231 stops being the gate. Check: SHOP-247 has an assignee, and SHOP-231 has either a PAY-88 date or a descoping decision, by tomorrow.\nDoes anyone on the team know who owns PAY-88 on the provider side?\n\nWhy:\n- SHOP-231: SHOP-231 is blocked by PAY-88, still In Progress. Marco commented 2 days ago that the sandbox fix ships next week, with no date. The item is in its third sprint. (Jira)\n- Ruled out: SHOP-231: Not waiting for reviewers: acme/shop#412 has 0 changes requested and passing checks. Lea wrote 6 days ago that the code is done and only testing is blocked. (GitHub)\n- SHOP-247, SHOP-248, SHOP-251: SHOP-247 and SHOP-248 are unassigned and have sat in To Do for 14 days. SHOP-251 was added on day 8 and is also unassigned. (Jira)\n- SHOP-249: SHOP-249 fixes about 40 failed mobile coupon checkouts a day. Its pull request acme/shop#415 has 2 change requests, 9 comments and failing checks, so it is active but not converging. (GitHub)\n- Ruled out: SHOP-243: The board and the code disagree on SHOP-243, but it is not a stall. acme/shop#418 was approved 1 day ago with passing checks, so the card only needs to move on merge. (GitHub)\n\nOptions:\nA. Name an owner for SHOP-247 today and build the switch ahead of SHOP-231 Takes capacity from other in-progress items Check: SHOP-247 is assigned today and in progress by tomorrow (recommended)\nB. Ask the product owner whether 10% rollout can start with 3-D Secure off, or whether the goal should be reworded A product risk decision, not the team's alone Check: Decision recorded on SHOP-231 by tomorrow (recommended)\nC. Move SHOP-251 and SHOP-248 out of the sprint to protect the goal and the coupon bug Product owner must accept the delay to both items Check: Both are out of Sprint 24 by the next refresh\nRecommended because the goal depends on the switch and on the 3-D Secure decision, and neither needs the provider's date",
+      "message": "The goal **Checkout v2 live for 10% of shoppers is unlikely to be met**: SHOP-231 waits on a provider fix with no date, and SHOP-247 has no owner.\nPossible · Jira only: Only Jira shows it.\n- SHOP-231: Blocked by PAY-88, with no sandbox date. Ask Lea and Marco: is there a firm date, and can 10% go live without 3-D Secure?\n- SHOP-247: The rollout switch has no owner and has been untouched for 14 days, with 8% chance. Ask the team: who takes it today?\n- SHOP-246: Stock alert emails wait on marketing copy, and the card is still In Progress. Ask Omar: who in marketing owns the copy, and by when?\n- SHOP-248, SHOP-251: Both are unassigned and not started, and neither serves the goal. Ask the product owner: can they move to Sprint 25 to free capacity?\nNext step: The team gives SHOP-247, the rollout switch, an owner today, because it is the one goal item that nobody has started. Check: SHOP-247 has an assignee and is In Progress by tomorrow, and SHOP-231 has a provider date or a decision to ship without it.\nCan the 10% rollout go live without 3-D Secure, or must SHOP-231 finish first?\n\nWhy:\n- SHOP-231: SHOP-231 is blocked by PAY-88, which is still In Progress. Marco's comment 2 days ago says the fix ships next week, with no date. The sprint ends in 4 days. (Jira)\n- SHOP-231: Lea wrote 6 days ago that the code is done and only testing waits on the sandbox. This is the item's 3rd sprint, and it has a 5% chance of finishing. (Jira)\n- SHOP-247, SHOP-248, SHOP-251: SHOP-247, SHOP-248 and SHOP-251 have no assignee. SHOP-247 and SHOP-248 have sat in To Do for 14 days, and SHOP-251 was added on day 8. (Jira)\n- SHOP-246: Omar's comment 1 day ago says the emails cannot go to review until marketing sends the copy. The 5-point item has been In Progress for 5 days. (Jira)\n- Ruled out: SHOP-231: Not a code problem: pull request acme/shop#412 has passing checks and no requested changes. It has had no activity for 6 days, which fits waiting on the sandbox. (GitHub)\n- Ruled out: SHOP-243: SHOP-243 is not a risk. Its pull request acme/shop#418 was approved 1 day ago and the card has a 95% chance, so the card only lags the code. (GitHub)\n\nOptions:\nA. Decide today whether 10% can go live without 3-D Secure, and ask the provider for a firm sandbox date. Needs a product and risk decision, and leaves SHOP-231 testing for next sprint. Check: A written yes or no, plus a provider date, by tomorrow. (recommended)\nB. Assign SHOP-247 now and move SHOP-248 and SHOP-251 to Sprint 25. Two items leave the sprint, and the product owner must agree. Check: SHOP-247 is In Progress by tomorrow, and the sprint holds no unassigned item that serves no goal. (recommended)\nC. Take SHOP-246 out of the sprint if the marketing copy has no date by tomorrow. Loses 5 points that sit idle anyway, and frees Omar for review work. Check: A copy date from marketing, or SHOP-246 moved to Sprint 25, by tomorrow.\nRecommended because Together they decide whether the goal can still be met, and they free capacity for the one goal item nobody has started.",
       "card": {
-        "verdict": "The goal, **Checkout v2 live for 10% of shoppers**, is unlikely to be met: SHOP-231 waits on a provider fix with no date, and SHOP-247 has no owner.",
-        "confidence": "likely",
-        "basis": "Jira and GitHub agree",
-        "sources": ["Jira", "GitHub"],
+        "verdict": "The goal **Checkout v2 live for 10% of shoppers is unlikely to be met**: SHOP-231 waits on a provider fix with no date, and SHOP-247 has no owner.",
+        "confidence": "possible",
+        "basis": "Only Jira shows it",
+        "sources": ["Jira"],
         "list": [
           {
             "keys": ["SHOP-231"],
-            "text": "Blocked by PAY-88, which has no date. Lea: can rollout go without 3-D Secure, or can PAY-88's owner give a date?"
+            "text": "Blocked by PAY-88, with no sandbox date. Ask Lea and Marco: is there a firm date, and can 10% go live without 3-D Secure?"
           },
           {
             "keys": ["SHOP-247"],
-            "text": "The rollout switch is unassigned and untouched for 14 days. Who takes it today, so it is ready when SHOP-231 unblocks?"
-          },
-          {
-            "keys": ["SHOP-249", "SHOP-251"],
-            "text": "Added mid-sprint. Nina: what is failing in the build and the requested changes? Team: does SHOP-251 stay, or move to Sprint 25?"
+            "text": "The rollout switch has no owner and has been untouched for 14 days, with 8% chance. Ask the team: who takes it today?"
           },
           {
             "keys": ["SHOP-246"],
-            "text": "Waiting for marketing copy. Omar: who in marketing owns it, and by when? If there is no date, what moves instead?"
+            "text": "Stock alert emails wait on marketing copy, and the card is still In Progress. Ask Omar: who in marketing owns the copy, and by when?"
+          },
+          {
+            "keys": ["SHOP-248", "SHOP-251"],
+            "text": "Both are unassigned and not started, and neither serves the goal. Ask the product owner: can they move to Sprint 25 to free capacity?"
           }
         ],
         "reasons": [
@@ -37,59 +37,65 @@
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-231"],
-            "fact": "SHOP-231 is blocked by PAY-88, still In Progress. Marco commented 2 days ago that the sandbox fix ships next week, with no date. The item is in its third sprint."
+            "fact": "SHOP-231 is blocked by PAY-88, which is still In Progress. Marco's comment 2 days ago says the fix ships next week, with no date. The sprint ends in 4 days."
           },
           {
-            "kind": "rules-out",
-            "source": "GitHub",
+            "kind": "supports",
+            "source": "Jira",
             "keys": ["SHOP-231"],
-            "fact": "Not waiting for reviewers: acme/shop#412 has 0 changes requested and passing checks. Lea wrote 6 days ago that the code is done and only testing is blocked."
+            "fact": "Lea wrote 6 days ago that the code is done and only testing waits on the sandbox. This is the item's 3rd sprint, and it has a 5% chance of finishing."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-247", "SHOP-248", "SHOP-251"],
-            "fact": "SHOP-247 and SHOP-248 are unassigned and have sat in To Do for 14 days. SHOP-251 was added on day 8 and is also unassigned."
+            "fact": "SHOP-247, SHOP-248 and SHOP-251 have no assignee. SHOP-247 and SHOP-248 have sat in To Do for 14 days, and SHOP-251 was added on day 8."
           },
           {
             "kind": "supports",
+            "source": "Jira",
+            "keys": ["SHOP-246"],
+            "fact": "Omar's comment 1 day ago says the emails cannot go to review until marketing sends the copy. The 5-point item has been In Progress for 5 days."
+          },
+          {
+            "kind": "rules-out",
             "source": "GitHub",
-            "keys": ["SHOP-249"],
-            "fact": "SHOP-249 fixes about 40 failed mobile coupon checkouts a day. Its pull request acme/shop#415 has 2 change requests, 9 comments and failing checks, so it is active but not converging."
+            "keys": ["SHOP-231"],
+            "fact": "Not a code problem: pull request acme/shop#412 has passing checks and no requested changes. It has had no activity for 6 days, which fits waiting on the sandbox."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
             "keys": ["SHOP-243"],
-            "fact": "The board and the code disagree on SHOP-243, but it is not a stall. acme/shop#418 was approved 1 day ago with passing checks, so the card only needs to move on merge."
+            "fact": "SHOP-243 is not a risk. Its pull request acme/shop#418 was approved 1 day ago and the card has a 95% chance, so the card only lags the code."
           }
         ],
         "options": [
           {
-            "what": "Name an owner for SHOP-247 today and build the switch ahead of SHOP-231",
-            "tradeOff": "Takes capacity from other in-progress items",
-            "checkpoint": "SHOP-247 is assigned today and in progress by tomorrow",
-            "keys": ["SHOP-247"],
+            "what": "Decide today whether 10% can go live without 3-D Secure, and ask the provider for a firm sandbox date.",
+            "tradeOff": "Needs a product and risk decision, and leaves SHOP-231 testing for next sprint.",
+            "checkpoint": "A written yes or no, plus a provider date, by tomorrow.",
+            "keys": ["SHOP-231"],
             "recommended": true
           },
           {
-            "what": "Ask the product owner whether 10% rollout can start with 3-D Secure off, or whether the goal should be reworded",
-            "tradeOff": "A product risk decision, not the team's alone",
-            "checkpoint": "Decision recorded on SHOP-231 by tomorrow",
-            "keys": ["SHOP-231", "SHOP-247"],
+            "what": "Assign SHOP-247 now and move SHOP-248 and SHOP-251 to Sprint 25.",
+            "tradeOff": "Two items leave the sprint, and the product owner must agree.",
+            "checkpoint": "SHOP-247 is In Progress by tomorrow, and the sprint holds no unassigned item that serves no goal.",
+            "keys": ["SHOP-247", "SHOP-248", "SHOP-251"],
             "recommended": true
           },
           {
-            "what": "Move SHOP-251 and SHOP-248 out of the sprint to protect the goal and the coupon bug",
-            "tradeOff": "Product owner must accept the delay to both items",
-            "checkpoint": "Both are out of Sprint 24 by the next refresh",
-            "keys": ["SHOP-251", "SHOP-248"]
+            "what": "Take SHOP-246 out of the sprint if the marketing copy has no date by tomorrow.",
+            "tradeOff": "Loses 5 points that sit idle anyway, and frees Omar for review work.",
+            "checkpoint": "A copy date from marketing, or SHOP-246 moved to Sprint 25, by tomorrow.",
+            "keys": ["SHOP-246"]
           }
         ],
-        "why": "the goal depends on the switch and on the 3-D Secure decision, and neither needs the provider's date",
-        "next": "Ask Lea whether the 10% rollout can start with the 3-D Secure step switched off. If it can, SHOP-231 stops being the gate.",
-        "checkpoint": "SHOP-247 has an assignee, and SHOP-231 has either a PAY-88 date or a descoping decision, by tomorrow.",
-        "question": "Does anyone on the team know who owns PAY-88 on the provider side?"
+        "why": "Together they decide whether the goal can still be met, and they free capacity for the one goal item nobody has started.",
+        "next": "The team gives SHOP-247, the rollout switch, an owner today, because it is the one goal item that nobody has started.",
+        "checkpoint": "SHOP-247 has an assignee and is In Progress by tomorrow, and SHOP-231 has a provider date or a decision to ship without it.",
+        "question": "Can the 10% rollout go live without 3-D Secure, or must SHOP-231 finish first?"
       },
       "checkedJiraKeys": [
         "SHOP-231",
@@ -98,8 +104,8 @@
         "SHOP-249",
         "SHOP-243",
         "SHOP-248",
-        "SHOP-250",
         "SHOP-251",
+        "SHOP-250",
         "SHOP-245",
         "SHOP-244"
       ],
@@ -116,17 +122,17 @@
         {
           "step": "jira",
           "label": "Read SHOP-231, SHOP-246, SHOP-247, SHOP-249 and 1 more in detail: description, comments, history and links",
-          "at": 3281
+          "at": 3128
         },
         {
           "step": "jira",
-          "label": "Read SHOP-248, SHOP-250, SHOP-251, SHOP-245 and 1 more in detail: description, comments, history and links",
-          "at": 3282
+          "label": "Read SHOP-248, SHOP-251, SHOP-250, SHOP-245 and 1 more in detail: description, comments, history and links",
+          "at": 3128
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 3282
+          "at": 3129
         }
       ]
     },
@@ -134,70 +140,84 @@
       "label": "Will we meet the goal?",
       "question": "Will Sprint 24 meet its goal: \"Checkout v2 live for 10% of shoppers\"? Read the sprint's items to decide which ones serve the goal, then say whether it is likely met, partly met or not met by the end, which items decide it, and what would change the outcome.",
       "starter": true,
-      "message": "Sprint 24's goal is **not met** by the end: the payment step SHOP-231 is blocked by the provider, and the 10% rollout switch SHOP-247 has no owner and hasn't started.\nLikely · Jira + Board: Jira and the board agree.\nNext step: The team gives SHOP-247 an owner today. Then ask Marco for a firm date from the provider on PAY-88, because the sprint ends in 4 days and the sandbox fix has no date. Check: SHOP-247 has an assignee and is In Progress by the next refresh. PAY-88 has a committed date.\nDoes the provider's \"next week\" for the sandbox fix leave any time to test SHOP-231 and switch on 10% before Sprint 25 ends?\n\nWhy:\n- SHOP-231: The 3-D Secure payment step is blocked by PAY-88. Lea wrote 6 days ago that it can't be tested until the provider fixes their sandbox. Marco wrote 2 days ago that the fix ships next week, with no date. (Jira)\n- SHOP-247: The rollout switch for 10% is unassigned and still To Do after 14 days. The board gives it an 8% chance of finishing in the sprint. (Jira)\n- SHOP-231, SHOP-247: The board gives SHOP-231 a 5% chance of reaching Done this sprint. It is in its 3rd sprint. (Board)\n- SHOP-245: The delivery slot picker is probably part of checkout v2. Marco wrote 3 days ago that it's bigger than estimated because the courier API has no slot endpoint. Its chance is 75%. (Jira)\n- Ruled out: SHOP-241, SHOP-243: Not a pace problem on the rest of checkout v2. The order summary SHOP-241 is Done, and delivery options SHOP-243 has a 95% chance, with its pull request approved 1 day ago. (Board)\n\nOptions:\nA. Give SHOP-247 an owner now and build the switch this sprint. Ask the provider for a date on PAY-88. The goal is still missed this sprint, but checkout v2 is ready to switch on once payments can be tested. Check: SHOP-247 is In Progress with an owner by the next refresh. (recommended)\nB. Ask whether the payment step can be tested another way, such as a different sandbox or a manual check. Needs agreement on risk for a payment flow, and may not be possible at all. Check: Answer from Lea and Marco within a day. SHOP-231 moves to Done only if a test route exists.\nC. Agree with the product owner to carry SHOP-231 and SHOP-247 into Sprint 25 and restate the goal as ready for rollout. The goal is admitted as missed, but Sprint 25 starts with honest scope. Check: The goal wording and both items are agreed before Sprint 25 starts. (recommended)\nRecommended because The blocker is outside the team's control, so build what can be built and plan Sprint 25 around the real date.",
+      "message": "The goal is **not likely to be met**: the 3-D Secure step and the 10% rollout switch both need to finish, and each has under a 10% chance in 4 days.\nPossible · Jira only: Only Jira shows it.\n- SHOP-231: Blocked by PAY-88 at the payment provider, with no date. Ask Lea whether the goal can be tested without it.\n- SHOP-247: The rollout switch has no owner and has not started. Who takes it today, and what do they need to begin?\n- SHOP-245: Slot picker is bigger than estimated because the courier has no slot endpoint. Ask Marco what is left.\nNext step: Ask Lea to get a firm date from the payment provider for the sandbox fix in PAY-88 today, so the team knows whether SHOP-231 can finish this sprint. Check: SHOP-247 has an owner and has started, and PAY-88 has a dated fix, by tomorrow.\nCan checkout v2 go live for 10% of shoppers without the 3-D Secure step, or is that step required?\n\nWhy:\n- SHOP-231: Lea said the code is done, but the 3-D Secure step can only be tested once the provider fixes their sandbox. It is blocked by PAY-88, still in progress. (Jira)\n- SHOP-231: Marco wrote 2 days ago that the fix ships next week, with no date. The sprint has 4 days left and the item has only a 5% chance. (Jira)\n- SHOP-247: The rollout switch for 10% is unassigned and has sat in To Do for 14 days. Its chance is 8% and it is the step that makes checkout live. (Jira)\n- SHOP-245: Marco commented 3 days ago that the slot picker is bigger than estimated, because the courier feed has to be polled. It has a 75% chance. (Jira)\n- Ruled out: SHOP-243: Not slow review: the delivery options pull request was approved within a day with passing checks (95% chance), so it is not what decides the goal. (GitHub)\n\nOptions:\nA. Give SHOP-247 an owner now and build the switch so it is ready the moment SHOP-231 can be tested The goal still depends on the provider's date, so it only helps if the fix lands early Check: SHOP-247 in progress by tomorrow, and PAY-88 has a date (recommended)\nB. Ask the product owner whether 10% can go live without the 3-D Secure step, or whether the goal moves to Sprint 25 Taking payments without 3-D Secure may not be acceptable, so this is a product and risk decision Check: Decision recorded by tomorrow (recommended)\nC. Free capacity for SHOP-247 and SHOP-245 by moving SHOP-248 and SHOP-251 out of the sprint, and SHOP-246 too since it waits on marketing copy Needs the product owner's agreement, and SHOP-251 was added mid-sprint Check: SHOP-245 done and SHOP-247 started by the next refresh\nRecommended because The provider's date is outside the team's control, so build the switch now and decide early whether the goal can ship without 3-D Secure.",
       "card": {
-        "verdict": "Sprint 24's goal is **not met** by the end: the payment step SHOP-231 is blocked by the provider, and the 10% rollout switch SHOP-247 has no owner and hasn't started.",
-        "confidence": "likely",
-        "basis": "Jira and the board agree",
-        "sources": ["Jira", "Board"],
+        "verdict": "The goal is **not likely to be met**: the 3-D Secure step and the 10% rollout switch both need to finish, and each has under a 10% chance in 4 days.",
+        "confidence": "possible",
+        "basis": "Only Jira shows it",
+        "sources": ["Jira"],
+        "list": [
+          {
+            "keys": ["SHOP-231"],
+            "text": "Blocked by PAY-88 at the payment provider, with no date. Ask Lea whether the goal can be tested without it."
+          },
+          {
+            "keys": ["SHOP-247"],
+            "text": "The rollout switch has no owner and has not started. Who takes it today, and what do they need to begin?"
+          },
+          {
+            "keys": ["SHOP-245"],
+            "text": "Slot picker is bigger than estimated because the courier has no slot endpoint. Ask Marco what is left."
+          }
+        ],
         "reasons": [
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-231"],
-            "fact": "The 3-D Secure payment step is blocked by PAY-88. Lea wrote 6 days ago that it can't be tested until the provider fixes their sandbox. Marco wrote 2 days ago that the fix ships next week, with no date."
+            "fact": "Lea said the code is done, but the 3-D Secure step can only be tested once the provider fixes their sandbox. It is blocked by PAY-88, still in progress."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["SHOP-231"],
+            "fact": "Marco wrote 2 days ago that the fix ships next week, with no date. The sprint has 4 days left and the item has only a 5% chance."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-247"],
-            "fact": "The rollout switch for 10% is unassigned and still To Do after 14 days. The board gives it an 8% chance of finishing in the sprint."
-          },
-          {
-            "kind": "supports",
-            "source": "Board",
-            "keys": ["SHOP-231", "SHOP-247"],
-            "fact": "The board gives SHOP-231 a 5% chance of reaching Done this sprint. It is in its 3rd sprint."
+            "fact": "The rollout switch for 10% is unassigned and has sat in To Do for 14 days. Its chance is 8% and it is the step that makes checkout live."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-245"],
-            "fact": "The delivery slot picker is probably part of checkout v2. Marco wrote 3 days ago that it's bigger than estimated because the courier API has no slot endpoint. Its chance is 75%."
+            "fact": "Marco commented 3 days ago that the slot picker is bigger than estimated, because the courier feed has to be polled. It has a 75% chance."
           },
           {
             "kind": "rules-out",
-            "source": "Board",
-            "keys": ["SHOP-241", "SHOP-243"],
-            "fact": "Not a pace problem on the rest of checkout v2. The order summary SHOP-241 is Done, and delivery options SHOP-243 has a 95% chance, with its pull request approved 1 day ago."
+            "source": "GitHub",
+            "keys": ["SHOP-243"],
+            "fact": "Not slow review: the delivery options pull request was approved within a day with passing checks (95% chance), so it is not what decides the goal."
           }
         ],
         "options": [
           {
-            "what": "Give SHOP-247 an owner now and build the switch this sprint. Ask the provider for a date on PAY-88.",
-            "tradeOff": "The goal is still missed this sprint, but checkout v2 is ready to switch on once payments can be tested.",
-            "checkpoint": "SHOP-247 is In Progress with an owner by the next refresh.",
+            "what": "Give SHOP-247 an owner now and build the switch so it is ready the moment SHOP-231 can be tested",
+            "tradeOff": "The goal still depends on the provider's date, so it only helps if the fix lands early",
+            "checkpoint": "SHOP-247 in progress by tomorrow, and PAY-88 has a date",
             "keys": ["SHOP-247", "SHOP-231"],
             "recommended": true
           },
           {
-            "what": "Ask whether the payment step can be tested another way, such as a different sandbox or a manual check.",
-            "tradeOff": "Needs agreement on risk for a payment flow, and may not be possible at all.",
-            "checkpoint": "Answer from Lea and Marco within a day. SHOP-231 moves to Done only if a test route exists.",
-            "keys": ["SHOP-231"]
+            "what": "Ask the product owner whether 10% can go live without the 3-D Secure step, or whether the goal moves to Sprint 25",
+            "tradeOff": "Taking payments without 3-D Secure may not be acceptable, so this is a product and risk decision",
+            "checkpoint": "Decision recorded by tomorrow",
+            "keys": ["SHOP-231", "SHOP-247"],
+            "recommended": true
           },
           {
-            "what": "Agree with the product owner to carry SHOP-231 and SHOP-247 into Sprint 25 and restate the goal as ready for rollout.",
-            "tradeOff": "The goal is admitted as missed, but Sprint 25 starts with honest scope.",
-            "checkpoint": "The goal wording and both items are agreed before Sprint 25 starts.",
-            "keys": ["SHOP-231", "SHOP-247", "SHOP-245"],
-            "recommended": true
+            "what": "Free capacity for SHOP-247 and SHOP-245 by moving SHOP-248 and SHOP-251 out of the sprint, and SHOP-246 too since it waits on marketing copy",
+            "tradeOff": "Needs the product owner's agreement, and SHOP-251 was added mid-sprint",
+            "checkpoint": "SHOP-245 done and SHOP-247 started by the next refresh",
+            "keys": ["SHOP-248", "SHOP-251", "SHOP-246", "SHOP-245", "SHOP-247"]
           }
         ],
-        "why": "The blocker is outside the team's control, so build what can be built and plan Sprint 25 around the real date.",
-        "next": "The team gives SHOP-247 an owner today. Then ask Marco for a firm date from the provider on PAY-88, because the sprint ends in 4 days and the sandbox fix has no date.",
-        "checkpoint": "SHOP-247 has an assignee and is In Progress by the next refresh. PAY-88 has a committed date.",
-        "question": "Does the provider's \"next week\" for the sandbox fix leave any time to test SHOP-231 and switch on 10% before Sprint 25 ends?"
+        "why": "The provider's date is outside the team's control, so build the switch now and decide early whether the goal can ship without 3-D Secure.",
+        "next": "Ask Lea to get a firm date from the payment provider for the sandbox fix in PAY-88 today, so the team knows whether SHOP-231 can finish this sprint.",
+        "checkpoint": "SHOP-247 has an owner and has started, and PAY-88 has a dated fix, by tomorrow.",
+        "question": "Can checkout v2 go live for 10% of shoppers without the 3-D Secure step, or is that step required?"
       },
       "checkedJiraKeys": [
         "SHOP-240",
@@ -227,22 +247,22 @@
         {
           "step": "jira",
           "label": "Read SHOP-240, SHOP-241, SHOP-242, SHOP-243 and 1 more in detail: description, comments, history and links",
-          "at": 3544
+          "at": 2224
         },
         {
           "step": "jira",
           "label": "Read SHOP-245, SHOP-246, SHOP-247, SHOP-248 and 1 more in detail: description, comments, history and links",
-          "at": 3545
+          "at": 2224
         },
         {
           "step": "jira",
           "label": "Read SHOP-250, SHOP-251, SHOP-231 in detail: description, comments, history and links",
-          "at": 3545
+          "at": 2224
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 3545
+          "at": 2224
         }
       ]
     },
@@ -250,203 +270,85 @@
       "label": "What to descope",
       "question": "What should we descope, swarm or finish first in Sprint 24, now and not at the review? Its goal: \"Checkout v2 live for 10% of shoppers\".",
       "starter": true,
-      "message": "The goal is **unlikely to be met this sprint**: SHOP-231 waits on a provider fix with no date, and SHOP-247, the rollout switch, has no owner.\nPossible · Jira only: Only Jira shows it.\n- SHOP-231: Blocked by PAY-88 at the payment provider, no date. Ask Lea whether a firm date exists, or whether 3-D Secure can be left out of the 10%.\n- SHOP-247: Unassigned for 14 days, no linked code. Who can take it today so the switch is ready when PAY-88 ships?\n- SHOP-246: Waiting on copy from marketing. Ask Omar whether the copy has a date, or whether it should move to Sprint 25.\n- SHOP-248, SHOP-251: Both unassigned, no linked code, not part of Checkout v2. Can the product owner move them out?\nNext step: Ask Lea today whether PAY-88 has a firm date, and whether the 10% rollout can go live without the 3-D Secure step. Check: By tomorrow: SHOP-247 has an owner, and SHOP-246, SHOP-248 and SHOP-251 are moved out or have a stated reason to stay.\nCan Checkout v2 go live for 10% of shoppers without the 3-D Secure step?\n\nWhy:\n- SHOP-231: Lea wrote 6 days ago that the code is done and testing needs the provider's sandbox fix. Marco wrote 2 days ago that the fix ships next week, with no date. The sprint ends in 4 days. (Jira)\n- SHOP-231: SHOP-231 is blocked by PAY-88, which is still In Progress. It is in its 3rd sprint, and 5% likely means the wait is outside the team's hands. (Jira)\n- Ruled out: SHOP-231: Not a reviewer queue or a build problem: pull request acme/shop#412 has passing checks. It is large (640 lines, 14 files) but is not what holds the item. (GitHub)\n- SHOP-246: Omar commented 1 day ago that the emails wait for marketing copy before review. The branch's last commit was 4 days ago and no pull request exists. (Jira)\n- SHOP-247, SHOP-248, SHOP-251: All three are unassigned with no comments, and no branch or pull request names them. SHOP-247 and SHOP-248 have sat in To Do for 14 days, SHOP-251 for 2 days. (Jira)\n\nOptions:\nA. Descope SHOP-248, SHOP-251 and SHOP-246 to Sprint 25, with the product owner. Needs the product owner's agreement. Stock alerts and a size guide ship later. Frees 11 points and focus. Check: By tomorrow all three are out of Sprint 24, or the product owner has given a reason to keep each. (recommended)\nB. Give SHOP-247 an owner today and have the team swarm on it, so the switch is ready when PAY-88 ships. 5 points with 4 days left. It slows other in-progress items and may not finish in this sprint. Check: By tomorrow SHOP-247 is assigned, in progress and has a branch with a first commit. (recommended)\nC. Ask Lea whether SHOP-231 can be split, or 3-D Secure left out of the 10% rollout, and keep SHOP-231 in Review for the provider fix. Only works if the 10% of shoppers do not need 3-D Secure. If they do, the goal moves to Sprint 25. Check: By tomorrow Lea has a yes or no on a PAY-88 date and on leaving 3-D Secure out, and the goal is confirmed or moved.\nRecommended because Descoping frees the team for SHOP-247, the only unowned item that directly serves the goal, while SHOP-231 waits on the provider.",
+      "message": "The goal is **unlikely to be met**: SHOP-231, the 3-D Secure step, is blocked by a provider sandbox with no date, and SHOP-247, the rollout switch, has no owner.\nLikely · Jira + Board: Jira and the board agree.\nNext step: Give SHOP-247, the rollout switch, an owner today. Nobody holds it, and nothing reaches 10% of shoppers without it. Check: By tomorrow SHOP-247 has an assignee and is in progress, and SHOP-248 and SHOP-251 are out of the sprint.\nCan Checkout v2 go live for 10% of shoppers without the 3-D Secure step, or is SHOP-231 a must-have for the goal?\n\nWhy:\n- SHOP-231: Lea's comment 6 days ago says the code is done but cannot be tested until the provider fixes the sandbox. Marco's comment 2 days ago says the fix ships next week, with no date. SHOP-231 is blocked by PAY-88, which is still in progress. (Jira)\n- SHOP-231, SHOP-247: The chance of finishing by sprint end is 5% for SHOP-231 and 8% for SHOP-247, with 4 days left. These are the two goal items most likely to miss. (Board)\n- SHOP-247: SHOP-247 has been in To Do for 14 days with no assignee. At 5 points it is a large item, and large items here take a median of 8 days against 3.6 for small ones. (Jira)\n- SHOP-248, SHOP-251, SHOP-246: SHOP-248 (returns label) and SHOP-251 (size guide, added on day 8) are unowned, not started, and don't serve the goal. SHOP-246 (stock alerts) has been waiting on marketing copy since yesterday. (Jira)\n- Ruled out: SHOP-243, SHOP-244: The delivery options item SHOP-243 has an approved pull request with passing checks, and SHOP-244's pull request merged 12 hours ago. Neither needs a rescue; they only need the card moved on. (GitHub)\n\nOptions:\nA. Descope SHOP-248 and SHOP-251 (6 points, both unstarted and unowned) and agree with the product owner to also drop SHOP-246 (5 points) while it waits on marketing. The product owner has to agree, and SHOP-251 was only added on day 8. Check: By tomorrow all three are out of Sprint 24 and the open count has dropped. (recommended)\nB. Swarm SHOP-247: give it an owner today and cut it to the smallest switch that can serve 10% of shoppers. It pulls someone off SHOP-245 or SHOP-250, and even with a swarm 4 days is tight for 5 points. Check: By tomorrow SHOP-247 is in progress and its chance of finishing is clearly above 8%. (recommended)\nC. Finish first: merge SHOP-243, close SHOP-244, and let someone review SHOP-231's pull request (acme/shop#412, 640 lines, no review in 6 days) so only the sandbox test is left. This does not unblock the sandbox. The goal still depends on whether 10% can go live without 3-D Secure, and on PAY-88. Check: By tomorrow SHOP-243 and SHOP-244 are Done and acme/shop#412 has had a first review.\nRecommended because Descoping frees the capacity that SHOP-247 needs, and SHOP-231 can't be pushed through until the provider fixes the sandbox.",
       "card": {
-        "verdict": "The goal is **unlikely to be met this sprint**: SHOP-231 waits on a provider fix with no date, and SHOP-247, the rollout switch, has no owner.",
-        "confidence": "possible",
-        "basis": "Only Jira shows it",
-        "sources": ["Jira"],
-        "list": [
-          {
-            "keys": ["SHOP-231"],
-            "text": "Blocked by PAY-88 at the payment provider, no date. Ask Lea whether a firm date exists, or whether 3-D Secure can be left out of the 10%."
-          },
-          {
-            "keys": ["SHOP-247"],
-            "text": "Unassigned for 14 days, no linked code. Who can take it today so the switch is ready when PAY-88 ships?"
-          },
-          {
-            "keys": ["SHOP-246"],
-            "text": "Waiting on copy from marketing. Ask Omar whether the copy has a date, or whether it should move to Sprint 25."
-          },
-          {
-            "keys": ["SHOP-248", "SHOP-251"],
-            "text": "Both unassigned, no linked code, not part of Checkout v2. Can the product owner move them out?"
-          }
-        ],
+        "verdict": "The goal is **unlikely to be met**: SHOP-231, the 3-D Secure step, is blocked by a provider sandbox with no date, and SHOP-247, the rollout switch, has no owner.",
+        "confidence": "likely",
+        "basis": "Jira and the board agree",
+        "sources": ["Jira", "Board"],
         "reasons": [
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-231"],
-            "fact": "Lea wrote 6 days ago that the code is done and testing needs the provider's sandbox fix. Marco wrote 2 days ago that the fix ships next week, with no date. The sprint ends in 4 days."
+            "fact": "Lea's comment 6 days ago says the code is done but cannot be tested until the provider fixes the sandbox. Marco's comment 2 days ago says the fix ships next week, with no date. SHOP-231 is blocked by PAY-88, which is still in progress."
+          },
+          {
+            "kind": "supports",
+            "source": "Board",
+            "keys": ["SHOP-231", "SHOP-247"],
+            "fact": "The chance of finishing by sprint end is 5% for SHOP-231 and 8% for SHOP-247, with 4 days left. These are the two goal items most likely to miss."
           },
           {
             "kind": "supports",
             "source": "Jira",
-            "keys": ["SHOP-231"],
-            "fact": "SHOP-231 is blocked by PAY-88, which is still In Progress. It is in its 3rd sprint, and 5% likely means the wait is outside the team's hands."
+            "keys": ["SHOP-247"],
+            "fact": "SHOP-247 has been in To Do for 14 days with no assignee. At 5 points it is a large item, and large items here take a median of 8 days against 3.6 for small ones."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["SHOP-248", "SHOP-251", "SHOP-246"],
+            "fact": "SHOP-248 (returns label) and SHOP-251 (size guide, added on day 8) are unowned, not started, and don't serve the goal. SHOP-246 (stock alerts) has been waiting on marketing copy since yesterday."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
-            "keys": ["SHOP-231"],
-            "fact": "Not a reviewer queue or a build problem: pull request acme/shop#412 has passing checks. It is large (640 lines, 14 files) but is not what holds the item."
-          },
-          {
-            "kind": "supports",
-            "source": "Jira",
-            "keys": ["SHOP-246"],
-            "fact": "Omar commented 1 day ago that the emails wait for marketing copy before review. The branch's last commit was 4 days ago and no pull request exists."
-          },
-          {
-            "kind": "supports",
-            "source": "Jira",
-            "keys": ["SHOP-247", "SHOP-248", "SHOP-251"],
-            "fact": "All three are unassigned with no comments, and no branch or pull request names them. SHOP-247 and SHOP-248 have sat in To Do for 14 days, SHOP-251 for 2 days."
+            "keys": ["SHOP-243", "SHOP-244"],
+            "fact": "The delivery options item SHOP-243 has an approved pull request with passing checks, and SHOP-244's pull request merged 12 hours ago. Neither needs a rescue; they only need the card moved on."
           }
         ],
         "options": [
           {
-            "what": "Descope SHOP-248, SHOP-251 and SHOP-246 to Sprint 25, with the product owner.",
-            "tradeOff": "Needs the product owner's agreement. Stock alerts and a size guide ship later. Frees 11 points and focus.",
-            "checkpoint": "By tomorrow all three are out of Sprint 24, or the product owner has given a reason to keep each.",
+            "what": "Descope SHOP-248 and SHOP-251 (6 points, both unstarted and unowned) and agree with the product owner to also drop SHOP-246 (5 points) while it waits on marketing.",
+            "tradeOff": "The product owner has to agree, and SHOP-251 was only added on day 8.",
+            "checkpoint": "By tomorrow all three are out of Sprint 24 and the open count has dropped.",
             "keys": ["SHOP-248", "SHOP-251", "SHOP-246"],
             "recommended": true
           },
           {
-            "what": "Give SHOP-247 an owner today and have the team swarm on it, so the switch is ready when PAY-88 ships.",
-            "tradeOff": "5 points with 4 days left. It slows other in-progress items and may not finish in this sprint.",
-            "checkpoint": "By tomorrow SHOP-247 is assigned, in progress and has a branch with a first commit.",
+            "what": "Swarm SHOP-247: give it an owner today and cut it to the smallest switch that can serve 10% of shoppers.",
+            "tradeOff": "It pulls someone off SHOP-245 or SHOP-250, and even with a swarm 4 days is tight for 5 points.",
+            "checkpoint": "By tomorrow SHOP-247 is in progress and its chance of finishing is clearly above 8%.",
             "keys": ["SHOP-247"],
             "recommended": true
           },
           {
-            "what": "Ask Lea whether SHOP-231 can be split, or 3-D Secure left out of the 10% rollout, and keep SHOP-231 in Review for the provider fix.",
-            "tradeOff": "Only works if the 10% of shoppers do not need 3-D Secure. If they do, the goal moves to Sprint 25.",
-            "checkpoint": "By tomorrow Lea has a yes or no on a PAY-88 date and on leaving 3-D Secure out, and the goal is confirmed or moved.",
-            "keys": ["SHOP-231"]
+            "what": "Finish first: merge SHOP-243, close SHOP-244, and let someone review SHOP-231's pull request (acme/shop#412, 640 lines, no review in 6 days) so only the sandbox test is left.",
+            "tradeOff": "This does not unblock the sandbox. The goal still depends on whether 10% can go live without 3-D Secure, and on PAY-88.",
+            "checkpoint": "By tomorrow SHOP-243 and SHOP-244 are Done and acme/shop#412 has had a first review.",
+            "keys": ["SHOP-243", "SHOP-244", "SHOP-231"]
           }
         ],
-        "why": "Descoping frees the team for SHOP-247, the only unowned item that directly serves the goal, while SHOP-231 waits on the provider.",
-        "next": "Ask Lea today whether PAY-88 has a firm date, and whether the 10% rollout can go live without the 3-D Secure step.",
-        "checkpoint": "By tomorrow: SHOP-247 has an owner, and SHOP-246, SHOP-248 and SHOP-251 are moved out or have a stated reason to stay.",
-        "question": "Can Checkout v2 go live for 10% of shoppers without the 3-D Secure step?"
+        "why": "Descoping frees the capacity that SHOP-247 needs, and SHOP-231 can't be pushed through until the provider fixes the sandbox.",
+        "next": "Give SHOP-247, the rollout switch, an owner today. Nobody holds it, and nothing reaches 10% of shoppers without it.",
+        "checkpoint": "By tomorrow SHOP-247 has an assignee and is in progress, and SHOP-248 and SHOP-251 are out of the sprint.",
+        "question": "Can Checkout v2 go live for 10% of shoppers without the 3-D Secure step, or is SHOP-231 a must-have for the goal?"
       },
       "checkedJiraKeys": [
-        "SHOP-246",
         "SHOP-231",
+        "SHOP-246",
+        "SHOP-247",
         "SHOP-248",
         "SHOP-251",
-        "SHOP-247"
-      ],
-      "skill": {
-        "id": "item-investigation",
-        "name": "Item investigation"
-      },
-      "trail": [
-        {
-          "step": "plan",
-          "label": "Planning",
-          "at": 1
-        },
-        {
-          "step": "jira",
-          "label": "Read SHOP-246, SHOP-231, SHOP-248, SHOP-251 and 1 more in detail: description, comments, history and links",
-          "at": 2459
-        },
-        {
-          "step": "jira",
-          "label": "Read the code trail of SHOP-246, SHOP-231, SHOP-248, SHOP-251 and 1 more: branch, pull requests and review timing",
-          "at": 2459
-        },
-        {
-          "step": "plan",
-          "label": "Thinking",
-          "at": 2459
-        }
-      ]
-    },
-    {
-      "label": "What do the last sprints tell us?",
-      "question": "What do the last 5 sprints tell us for the next planning?",
-      "starter": true,
-      "message": "**Sprint 25 is planned at 52 points**, above the 47 that the best of the last five sprints finished and far above the usual 31.\nLikely · Board + Jira: The board and Jira agree.\nNext step: Ask the team and the product owner whether SHOP-260, SHOP-262 and SHOP-264, 24 points of 8-pointers, can move out of Sprint 25 before it starts. Check: Sprint 25 planned points drop from 52 to about 28–35, with room left for 1–3 added items.\nIs SHOP-231 meant to roll into Sprint 25 if the sandbox fix arrives, and if so, with how many points?\n\nWhy:\n- The last five sprints finished 24, 47, 29, 39 and 31 points, usually about 31, and Sprint 25 holds 52 points plus two unestimated bugs. (Board)\n- Work was added mid-sprint in four of the five sprints, 8 items in total, and 3 more were added in Sprint 24. (Board)\n- SHOP-260, SHOP-262, SHOP-264: Large items took a median 8 days against 3.6 days for small ones, about 2.2 times longer, and these three are 8 points each. (Board)\n- SHOP-231: It is in its 3rd sprint and blocked by PAY-88 (sandbox fix, no date). The provider said 2 days ago it ships next week. (Jira)\n- Ruled out: Not a habit of overcommitting items: 46 of 49 planned items finished across the five sprints, and none were removed. (Board)\n\nOptions:\nA. Move the three 8-point items out of Sprint 25, leaving about 28 points plus the two bugs Less planned for stakeholders, and the product owner must agree on what waits Check: Sprint 25 starts at or below about 35 points; check at planning (recommended)\nB. Keep the scope but order it and draw a line near 31 points, with everything below it labelled stretch The plan still looks full and the team has to hold the line when work is added Check: By mid-sprint, nothing below the line has started while items above it are open\nC. Estimate the two bugs now and keep room for them, since added work has often been bugs and small fixes Needs a short estimate session before planning Check: SHOP-269 and SHOP-270 carry points before Sprint 25 starts (recommended)\nRecommended because cutting the 8-pointers brings the plan to the usual range, and estimating the bugs makes the remaining room real",
-      "card": {
-        "verdict": "**Sprint 25 is planned at 52 points**, above the 47 that the best of the last five sprints finished and far above the usual 31.",
-        "confidence": "likely",
-        "basis": "The board and Jira agree",
-        "sources": ["Board", "Jira"],
-        "reasons": [
-          {
-            "kind": "supports",
-            "source": "Board",
-            "keys": [],
-            "fact": "The last five sprints finished 24, 47, 29, 39 and 31 points, usually about 31, and Sprint 25 holds 52 points plus two unestimated bugs."
-          },
-          {
-            "kind": "supports",
-            "source": "Board",
-            "keys": [],
-            "fact": "Work was added mid-sprint in four of the five sprints, 8 items in total, and 3 more were added in Sprint 24."
-          },
-          {
-            "kind": "supports",
-            "source": "Board",
-            "keys": ["SHOP-260", "SHOP-262", "SHOP-264"],
-            "fact": "Large items took a median 8 days against 3.6 days for small ones, about 2.2 times longer, and these three are 8 points each."
-          },
-          {
-            "kind": "supports",
-            "source": "Jira",
-            "keys": ["SHOP-231"],
-            "fact": "It is in its 3rd sprint and blocked by PAY-88 (sandbox fix, no date). The provider said 2 days ago it ships next week."
-          },
-          {
-            "kind": "rules-out",
-            "source": "Board",
-            "keys": [],
-            "fact": "Not a habit of overcommitting items: 46 of 49 planned items finished across the five sprints, and none were removed."
-          }
-        ],
-        "options": [
-          {
-            "what": "Move the three 8-point items out of Sprint 25, leaving about 28 points plus the two bugs",
-            "tradeOff": "Less planned for stakeholders, and the product owner must agree on what waits",
-            "checkpoint": "Sprint 25 starts at or below about 35 points; check at planning",
-            "keys": ["SHOP-260", "SHOP-262", "SHOP-264"],
-            "recommended": true
-          },
-          {
-            "what": "Keep the scope but order it and draw a line near 31 points, with everything below it labelled stretch",
-            "tradeOff": "The plan still looks full and the team has to hold the line when work is added",
-            "checkpoint": "By mid-sprint, nothing below the line has started while items above it are open",
-            "keys": ["SHOP-260", "SHOP-261", "SHOP-263"]
-          },
-          {
-            "what": "Estimate the two bugs now and keep room for them, since added work has often been bugs and small fixes",
-            "tradeOff": "Needs a short estimate session before planning",
-            "checkpoint": "SHOP-269 and SHOP-270 carry points before Sprint 25 starts",
-            "keys": ["SHOP-269", "SHOP-270"],
-            "recommended": true
-          }
-        ],
-        "why": "cutting the 8-pointers brings the plan to the usual range, and estimating the bugs makes the remaining room real",
-        "next": "Ask the team and the product owner whether SHOP-260, SHOP-262 and SHOP-264, 24 points of 8-pointers, can move out of Sprint 25 before it starts.",
-        "checkpoint": "Sprint 25 planned points drop from 52 to about 28–35, with room left for 1–3 added items.",
-        "question": "Is SHOP-231 meant to roll into Sprint 25 if the sandbox fix arrives, and if so, with how many points?"
-      },
-      "checkedJiraKeys": [
-        "SHOP-231",
-        "SHOP-260",
-        "SHOP-262",
-        "SHOP-264",
-        "SHOP-269",
-        "SHOP-270",
-        "SHOP-261",
-        "SHOP-263",
-        "SHOP-265",
-        "SHOP-266"
+        "SHOP-243",
+        "SHOP-244",
+        "SHOP-245",
+        "SHOP-249",
+        "SHOP-250",
+        "SHOP-240",
+        "SHOP-241",
+        "SHOP-242"
       ],
       "skill": {
         "id": "flow-diagnosis",
@@ -460,65 +362,173 @@
         },
         {
           "step": "jira",
-          "label": "Read SHOP-231, SHOP-260, SHOP-262, SHOP-264 and 1 more in detail: description, comments, history and links",
-          "at": 7064
+          "label": "Read SHOP-231, SHOP-246, SHOP-247, SHOP-248 and 1 more in detail: description, comments, history and links",
+          "at": 2768
         },
         {
           "step": "jira",
-          "label": "Read SHOP-270, SHOP-261, SHOP-263, SHOP-265 and 1 more: status, owner, priority and dates",
-          "at": 7065
+          "label": "Read SHOP-243, SHOP-244, SHOP-245, SHOP-249 and 1 more in detail: description, comments, history and links",
+          "at": 2768
+        },
+        {
+          "step": "jira",
+          "label": "Read SHOP-240, SHOP-241, SHOP-242: status, owner, priority and dates",
+          "at": 2768
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 7065
+          "at": 2768
+        }
+      ]
+    },
+    {
+      "label": "What do the last sprints tell us?",
+      "question": "What do the last 5 sprints tell us for the next planning?",
+      "starter": true,
+      "message": "Sprint 25's **52 planned points is above anything the team finished in the last 5 sprints**, whose finished points ranged from 24 to 47 with a usual 31.\nLikely · Board + Jira: The board and Jira agree.\nNext step: Ask the team and product owner to cut Sprint 25 to about 31 to 40 points, starting with an 8-point story such as SHOP-260, SHOP-262 or SHOP-264. Check: Sprint 25 planned points at or below 40, and SHOP-269 and SHOP-270 estimated before the sprint starts.\nDoes SHOP-231, now in its third sprint, carry into Sprint 25? If so, it takes 8 more points from this plan.\n\nWhy:\n- Finished points over Sprints 19 to 23 were 24, 47, 29, 39 and 31. Sprint 25 holds 52 points, 5 above the best sprint and 21 above the usual. (Board)\n- Work was added after the start in 4 of 5 sprints: 1, 2, 0, 3 and 2 items. Sprint 24 has already added 3, so the plan has no room for them. (Board)\n- Sprints 19, 22 and 23 each carried one item over, and Sprints 20 and 21 carried none. Most of the plan finishes, but a plan this size makes the carry-over bigger. (Board)\n- Ruled out: Not scope taken out: removed and back to backlog are 0 in all five sprints. Misses came from unfinished work, not from cuts. (Board)\n- SHOP-269, SHOP-270: SHOP-269 and SHOP-270 are unassigned bugs created 5 days ago with no estimate, so the real total is above 52. (Jira)\n\nOptions:\nA. Cut the plan to about 31 to 40 points by moving out one or two 8-point stories Less committed scope, so the product owner has to reorder priorities Check: Sprint 25 starts at 40 points or fewer. At least 90% of planned items are finished at its end, as in the last 5 sprints (46 of 49). (recommended)\nB. Estimate SHOP-269 and SHOP-270 before planning and hold a visible buffer for work added mid-sprint A few minutes of refinement, and a smaller committed plan Check: Both bugs have estimates before day 1. Added items in Sprint 25 stay at 2 or fewer. (recommended)\nC. Keep 52 points but mark the lowest-priority items as stretch The stretch items are likely to carry over, and the team has to agree they are not a commitment Check: Carried-over items in Sprint 25 stay at 1 or fewer, with only stretch items among them.\nRecommended because A cut brings the plan inside what the team has finished before, and estimating the two bugs shows what is really in it.",
+      "card": {
+        "verdict": "Sprint 25's **52 planned points is above anything the team finished in the last 5 sprints**, whose finished points ranged from 24 to 47 with a usual 31.",
+        "confidence": "likely",
+        "basis": "The board and Jira agree",
+        "sources": ["Board", "Jira"],
+        "reasons": [
+          {
+            "kind": "supports",
+            "source": "Board",
+            "keys": [],
+            "fact": "Finished points over Sprints 19 to 23 were 24, 47, 29, 39 and 31. Sprint 25 holds 52 points, 5 above the best sprint and 21 above the usual."
+          },
+          {
+            "kind": "supports",
+            "source": "Board",
+            "keys": [],
+            "fact": "Work was added after the start in 4 of 5 sprints: 1, 2, 0, 3 and 2 items. Sprint 24 has already added 3, so the plan has no room for them."
+          },
+          {
+            "kind": "supports",
+            "source": "Board",
+            "keys": [],
+            "fact": "Sprints 19, 22 and 23 each carried one item over, and Sprints 20 and 21 carried none. Most of the plan finishes, but a plan this size makes the carry-over bigger."
+          },
+          {
+            "kind": "rules-out",
+            "source": "Board",
+            "keys": [],
+            "fact": "Not scope taken out: removed and back to backlog are 0 in all five sprints. Misses came from unfinished work, not from cuts."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["SHOP-269", "SHOP-270"],
+            "fact": "SHOP-269 and SHOP-270 are unassigned bugs created 5 days ago with no estimate, so the real total is above 52."
+          }
+        ],
+        "options": [
+          {
+            "what": "Cut the plan to about 31 to 40 points by moving out one or two 8-point stories",
+            "tradeOff": "Less committed scope, so the product owner has to reorder priorities",
+            "checkpoint": "Sprint 25 starts at 40 points or fewer. At least 90% of planned items are finished at its end, as in the last 5 sprints (46 of 49).",
+            "keys": ["SHOP-260", "SHOP-262", "SHOP-264"],
+            "recommended": true
+          },
+          {
+            "what": "Estimate SHOP-269 and SHOP-270 before planning and hold a visible buffer for work added mid-sprint",
+            "tradeOff": "A few minutes of refinement, and a smaller committed plan",
+            "checkpoint": "Both bugs have estimates before day 1. Added items in Sprint 25 stay at 2 or fewer.",
+            "keys": ["SHOP-269", "SHOP-270"],
+            "recommended": true
+          },
+          {
+            "what": "Keep 52 points but mark the lowest-priority items as stretch",
+            "tradeOff": "The stretch items are likely to carry over, and the team has to agree they are not a commitment",
+            "checkpoint": "Carried-over items in Sprint 25 stay at 1 or fewer, with only stretch items among them.",
+            "keys": ["SHOP-264", "SHOP-265"]
+          }
+        ],
+        "why": "A cut brings the plan inside what the team has finished before, and estimating the two bugs shows what is really in it.",
+        "next": "Ask the team and product owner to cut Sprint 25 to about 31 to 40 points, starting with an 8-point story such as SHOP-260, SHOP-262 or SHOP-264.",
+        "checkpoint": "Sprint 25 planned points at or below 40, and SHOP-269 and SHOP-270 estimated before the sprint starts.",
+        "question": "Does SHOP-231, now in its third sprint, carry into Sprint 25? If so, it takes 8 more points from this plan."
+      },
+      "checkedJiraKeys": [
+        "SHOP-269",
+        "SHOP-270",
+        "SHOP-260",
+        "SHOP-262",
+        "SHOP-264"
+      ],
+      "skill": {
+        "id": "flow-diagnosis",
+        "name": "Flow diagnosis"
+      },
+      "trail": [
+        {
+          "step": "plan",
+          "label": "Planning",
+          "at": 1
+        },
+        {
+          "step": "jira",
+          "label": "Read SHOP-269, SHOP-270, SHOP-260, SHOP-262 and 1 more in detail: description, comments, history and links",
+          "at": 6994
+        },
+        {
+          "step": "plan",
+          "label": "Thinking",
+          "at": 6994
         }
       ]
     },
     {
       "label": "Choose what to leave out",
       "question": "Sprint 25 holds 52 points so far. The last 5 sprints finished 24–47 points, usually 31. 2 planned items have no estimate. Help me choose what to leave out or make optional, so the plan fits what the team usually finishes. Look at each planned item's size, dependencies and age, and end with a plan the team can commit to.",
-      "message": "Commit to about 31 points: **six small items and the two bugs**, with SHOP-260 optional and SHOP-262 and SHOP-264 left out.\nPossible · Board only: Only the board shows it.\n- SHOP-261, SHOP-263, SHOP-265, SHOP-266, SHOP-267, SHOP-268: Commit: 28 points in six items of 3 or 5 points. Is anything here too vague to start?\n- SHOP-269, SHOP-270: Commit after sizing: two bugs with no estimate. How big are they, and which one matters first?\n- SHOP-260: Optional: 8 points, started only once the committed items are on track. Does the product owner want it first?\n- SHOP-262, SHOP-264: Leave out: 16 points in two 8-point items. Can the product owner move them to Sprint 26?\nNext step: The team estimates SHOP-269 and SHOP-270 first, then commits the 28 points of small items. With the bugs at about 3 points together, that lands on the usual 31. Check: Sprint 25 shows about 31 points committed, SHOP-262 and SHOP-264 out, and both bugs estimated.\nWill any unfinished Sprint 24 items roll into Sprint 25? Those points are not in the 52 and would push the plan back over 31.\n\nWhy:\n- SHOP-260, SHOP-262, SHOP-264: Items of up to 3 points took a median 3.6 days, while larger ones took 8 days, so estimates here do predict time and the three 8-point items are the slowest. (Board)\n- SHOP-260, SHOP-261, SHOP-262, SHOP-263, SHOP-264, SHOP-265: The 52 planned points are about 1.7 times the usual 31 and above the best of the last 5 sprints (47), so cutting is needed, not trimming. (Board)\n- Ruled out: SHOP-260, SHOP-261, SHOP-262, SHOP-263, SHOP-264, SHOP-265: No dependencies or blockers: none of the 11 planned items has a link, a comment or a description, so none has to stay in because another item needs it. (Jira)\n- Ruled out: SHOP-260, SHOP-261, SHOP-262, SHOP-263, SHOP-264, SHOP-265: Age does not separate them: all 11 were created 5 days ago, all are Medium priority, and none has an assignee. (Jira)\n\nOptions:\nA. Commit the six small items and both bugs (about 31 points). Keep SHOP-260 as optional and move SHOP-262 and SHOP-264 out. Two 8-point features slip a sprint. Needs the product owner's agreement. Check: By the end of planning, both bugs are estimated and the committed total is 31 or less. (recommended)\nB. Commit the same items with no optional item and move all three 8-point items out. Safest, but leaves slack if the small items finish early. SHOP-260 would be pulled in mid-sprint. Check: By mid-sprint, if the committed items are done, SHOP-260 comes in as added scope.\nC. Split SHOP-262 or SHOP-264 into pieces of 3 to 5 points and commit the first piece in place of SHOP-268. Needs refinement time before the sprint starts. The pieces must each be usable on their own. Check: Before commitment, the split items have their own estimates and the total stays at about 31.\nRecommended because it fits the usual 31 points, keeps all the small items, and leaves one 8-point item as a stretch inside the 24–47 range",
+      "message": "**Commit to about 23 points plus the two bugs** once they are estimated, and move the three 8-point items and one 5-point item out or to optional.\nLikely · Board + Jira: The board and Jira agree.\n- SHOP-260, SHOP-262, SHOP-264: Three 8-point items, 24 points together. Leave out, or split one: what is the smallest slice that ships on its own?\n- SHOP-263: 5 points, no dependency found. Make it optional: start it only when the committed items are done.\n- SHOP-269, SHOP-270: Two bugs with no estimate. What size are they? Keep them in once sized, since they can hurt shoppers now.\n- SHOP-261, SHOP-265, SHOP-266, SHOP-267, SHOP-268: Five small items, 23 points. Commit to these. Who takes each one?\nNext step: Ask the product owner to confirm the cut line, and ask the team to estimate SHOP-269 and SHOP-270 before the plan is locked. Check: Committed points at or under 31 after SHOP-269 and SHOP-270 get estimates, and no item without an estimate left in the plan.\nIf SHOP-231 and SHOP-247 move into Sprint 25, that is 13 points before anything else, so should the commitment drop to about 18 points?\n\nWhy:\n- Items up to 3 points took a median of 3.6 days. Larger ones took 8 days, about 2 times longer. So three 8-point items fill most of a sprint. (Board)\n- SHOP-231, SHOP-247: SHOP-231 (8 points, 3rd sprint, 5% chance) and SHOP-247 (5 points, 8% chance) will probably finish after Sprint 24 ends. They are not in the 52 points. (Board)\n- SHOP-260, SHOP-261, SHOP-262, SHOP-263, SHOP-264, SHOP-265: All 11 items were created 5 days ago, are unassigned and have medium priority. None has a comment or a link, so none can be ranked by age. (Jira)\n- Ruled out: SHOP-260, SHOP-261, SHOP-262, SHOP-263, SHOP-264, SHOP-265: No item is blocked by another item or by another team. Dependencies do not change the cut line. (Jira)\n- The last 5 sprints finished 24 to 47 points, usually 31. 52 points is 21 above that and above the best sprint. Planned work is finished on most sprints, with one item carried over in three of them. (Board)\n\nOptions:\nA. Commit to the five small items (23 points) plus both bugs. Keep SHOP-263 as the first optional item, and keep the three 8-point items out. Three large items wait a sprint, so the product owner must accept that. Check: 23 points done and both bugs sized by the first day. Start SHOP-263 only once the committed items are done. (recommended)\nB. Commit to one 8-point item (SHOP-260) with SHOP-266, SHOP-261, SHOP-265 and SHOP-267, which is 26 points, plus the bugs. One large item takes about 8 days. SHOP-268 drops out, and the choice of which 8-point item rests on the product owner's priority. Check: SHOP-260 is in Review by mid-sprint. Otherwise move it to optional.\nC. Split SHOP-262 or SHOP-264 into a small first slice of 3 points or less and commit only that slice. It needs refinement time before the sprint starts, and the rest of the item stays in the backlog. Check: A slice of 3 points or less is estimated before planning ends.\nRecommended because it fits the usual 31 points, leaves room for the bugs and for Sprint 24 carry-over, and uses small items that finish about twice as fast.",
       "card": {
-        "verdict": "Commit to about 31 points: **six small items and the two bugs**, with SHOP-260 optional and SHOP-262 and SHOP-264 left out.",
-        "confidence": "possible",
-        "basis": "Only the board shows it",
-        "sources": ["Board"],
+        "verdict": "**Commit to about 23 points plus the two bugs** once they are estimated, and move the three 8-point items and one 5-point item out or to optional.",
+        "confidence": "likely",
+        "basis": "The board and Jira agree",
+        "sources": ["Board", "Jira"],
         "list": [
+          {
+            "keys": ["SHOP-260", "SHOP-262", "SHOP-264"],
+            "text": "Three 8-point items, 24 points together. Leave out, or split one: what is the smallest slice that ships on its own?"
+          },
+          {
+            "keys": ["SHOP-263"],
+            "text": "5 points, no dependency found. Make it optional: start it only when the committed items are done."
+          },
+          {
+            "keys": ["SHOP-269", "SHOP-270"],
+            "text": "Two bugs with no estimate. What size are they? Keep them in once sized, since they can hurt shoppers now."
+          },
           {
             "keys": [
               "SHOP-261",
-              "SHOP-263",
               "SHOP-265",
               "SHOP-266",
               "SHOP-267",
               "SHOP-268"
             ],
-            "text": "Commit: 28 points in six items of 3 or 5 points. Is anything here too vague to start?"
-          },
-          {
-            "keys": ["SHOP-269", "SHOP-270"],
-            "text": "Commit after sizing: two bugs with no estimate. How big are they, and which one matters first?"
-          },
-          {
-            "keys": ["SHOP-260"],
-            "text": "Optional: 8 points, started only once the committed items are on track. Does the product owner want it first?"
-          },
-          {
-            "keys": ["SHOP-262", "SHOP-264"],
-            "text": "Leave out: 16 points in two 8-point items. Can the product owner move them to Sprint 26?"
+            "text": "Five small items, 23 points. Commit to these. Who takes each one?"
           }
         ],
         "reasons": [
           {
             "kind": "supports",
             "source": "Board",
-            "keys": ["SHOP-260", "SHOP-262", "SHOP-264"],
-            "fact": "Items of up to 3 points took a median 3.6 days, while larger ones took 8 days, so estimates here do predict time and the three 8-point items are the slowest."
+            "keys": [],
+            "fact": "Items up to 3 points took a median of 3.6 days. Larger ones took 8 days, about 2 times longer. So three 8-point items fill most of a sprint."
           },
           {
             "kind": "supports",
             "source": "Board",
+            "keys": ["SHOP-231", "SHOP-247"],
+            "fact": "SHOP-231 (8 points, 3rd sprint, 5% chance) and SHOP-247 (5 points, 8% chance) will probably finish after Sprint 24 ends. They are not in the 52 points."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
             "keys": [
               "SHOP-260",
               "SHOP-261",
@@ -527,7 +537,7 @@
               "SHOP-264",
               "SHOP-265"
             ],
-            "fact": "The 52 planned points are about 1.7 times the usual 31 and above the best of the last 5 sprints (47), so cutting is needed, not trimming."
+            "fact": "All 11 items were created 5 days ago, are unassigned and have medium priority. None has a comment or a link, so none can be ranked by age."
           },
           {
             "kind": "rules-out",
@@ -540,54 +550,54 @@
               "SHOP-264",
               "SHOP-265"
             ],
-            "fact": "No dependencies or blockers: none of the 11 planned items has a link, a comment or a description, so none has to stay in because another item needs it."
+            "fact": "No item is blocked by another item or by another team. Dependencies do not change the cut line."
           },
           {
-            "kind": "rules-out",
-            "source": "Jira",
-            "keys": [
-              "SHOP-260",
-              "SHOP-261",
-              "SHOP-262",
-              "SHOP-263",
-              "SHOP-264",
-              "SHOP-265"
-            ],
-            "fact": "Age does not separate them: all 11 were created 5 days ago, all are Medium priority, and none has an assignee."
+            "kind": "supports",
+            "source": "Board",
+            "keys": [],
+            "fact": "The last 5 sprints finished 24 to 47 points, usually 31. 52 points is 21 above that and above the best sprint. Planned work is finished on most sprints, with one item carried over in three of them."
           }
         ],
         "options": [
           {
-            "what": "Commit the six small items and both bugs (about 31 points). Keep SHOP-260 as optional and move SHOP-262 and SHOP-264 out.",
-            "tradeOff": "Two 8-point features slip a sprint. Needs the product owner's agreement.",
-            "checkpoint": "By the end of planning, both bugs are estimated and the committed total is 31 or less.",
+            "what": "Commit to the five small items (23 points) plus both bugs. Keep SHOP-263 as the first optional item, and keep the three 8-point items out.",
+            "tradeOff": "Three large items wait a sprint, so the product owner must accept that.",
+            "checkpoint": "23 points done and both bugs sized by the first day. Start SHOP-263 only once the committed items are done.",
             "keys": [
               "SHOP-261",
-              "SHOP-263",
               "SHOP-265",
               "SHOP-266",
               "SHOP-267",
-              "SHOP-268"
+              "SHOP-268",
+              "SHOP-269"
             ],
             "recommended": true
           },
           {
-            "what": "Commit the same items with no optional item and move all three 8-point items out.",
-            "tradeOff": "Safest, but leaves slack if the small items finish early. SHOP-260 would be pulled in mid-sprint.",
-            "checkpoint": "By mid-sprint, if the committed items are done, SHOP-260 comes in as added scope.",
-            "keys": ["SHOP-260", "SHOP-262", "SHOP-264"]
+            "what": "Commit to one 8-point item (SHOP-260) with SHOP-266, SHOP-261, SHOP-265 and SHOP-267, which is 26 points, plus the bugs.",
+            "tradeOff": "One large item takes about 8 days. SHOP-268 drops out, and the choice of which 8-point item rests on the product owner's priority.",
+            "checkpoint": "SHOP-260 is in Review by mid-sprint. Otherwise move it to optional.",
+            "keys": [
+              "SHOP-260",
+              "SHOP-266",
+              "SHOP-261",
+              "SHOP-265",
+              "SHOP-267",
+              "SHOP-268"
+            ]
           },
           {
-            "what": "Split SHOP-262 or SHOP-264 into pieces of 3 to 5 points and commit the first piece in place of SHOP-268.",
-            "tradeOff": "Needs refinement time before the sprint starts. The pieces must each be usable on their own.",
-            "checkpoint": "Before commitment, the split items have their own estimates and the total stays at about 31.",
-            "keys": ["SHOP-262", "SHOP-264", "SHOP-268"]
+            "what": "Split SHOP-262 or SHOP-264 into a small first slice of 3 points or less and commit only that slice.",
+            "tradeOff": "It needs refinement time before the sprint starts, and the rest of the item stays in the backlog.",
+            "checkpoint": "A slice of 3 points or less is estimated before planning ends.",
+            "keys": ["SHOP-262", "SHOP-264"]
           }
         ],
-        "why": "it fits the usual 31 points, keeps all the small items, and leaves one 8-point item as a stretch inside the 24–47 range",
-        "next": "The team estimates SHOP-269 and SHOP-270 first, then commits the 28 points of small items. With the bugs at about 3 points together, that lands on the usual 31.",
-        "checkpoint": "Sprint 25 shows about 31 points committed, SHOP-262 and SHOP-264 out, and both bugs estimated.",
-        "question": "Will any unfinished Sprint 24 items roll into Sprint 25? Those points are not in the 52 and would push the plan back over 31."
+        "why": "it fits the usual 31 points, leaves room for the bugs and for Sprint 24 carry-over, and uses small items that finish about twice as fast.",
+        "next": "Ask the product owner to confirm the cut line, and ask the team to estimate SHOP-269 and SHOP-270 before the plan is locked.",
+        "checkpoint": "Committed points at or under 31 after SHOP-269 and SHOP-270 get estimates, and no item without an estimate left in the plan.",
+        "question": "If SHOP-231 and SHOP-247 move into Sprint 25, that is 13 points before anything else, so should the commitment drop to about 18 points?"
       },
       "checkedJiraKeys": [
         "SHOP-260",
@@ -615,46 +625,50 @@
         {
           "step": "jira",
           "label": "Read SHOP-260, SHOP-261, SHOP-262, SHOP-263 and 1 more in detail: description, comments, history and links",
-          "at": 3057
+          "at": 3232
         },
         {
           "step": "jira",
           "label": "Read SHOP-265, SHOP-266, SHOP-267, SHOP-268 and 1 more in detail: description, comments, history and links",
-          "at": 3057
+          "at": 3232
         },
         {
           "step": "jira",
           "label": "Read SHOP-270 in detail: description, comments, history and links",
-          "at": 3057
+          "at": 3232
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 3057
+          "at": 3232
         }
       ]
     },
     {
       "label": "Sprint 24 changed after it started",
       "question": "Sprint 24 changed after it started\n10 planned when it started. Added since: SHOP-249, SHOP-250, SHOP-251. 1 of the added item is unlikely to finish.\n\nThe sprint changed after it started. List what was added and removed and when, whether added work replaced planned work, and what the team could drop or defer to protect the sprint goal. Never blame whoever added the work. Cite relevant ticket evidence, distinguish observed facts from possible causes, and end with a concrete team action and a measurable checkpoint.",
-      "message": "Sprint 24's goal is **likely not met**: nothing was removed when three items were added, and the goal items SHOP-231 and SHOP-247 are unlikely to finish.\nLikely · Board + Jira: The board and Jira agree.\n- SHOP-249: Added on day 3. Coupon bug on mobile, about 40 failed checkouts a day per Nina's comment. No estimate, 81% chance.\n- SHOP-250: Added on day 4. VAT on gift cards, no estimate, no comment saying why it came in. 74% chance.\n- SHOP-251: Added on day 8. Product size guide, 3 points, unassigned, not started. 54% chance, the weakest of the three.\nNext step: The team takes one conversation with the product owner today: defer SHOP-251 and SHOP-248, and decide whether the goal still holds while PAY-88 has no date. Check: By day 12: SHOP-251 and SHOP-248 out of the sprint, and PAY-88 has a date or the goal is revised.\nIs the goal still worth chasing if PAY-88 only lands after the sprint ends?\n\nWhy:\n- SHOP-249, SHOP-250, SHOP-251: 10 items were planned. Three were added on day 3, day 4 and day 8. None was removed, so the sprint now holds 13 items. (Board)\n- SHOP-249: Nina's comment 8 days ago gives the reason for adding it: about 40 failed coupon checkouts a day on mobile. It was started the day it came in. (Jira)\n- Ruled out: SHOP-231: The added work is not what holds SHOP-231 back. It is in its 3rd sprint and blocked by PAY-88 (still in progress). Lea said 6 days ago the code is done and only the provider's sandbox blocks testing. Marco said 2 days ago the fix ships next week, with no date. (Jira)\n- SHOP-247: The rollout switch for 10% has been unassigned in To Do for 14 days, with an 8% chance and 4 days left. The goal cannot be met without it. (Jira)\n- SHOP-246: Omar said 1 day ago the stock alert emails wait for marketing copy. The branch has been quiet for 4 days, and the item does not serve the goal. (Jira)\n\nOptions:\nA. Defer SHOP-251 and SHOP-248 to Sprint 25. Neither serves the goal, both are unassigned and not started. The size guide and the returns label wait. Frees 6 points and no started work is lost. Check: Both out of Sprint 24 by day 11, so the points still open fall by 6. (recommended)\nB. Give SHOP-247 an owner and start it now, so the switch is ready when payment testing unblocks. Takes capacity from items already in progress. Only worth it if the goal stays. Check: SHOP-247 in In Progress with a named owner by day 11.\nC. Ask the product owner whether the goal holds while PAY-88 has no date. If not, carry SHOP-231 to Sprint 25 or reword the goal. The goal is the product owner's call. SHOP-231 would then be in its 4th sprint. Check: A date for PAY-88 or a goal decision by day 12 of 14. (recommended)\nRecommended because A frees six points without touching started work, and C settles whether the goal is still real before more capacity goes to SHOP-247.",
+      "message": "Three items were added and none removed, so planned work was not replaced. The goal is **likely not met**: its 3-D Secure step is blocked and its rollout switch is unstarted.\nLikely · Board + Jira: The board and Jira agree.\n- SHOP-231: Blocked by PAY-88, the provider's sandbox fix, with no date. Ask Marco whether the provider can commit to one.\n- SHOP-247: Goal item, unassigned and untouched for 14 days. Who can start it now, since it needs no sandbox?\n- SHOP-246: Waiting for marketing copy, with its last commit 4 days ago. Ask Omar whether the copy has a date.\n- SHOP-251, SHOP-248: Both unassigned and not started, and neither serves the goal. Can the product owner defer them?\nNext step: In the next planning conversation, the team and the product owner defer SHOP-251 and SHOP-248, and someone picks up SHOP-247, the rollout switch, today. Check: By tomorrow SHOP-247 is assigned and In Progress, SHOP-251 and SHOP-248 are out of Sprint 24, and PAY-88 has a date.\nIs a 10% rollout still worth shipping if 3-D Secure waits for the provider's fix?\n\nWhy:\n- SHOP-249, SHOP-250, SHOP-251: Added on day 3, day 4 and day 8 of 14, after 10 planned items. Nothing was removed. (Board)\n- SHOP-249: Nina's comment 8 days ago: support reports about 40 failed coupon checkouts a day on mobile, so the bug was taken in because of customer impact. (Jira)\n- SHOP-231: Blocked by PAY-88, which is still In Progress. Marco wrote 2 days ago that the fix ships next week with no date. This is its 3rd sprint, with a 5% chance of finishing. (Jira)\n- SHOP-247: Rollout switch for 10% has had no assignee and no status change since it was created 14 days ago, and its chance of finishing is 8%. (Jira)\n- Ruled out: SHOP-251, SHOP-250: The added items are not the main threat to the goal. SHOP-250 is in progress, and SHOP-251 is not started. (Jira)\n- SHOP-245: Marco wrote 3 days ago that the courier API has no slot endpoint, so the 5-point item is bigger than estimated. (Jira)\n\nOptions:\nA. Defer SHOP-251 and SHOP-248, and put the freed capacity on SHOP-247. The size guide and returns label slip to Sprint 25. This needs the product owner's agreement. Check: SHOP-247 is In Progress by tomorrow, and both deferred items are out of the sprint. (recommended)\nB. Ask Omar about SHOP-246's copy date and, if there is none, move it out. Stock alerts slip, but 5 points stop looking like work in progress. Check: By tomorrow SHOP-246 has a copy date or is out of the sprint.\nC. Get a firm date from the provider for PAY-88, and cut the goal to what can ship without 3-D Secure if there is none. The goal may shrink or move. The team cannot speed up the provider. Check: PAY-88 has a committed date within 2 days, or the goal is renegotiated. (recommended)\nRecommended because They protect the goal items directly: A starts the one goal item the team controls, and C settles the one it does not.",
       "card": {
-        "verdict": "Sprint 24's goal is **likely not met**: nothing was removed when three items were added, and the goal items SHOP-231 and SHOP-247 are unlikely to finish.",
+        "verdict": "Three items were added and none removed, so planned work was not replaced. The goal is **likely not met**: its 3-D Secure step is blocked and its rollout switch is unstarted.",
         "confidence": "likely",
         "basis": "The board and Jira agree",
         "sources": ["Board", "Jira"],
         "list": [
           {
-            "keys": ["SHOP-249"],
-            "text": "Added on day 3. Coupon bug on mobile, about 40 failed checkouts a day per Nina's comment. No estimate, 81% chance."
+            "keys": ["SHOP-231"],
+            "text": "Blocked by PAY-88, the provider's sandbox fix, with no date. Ask Marco whether the provider can commit to one."
           },
           {
-            "keys": ["SHOP-250"],
-            "text": "Added on day 4. VAT on gift cards, no estimate, no comment saying why it came in. 74% chance."
+            "keys": ["SHOP-247"],
+            "text": "Goal item, unassigned and untouched for 14 days. Who can start it now, since it needs no sandbox?"
           },
           {
-            "keys": ["SHOP-251"],
-            "text": "Added on day 8. Product size guide, 3 points, unassigned, not started. 54% chance, the weakest of the three."
+            "keys": ["SHOP-246"],
+            "text": "Waiting for marketing copy, with its last commit 4 days ago. Ask Omar whether the copy has a date."
+          },
+          {
+            "keys": ["SHOP-251", "SHOP-248"],
+            "text": "Both unassigned and not started, and neither serves the goal. Can the product owner defer them?"
           }
         ],
         "reasons": [
@@ -662,59 +676,65 @@
             "kind": "supports",
             "source": "Board",
             "keys": ["SHOP-249", "SHOP-250", "SHOP-251"],
-            "fact": "10 items were planned. Three were added on day 3, day 4 and day 8. None was removed, so the sprint now holds 13 items."
+            "fact": "Added on day 3, day 4 and day 8 of 14, after 10 planned items. Nothing was removed."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-249"],
-            "fact": "Nina's comment 8 days ago gives the reason for adding it: about 40 failed coupon checkouts a day on mobile. It was started the day it came in."
+            "fact": "Nina's comment 8 days ago: support reports about 40 failed coupon checkouts a day on mobile, so the bug was taken in because of customer impact."
           },
           {
-            "kind": "rules-out",
+            "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-231"],
-            "fact": "The added work is not what holds SHOP-231 back. It is in its 3rd sprint and blocked by PAY-88 (still in progress). Lea said 6 days ago the code is done and only the provider's sandbox blocks testing. Marco said 2 days ago the fix ships next week, with no date."
+            "fact": "Blocked by PAY-88, which is still In Progress. Marco wrote 2 days ago that the fix ships next week with no date. This is its 3rd sprint, with a 5% chance of finishing."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["SHOP-247"],
-            "fact": "The rollout switch for 10% has been unassigned in To Do for 14 days, with an 8% chance and 4 days left. The goal cannot be met without it."
+            "fact": "Rollout switch for 10% has had no assignee and no status change since it was created 14 days ago, and its chance of finishing is 8%."
+          },
+          {
+            "kind": "rules-out",
+            "source": "Jira",
+            "keys": ["SHOP-251", "SHOP-250"],
+            "fact": "The added items are not the main threat to the goal. SHOP-250 is in progress, and SHOP-251 is not started."
           },
           {
             "kind": "supports",
             "source": "Jira",
-            "keys": ["SHOP-246"],
-            "fact": "Omar said 1 day ago the stock alert emails wait for marketing copy. The branch has been quiet for 4 days, and the item does not serve the goal."
+            "keys": ["SHOP-245"],
+            "fact": "Marco wrote 3 days ago that the courier API has no slot endpoint, so the 5-point item is bigger than estimated."
           }
         ],
         "options": [
           {
-            "what": "Defer SHOP-251 and SHOP-248 to Sprint 25. Neither serves the goal, both are unassigned and not started.",
-            "tradeOff": "The size guide and the returns label wait. Frees 6 points and no started work is lost.",
-            "checkpoint": "Both out of Sprint 24 by day 11, so the points still open fall by 6.",
-            "keys": ["SHOP-251", "SHOP-248"],
+            "what": "Defer SHOP-251 and SHOP-248, and put the freed capacity on SHOP-247.",
+            "tradeOff": "The size guide and returns label slip to Sprint 25. This needs the product owner's agreement.",
+            "checkpoint": "SHOP-247 is In Progress by tomorrow, and both deferred items are out of the sprint.",
+            "keys": ["SHOP-251", "SHOP-248", "SHOP-247"],
             "recommended": true
           },
           {
-            "what": "Give SHOP-247 an owner and start it now, so the switch is ready when payment testing unblocks.",
-            "tradeOff": "Takes capacity from items already in progress. Only worth it if the goal stays.",
-            "checkpoint": "SHOP-247 in In Progress with a named owner by day 11.",
-            "keys": ["SHOP-247"]
+            "what": "Ask Omar about SHOP-246's copy date and, if there is none, move it out.",
+            "tradeOff": "Stock alerts slip, but 5 points stop looking like work in progress.",
+            "checkpoint": "By tomorrow SHOP-246 has a copy date or is out of the sprint.",
+            "keys": ["SHOP-246"]
           },
           {
-            "what": "Ask the product owner whether the goal holds while PAY-88 has no date. If not, carry SHOP-231 to Sprint 25 or reword the goal.",
-            "tradeOff": "The goal is the product owner's call. SHOP-231 would then be in its 4th sprint.",
-            "checkpoint": "A date for PAY-88 or a goal decision by day 12 of 14.",
-            "keys": ["SHOP-231", "SHOP-247"],
+            "what": "Get a firm date from the provider for PAY-88, and cut the goal to what can ship without 3-D Secure if there is none.",
+            "tradeOff": "The goal may shrink or move. The team cannot speed up the provider.",
+            "checkpoint": "PAY-88 has a committed date within 2 days, or the goal is renegotiated.",
+            "keys": ["SHOP-231"],
             "recommended": true
           }
         ],
-        "why": "A frees six points without touching started work, and C settles whether the goal is still real before more capacity goes to SHOP-247.",
-        "next": "The team takes one conversation with the product owner today: defer SHOP-251 and SHOP-248, and decide whether the goal still holds while PAY-88 has no date.",
-        "checkpoint": "By day 12: SHOP-251 and SHOP-248 out of the sprint, and PAY-88 has a date or the goal is revised.",
-        "question": "Is the goal still worth chasing if PAY-88 only lands after the sprint ends?"
+        "why": "They protect the goal items directly: A starts the one goal item the team controls, and C settles the one it does not.",
+        "next": "In the next planning conversation, the team and the product owner defer SHOP-251 and SHOP-248, and someone picks up SHOP-247, the rollout switch, today.",
+        "checkpoint": "By tomorrow SHOP-247 is assigned and In Progress, SHOP-251 and SHOP-248 are out of Sprint 24, and PAY-88 has a date.",
+        "question": "Is a 10% rollout still worth shipping if 3-D Secure waits for the provider's fix?"
       },
       "checkedJiraKeys": [
         "SHOP-249",
@@ -722,11 +742,144 @@
         "SHOP-251",
         "SHOP-231",
         "SHOP-247",
-        "SHOP-243",
-        "SHOP-244",
-        "SHOP-245",
         "SHOP-246",
-        "SHOP-248"
+        "SHOP-248",
+        "SHOP-245"
+      ],
+      "skill": {
+        "id": "item-investigation",
+        "name": "Item investigation"
+      },
+      "trail": [
+        {
+          "step": "plan",
+          "label": "Planning",
+          "at": 2
+        },
+        {
+          "step": "jira",
+          "label": "Read SHOP-249, SHOP-250, SHOP-251, SHOP-231 and 1 more in detail: description, comments, history and links",
+          "at": 2045
+        },
+        {
+          "step": "jira",
+          "label": "Read SHOP-246, SHOP-248, SHOP-245 in detail: description, comments, history and links",
+          "at": 2045
+        },
+        {
+          "step": "plan",
+          "label": "Thinking",
+          "at": 2045
+        }
+      ]
+    },
+    {
+      "label": "SHOP-231 is in its 3rd sprint",
+      "question": "SHOP-231 is in its 3rd sprint\nCarried over from Sprint 22 and Sprint 23. 37 days in progress, 4.6× the usual.\n\nWork keeps rolling into the next sprint. Check each item’s history, comments and code to see whether it is too big, blocked or no longer a priority, and propose splitting, swarming or descoping before the next planning, with a measurable checkpoint. Cite relevant ticket evidence, distinguish observed facts from possible causes, and end with a concrete team action and a measurable checkpoint.",
+      "message": "SHOP-231 is **blocked, not too big**: its code is finished and it waits on the payment provider's sandbox fix in PAY-88, which has no date.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- SHOP-231: Waits on PAY-88 (another team's sandbox fix, no date). Ask Marco for a date, and ask a reviewer to open acme/shop#412.\n- SHOP-247: Rollout switch for the 10% goal has no owner and has not moved for 14 days. Who takes it before the sprint ends?\n- SHOP-246: Waits on marketing copy, and its branch has been quiet for 4 days. Ask Omar who at marketing owns the copy and by when.\n- SHOP-245: Marco says it is bigger than estimated: no courier slot endpoint, so the team polls their feed. Ask whether to split it.\nNext step: Ask Marco, who relayed the provider's update, to get a dated commitment for the PAY-88 sandbox fix, so the team can decide whether SHOP-231 stays in Sprint 25. Check: PAY-88 has a fix date, and acme/shop#412 has its first review, by tomorrow's refresh.\nDoes the team accept merging the 3-D Secure code behind the rollout switch before the provider's sandbox can verify it?\n\nWhy:\n- SHOP-231: SHOP-231 is blocked by PAY-88 ('Sandbox: 3-D Secure callbacks fail', In Progress). Marco wrote 2 days ago that the fix ships 'next week, no date yet'. (Jira)\n- SHOP-231: Lea wrote 6 days ago that the code is done and the 3-D Secure step can only be tested once the sandbox works. The card only moved to Review 1 day ago, so the board lagged the work. (Jira)\n- SHOP-231: Pull request acme/shop#412 has been ready for 6 days with no review and no activity. It has 640 lines in 14 files, and its checks pass. (GitHub)\n- Ruled out: SHOP-231: Not rework: no changes were requested on acme/shop#412. The time went into waiting, not into building. (GitHub)\n- Ruled out: SHOP-231: Not a dropped priority: it serves the Sprint 24 goal 'Checkout v2 live for 10% of shoppers'. It has a 5% chance of finishing in the 4 days left. (Board)\n\nOptions:\nA. Keep SHOP-231 whole. Get acme/shop#412 reviewed and merged now, and get a dated fix from the PAY-88 owner. Carry it only until the sandbox works. Needs a reviewer's time on a 640-line change. The date still depends on another team. Check: acme/shop#412 approved within 2 days and PAY-88 dated before Sprint 25 planning. (recommended)\nB. Split SHOP-231 so it can close at merge. The code is done, and a new small item covers verifying 3-D Secure once the sandbox works. The goal is not fully proven until the verification item closes. It also needs agreement on shipping untested behind the rollout switch. Check: SHOP-231 reaches Done after merge, and the verification item sits in Sprint 25 with PAY-88 as its blocker. (recommended)\nC. Take SHOP-231 out of Sprint 25 until PAY-88 has a date, and tell the product owner the 10% goal slips. Frees 8 points but the goal is not met. It would be a fourth sprint with no progress if the date never comes. Check: A named owner and date for PAY-88, or the item leaves the plan at planning.\nRecommended because the code is done and unreviewed, so review and a smaller finish line cost little and stop another rollover.",
+      "card": {
+        "verdict": "SHOP-231 is **blocked, not too big**: its code is finished and it waits on the payment provider's sandbox fix in PAY-88, which has no date.",
+        "confidence": "likely",
+        "basis": "Jira and GitHub agree",
+        "sources": ["Jira", "GitHub"],
+        "list": [
+          {
+            "keys": ["SHOP-231"],
+            "text": "Waits on PAY-88 (another team's sandbox fix, no date). Ask Marco for a date, and ask a reviewer to open acme/shop#412."
+          },
+          {
+            "keys": ["SHOP-247"],
+            "text": "Rollout switch for the 10% goal has no owner and has not moved for 14 days. Who takes it before the sprint ends?"
+          },
+          {
+            "keys": ["SHOP-246"],
+            "text": "Waits on marketing copy, and its branch has been quiet for 4 days. Ask Omar who at marketing owns the copy and by when."
+          },
+          {
+            "keys": ["SHOP-245"],
+            "text": "Marco says it is bigger than estimated: no courier slot endpoint, so the team polls their feed. Ask whether to split it."
+          }
+        ],
+        "reasons": [
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["SHOP-231"],
+            "fact": "SHOP-231 is blocked by PAY-88 ('Sandbox: 3-D Secure callbacks fail', In Progress). Marco wrote 2 days ago that the fix ships 'next week, no date yet'."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["SHOP-231"],
+            "fact": "Lea wrote 6 days ago that the code is done and the 3-D Secure step can only be tested once the sandbox works. The card only moved to Review 1 day ago, so the board lagged the work."
+          },
+          {
+            "kind": "supports",
+            "source": "GitHub",
+            "keys": ["SHOP-231"],
+            "fact": "Pull request acme/shop#412 has been ready for 6 days with no review and no activity. It has 640 lines in 14 files, and its checks pass."
+          },
+          {
+            "kind": "rules-out",
+            "source": "GitHub",
+            "keys": ["SHOP-231"],
+            "fact": "Not rework: no changes were requested on acme/shop#412. The time went into waiting, not into building."
+          },
+          {
+            "kind": "rules-out",
+            "source": "Board",
+            "keys": ["SHOP-231"],
+            "fact": "Not a dropped priority: it serves the Sprint 24 goal 'Checkout v2 live for 10% of shoppers'. It has a 5% chance of finishing in the 4 days left."
+          }
+        ],
+        "options": [
+          {
+            "what": "Keep SHOP-231 whole. Get acme/shop#412 reviewed and merged now, and get a dated fix from the PAY-88 owner. Carry it only until the sandbox works.",
+            "tradeOff": "Needs a reviewer's time on a 640-line change. The date still depends on another team.",
+            "checkpoint": "acme/shop#412 approved within 2 days and PAY-88 dated before Sprint 25 planning.",
+            "keys": ["SHOP-231"],
+            "recommended": true
+          },
+          {
+            "what": "Split SHOP-231 so it can close at merge. The code is done, and a new small item covers verifying 3-D Secure once the sandbox works.",
+            "tradeOff": "The goal is not fully proven until the verification item closes. It also needs agreement on shipping untested behind the rollout switch.",
+            "checkpoint": "SHOP-231 reaches Done after merge, and the verification item sits in Sprint 25 with PAY-88 as its blocker.",
+            "keys": ["SHOP-231", "SHOP-247"],
+            "recommended": true
+          },
+          {
+            "what": "Take SHOP-231 out of Sprint 25 until PAY-88 has a date, and tell the product owner the 10% goal slips.",
+            "tradeOff": "Frees 8 points but the goal is not met. It would be a fourth sprint with no progress if the date never comes.",
+            "checkpoint": "A named owner and date for PAY-88, or the item leaves the plan at planning.",
+            "keys": ["SHOP-231"]
+          }
+        ],
+        "why": "the code is done and unreviewed, so review and a smaller finish line cost little and stop another rollover.",
+        "next": "Ask Marco, who relayed the provider's update, to get a dated commitment for the PAY-88 sandbox fix, so the team can decide whether SHOP-231 stays in Sprint 25.",
+        "checkpoint": "PAY-88 has a fix date, and acme/shop#412 has its first review, by tomorrow's refresh.",
+        "question": "Does the team accept merging the 3-D Secure code behind the rollout switch before the provider's sandbox can verify it?"
+      },
+      "checkedJiraKeys": [
+        "SHOP-231",
+        "SHOP-246",
+        "SHOP-247",
+        "SHOP-245",
+        "SHOP-249",
+        "SHOP-120",
+        "SHOP-121",
+        "SHOP-122",
+        "SHOP-123",
+        "SHOP-124",
+        "SHOP-125",
+        "SHOP-126",
+        "SHOP-127",
+        "SHOP-128",
+        "SHOP-129",
+        "SHOP-130",
+        "SHOP-131",
+        "SHOP-132",
+        "SHOP-133",
+        "SHOP-134"
       ],
       "skill": {
         "id": "item-investigation",
@@ -740,144 +893,33 @@
         },
         {
           "step": "jira",
-          "label": "Read SHOP-249, SHOP-250, SHOP-251, SHOP-231 and 1 more in detail: description, comments, history and links",
-          "at": 2476
-        },
-        {
-          "step": "jira",
-          "label": "Read SHOP-243, SHOP-244, SHOP-245, SHOP-246 and 1 more in detail: description, comments, history and links",
-          "at": 2476
-        },
-        {
-          "step": "plan",
-          "label": "Thinking",
-          "at": 2476
-        }
-      ]
-    },
-    {
-      "label": "SHOP-231 is in its 3rd sprint",
-      "question": "SHOP-231 is in its 3rd sprint\nCarried over from Sprint 22 and Sprint 23. 37 days in progress, 4.6× the usual.\n\nWork keeps rolling into the next sprint. Check each item’s history, comments and code to see whether it is too big, blocked or no longer a priority, and propose splitting, swarming or descoping before the next planning, with a measurable checkpoint. Cite relevant ticket evidence, distinguish observed facts from possible causes, and end with a concrete team action and a measurable checkpoint.",
-      "message": "SHOP-231 is **blocked, not too big**: the code is done and the 3-D Secure step cannot be tested until the payment provider fixes its sandbox.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- SHOP-231: Waits on the provider's sandbox fix in PAY-88. Ask Marco: is there a firm date, and who chases the provider?\n- SHOP-247: The 10% rollout switch is unassigned and has not moved in 14 days. Ask the team: who owns it, and does it need 3-D Secure?\nNext step: Ask Marco to get a firm sandbox fix date from the provider by planning, and to name who owns PAY-88 on the Shop side. Without a date, take SHOP-231 out of Sprint 25. Check: By planning: PAY-88 has a confirmed date and an owner, or SHOP-231 is out of Sprint 25's commitment.\nCan the 10% rollout still go live without 3-D Secure, or is SHOP-231 on the critical path for the goal?\n\nWhy:\n- SHOP-231: Lea wrote 6 days ago: code is done, and the 3-D Secure step can only be tested once the provider fixes its sandbox. (Jira)\n- SHOP-231: SHOP-231 is blocked by PAY-88 (Sandbox: 3-D Secure callbacks fail), which was In Progress at last link. Marco wrote 2 days ago that the fix ships 'next week' with no date. (Jira)\n- SHOP-231: Pull request acme/shop#412 has been ready for 6 days with no review activity since. Checks pass and no changes were requested. (GitHub)\n- Ruled out: SHOP-231: Size alone does not explain it: the change is 640 lines in 14 files, large, but nothing was sent back. Large size could still slow a review. (GitHub)\n- SHOP-231: The card sat In Progress for 36 days and moved to Review only 1 day ago. The 3rd sprint therefore mostly shows time before the pull request was ready, not review time. (Jira)\n\nOptions:\nA. Descope SHOP-231 from Sprint 25 until PAY-88 has a confirmed date. Keep the pull request open and the card in Review. Checkout v2 for 10% of shoppers cannot go live without it, so the product owner must agree. Check: Before planning: the product owner confirms the goal and Sprint 25 no longer counts SHOP-231 as committed. (recommended)\nB. Swarm on the unblock: someone other than Lea reviews acme/shop#412 now, so only the sandbox test remains. Uses review time on a change that cannot ship yet. It avoids a second wait after the fix. Check: Within 2 working days: acme/shop#412 is reviewed. The test starts within a day of the sandbox fix. (recommended)\nC. Split the 640-line change so the parts that don't need 3-D Secure testing can merge first. Extra work, and a split only helps if parts can ship behind the rollout switch. Check: By planning: the team decides whether a split is possible. If so, a first part is merged within a week.\nRecommended because The wait is external, so protect the sprint plan from it and use the wait to get the review done.",
-      "card": {
-        "verdict": "SHOP-231 is **blocked, not too big**: the code is done and the 3-D Secure step cannot be tested until the payment provider fixes its sandbox.",
-        "confidence": "likely",
-        "basis": "Jira and GitHub agree",
-        "sources": ["Jira", "GitHub"],
-        "list": [
-          {
-            "keys": ["SHOP-231"],
-            "text": "Waits on the provider's sandbox fix in PAY-88. Ask Marco: is there a firm date, and who chases the provider?"
-          },
-          {
-            "keys": ["SHOP-247"],
-            "text": "The 10% rollout switch is unassigned and has not moved in 14 days. Ask the team: who owns it, and does it need 3-D Secure?"
-          }
-        ],
-        "reasons": [
-          {
-            "kind": "supports",
-            "source": "Jira",
-            "keys": ["SHOP-231"],
-            "fact": "Lea wrote 6 days ago: code is done, and the 3-D Secure step can only be tested once the provider fixes its sandbox."
-          },
-          {
-            "kind": "supports",
-            "source": "Jira",
-            "keys": ["SHOP-231"],
-            "fact": "SHOP-231 is blocked by PAY-88 (Sandbox: 3-D Secure callbacks fail), which was In Progress at last link. Marco wrote 2 days ago that the fix ships 'next week' with no date."
-          },
-          {
-            "kind": "supports",
-            "source": "GitHub",
-            "keys": ["SHOP-231"],
-            "fact": "Pull request acme/shop#412 has been ready for 6 days with no review activity since. Checks pass and no changes were requested."
-          },
-          {
-            "kind": "rules-out",
-            "source": "GitHub",
-            "keys": ["SHOP-231"],
-            "fact": "Size alone does not explain it: the change is 640 lines in 14 files, large, but nothing was sent back. Large size could still slow a review."
-          },
-          {
-            "kind": "supports",
-            "source": "Jira",
-            "keys": ["SHOP-231"],
-            "fact": "The card sat In Progress for 36 days and moved to Review only 1 day ago. The 3rd sprint therefore mostly shows time before the pull request was ready, not review time."
-          }
-        ],
-        "options": [
-          {
-            "what": "Descope SHOP-231 from Sprint 25 until PAY-88 has a confirmed date. Keep the pull request open and the card in Review.",
-            "tradeOff": "Checkout v2 for 10% of shoppers cannot go live without it, so the product owner must agree.",
-            "checkpoint": "Before planning: the product owner confirms the goal and Sprint 25 no longer counts SHOP-231 as committed.",
-            "keys": ["SHOP-231"],
-            "recommended": true
-          },
-          {
-            "what": "Swarm on the unblock: someone other than Lea reviews acme/shop#412 now, so only the sandbox test remains.",
-            "tradeOff": "Uses review time on a change that cannot ship yet. It avoids a second wait after the fix.",
-            "checkpoint": "Within 2 working days: acme/shop#412 is reviewed. The test starts within a day of the sandbox fix.",
-            "keys": ["SHOP-231"],
-            "recommended": true
-          },
-          {
-            "what": "Split the 640-line change so the parts that don't need 3-D Secure testing can merge first.",
-            "tradeOff": "Extra work, and a split only helps if parts can ship behind the rollout switch.",
-            "checkpoint": "By planning: the team decides whether a split is possible. If so, a first part is merged within a week.",
-            "keys": ["SHOP-231"]
-          }
-        ],
-        "why": "The wait is external, so protect the sprint plan from it and use the wait to get the review done.",
-        "next": "Ask Marco to get a firm sandbox fix date from the provider by planning, and to name who owns PAY-88 on the Shop side. Without a date, take SHOP-231 out of Sprint 25.",
-        "checkpoint": "By planning: PAY-88 has a confirmed date and an owner, or SHOP-231 is out of Sprint 25's commitment.",
-        "question": "Can the 10% rollout still go live without 3-D Secure, or is SHOP-231 on the critical path for the goal?"
-      },
-      "checkedJiraKeys": ["SHOP-231", "SHOP-247", "SHOP-248"],
-      "skill": {
-        "id": "item-investigation",
-        "name": "Item investigation"
-      },
-      "trail": [
-        {
-          "step": "plan",
-          "label": "Planning",
-          "at": 2
-        },
-        {
-          "step": "jira",
-          "label": "Read SHOP-231 in detail: description, comments, history and links",
-          "at": 1691
+          "label": "Read SHOP-231, SHOP-246, SHOP-247, SHOP-245 and 1 more in detail: description, comments, history and links",
+          "at": 3347
         },
         {
           "step": "jira",
           "label": "Read the code trail of SHOP-231: branch, pull requests and review timing",
-          "at": 1691
+          "at": 3347
+        },
+        {
+          "step": "jira",
+          "label": "Search Jira: items under SHOP-231",
+          "at": 3347
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 1691
+          "at": 3348
         },
         {
           "step": "jira",
           "label": "Read PAY-88 in detail: description, comments, history and links",
-          "at": 2793
+          "at": 5475
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 2793
-        },
-        {
-          "step": "jira",
-          "label": "Read SHOP-247, SHOP-248: status, owner, priority and dates",
-          "at": 3689
-        },
-        {
-          "step": "plan",
-          "label": "Thinking",
-          "at": 3689
+          "at": 5475
         }
       ]
     }

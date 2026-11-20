@@ -86,7 +86,17 @@ export interface ClosedSprintView {
   finished: SprintRef[]
   notFinished: SprintRef[]
   added: SprintRef[]
+  /** Planned items no longer in the sprint at its end. */
   removed: SprintRef[]
+  /** Of the removed: put into a later sprint. The rest went to the backlog. */
+  movedOn: SprintRef[]
+  /**
+   * Work that did not finish here and continued in a later sprint, however
+   * it got there: Jira moved it when the sprint was completed, or someone
+   * took it out and put it in the next one. This is what "carried over"
+   * means; work taken out for good is not in it.
+   */
+  carriedOver: SprintRef[]
   /** Planned items that finished: the say/do numerator. */
   finishedPlanned: number
   /** Points finished, added work included: the sprint's velocity. */
@@ -182,6 +192,23 @@ export function buildSprintBriefing(
       )
       .map((record) => record.issueId)
 
+  const startedAt = (sprint: SprintRecord) =>
+    Math.max(
+      Date.parse(sprint.startAt ?? '') || 0,
+      Date.parse(sprint.activatedAt ?? '') || 0,
+    )
+  /** Every sprint the item is or ever was in, from its field and its history. */
+  const everIn = (issueId: string) => {
+    const record = records.get(issueId)
+    return new Set([
+      ...(record?.sprintIds ?? []),
+      ...(record?.sprintChanges ?? []).flatMap((change) => [
+        ...change.from,
+        ...change.to,
+      ]),
+    ])
+  }
+
   const history = data.sprints
     .filter((sprint) => sprint.state === 'closed' && sprint.startAt)
     .slice(-HISTORY_SPRINTS)
@@ -193,6 +220,29 @@ export function buildSprintBriefing(
       const finished = atEnd.filter((id) => board.doneAt(id, end))
       const plannedSet = new Set(planned)
       const endSet = new Set(atEnd)
+      // The running and the planned sprints come after any closed one; a
+      // closed sprint comes after when it started later.
+      const later = new Set(
+        data.sprints
+          .filter(
+            (other) =>
+              other.id !== sprint.id &&
+              (other.state !== 'closed' ||
+                startedAt(other) > startedAt(sprint)),
+          )
+          .map((other) => other.id),
+      )
+      const wentOn = (id: string) =>
+        [...everIn(id)].some((sprintId) => later.has(sprintId))
+      const removed = planned.filter((id) => !endSet.has(id))
+      // The three ways unfinished work leaves a sprint: Jira moves it on
+      // when the sprint is completed (it stays in this sprint too), someone
+      // takes it out and adds it to the next sprint, or someone takes it out
+      // for good. The first two are carry-over, whichever the team does.
+      const carriedOver = [
+        ...atEnd.filter((id) => !board.doneAt(id, end)),
+        ...removed.filter((id) => !board.doneAt(id, end)),
+      ].filter(wentOn)
       return {
         sprint,
         planned: planned.map((id) => ref(id, start)),
@@ -203,9 +253,9 @@ export function buildSprintBriefing(
         added: atEnd
           .filter((id) => !plannedSet.has(id))
           .map((id) => ref(id, end)),
-        removed: planned
-          .filter((id) => !endSet.has(id))
-          .map((id) => ref(id, end)),
+        removed: removed.map((id) => ref(id, end)),
+        movedOn: removed.filter(wentOn).map((id) => ref(id, end)),
+        carriedOver: carriedOver.map((id) => ref(id, end)),
         finishedPlanned: finished.filter((id) => plannedSet.has(id)).length,
         finishedPoints: finished.reduce(
           (sum, id) => sum + (pointsAt(records.get(id), end) ?? 0),
@@ -311,8 +361,8 @@ export function buildSprintBriefing(
       list.reduce((sum, item) => sum + (item.points ?? 0), 0)
     return {
       sprint,
-      day: Math.min(sprintDay(start, now), sprintDay(start, end)),
-      days: sprintDay(start, end),
+      day: Math.min(sprintDay(start, now), sprintLength(start, end)),
+      days: sprintLength(start, end),
       items,
       likely,
       // Never above the headline: several items at 50–69% can make a higher
@@ -825,6 +875,16 @@ export function sprintPlanningPrompt(
 /* ---------------------------------------------------------------------------
  * Small helpers.
  * ------------------------------------------------------------------------- */
+
+/**
+ * How many days a sprint has, from the start and end Jira holds: four weeks
+ * from one Thursday to the Thursday four weeks on are 28 days, not 29. A part of a day at the
+ * end counts as a day.
+ */
+export function sprintLength(start: number, end: number): number {
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 1
+  return Math.max(1, Math.ceil((end - start) / DAY))
+}
 
 /** The sprint day a moment falls on: day 1 starts when the sprint does. */
 export function sprintDay(start: number, at: number): number {

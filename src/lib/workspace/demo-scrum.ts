@@ -134,10 +134,12 @@ export const SCRUM_DEMO_NOTES: Record<
 
 export function scrumDemoSnapshot(now = new Date()): FlowBoardSnapshot {
   const at = now.getTime()
-  // The running sprint started 9 days and 6 hours ago and runs 13 days.
+  // The running sprint started 9 days and 6 hours ago. A sprint starts every
+  // two weeks and ends on its fourteenth day, an hour into it: 14 days long,
+  // with the time left that the demo's forecast was written around.
   const anchor = at - 9 * DAY - 6 * HOUR
   const startOf = (n: number) => anchor + (n - ACTIVE) * 14 * DAY
-  const endOf = (n: number) => startOf(n) + 13 * DAY
+  const endOf = (n: number) => startOf(n) + 13 * DAY + HOUR
 
   const sprints: SprintRecord[] = [19, 20, 21, 22, 23, ACTIVE, NEXT].map(
     (n) => ({
