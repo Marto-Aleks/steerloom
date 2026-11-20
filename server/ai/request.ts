@@ -3,6 +3,7 @@ import { isServiceExpectation } from '../../src/lib/statistics/service-expectati
 import {
   AI_SIGNAL_LIMIT,
   type AiDataChecks,
+  type AiFlaggedLastWeek,
   type AiReportContext,
 } from '../../src/lib/ai/report-context'
 import { TEAM_NOTES_LIMIT } from '../../src/lib/workspace/model'
@@ -257,6 +258,14 @@ function parseContext(value: unknown): AiReportContext | null {
     value.workInProgressByStage === undefined
       ? undefined
       : parseArray(value.workInProgressByStage, 20, parseStageWork)
+  const stageTime =
+    value.stageTime === undefined
+      ? undefined
+      : parseArray(value.stageTime, 20, parseStageTime)
+  const flaggedLastWeek =
+    value.flaggedLastWeek === undefined
+      ? undefined
+      : parseFlaggedLastWeek(value.flaggedLastWeek)
   const dataChecks =
     value.dataChecks === undefined
       ? undefined
@@ -295,6 +304,8 @@ function parseContext(value: unknown): AiReportContext | null {
     periodComparison === null ||
     forecast === null ||
     workInProgressByStage === null ||
+    stageTime === null ||
+    flaggedLastWeek === null ||
     dataChecks === null ||
     pullRequests === null ||
     codeLookup === null ||
@@ -335,6 +346,8 @@ function parseContext(value: unknown): AiReportContext | null {
     ...(periodComparison ? { periodComparison } : {}),
     ...(forecast ? { forecast } : {}),
     ...(workInProgressByStage ? { workInProgressByStage } : {}),
+    ...(stageTime?.length ? { stageTime } : {}),
+    ...(flaggedLastWeek ? { flaggedLastWeek } : {}),
     ...(dataChecks ? { dataChecks } : {}),
     ...(teamNotes ? { teamNotes } : {}),
     ...(pullRequests ? { pullRequests } : {}),
@@ -810,6 +823,54 @@ function parseStageWork(value: unknown) {
   return stage !== null && count !== null && items !== null
     ? { stage, count, items }
     : null
+}
+
+function parseStageTime(value: unknown) {
+  if (!isRecord(value)) return null
+  const stage = text(value.stage, 160)
+  const sharePercent = boundedInteger(value.sharePercent, 100)
+  return stage !== null && sharePercent !== null
+    ? { stage, sharePercent }
+    : null
+}
+
+const FLAGGED_OUTCOMES = new Set(['finished', 'moved', 'waiting', 'returned'])
+
+function parseFlaggedLastWeek(value: unknown): AiFlaggedLastWeek | null {
+  if (!isRecord(value)) return null
+  const daysAgo = boundedInteger(value.daysAgo, 90)
+  const movedQuickly = boundedInteger(value.movedQuickly, 1_000)
+  const quickDays = boundedInteger(value.quickDays, 30)
+  const limits = optionalNumbers(value, ['limitThenDays', 'limitNowDays'])
+  const items = parseArray(value.items, 25, (item: unknown) => {
+    if (!isRecord(item)) return null
+    const key = text(item.key, 80)
+    const moved = optionalNumbers(item, ['movedAfterDays'])
+    if (
+      key === null ||
+      (item.reason !== 'late' && item.reason !== 'came back') ||
+      !FLAGGED_OUTCOMES.has(String(item.outcome)) ||
+      !moved
+    )
+      return null
+    const reason: AiFlaggedLastWeek['items'][number]['reason'] =
+      item.reason === 'late' ? 'late' : 'came back'
+    return {
+      key,
+      reason,
+      outcome: item.outcome as AiFlaggedLastWeek['items'][number]['outcome'],
+      ...moved,
+    }
+  })
+  if (
+    daysAgo === null ||
+    movedQuickly === null ||
+    quickDays === null ||
+    !limits ||
+    items === null
+  )
+    return null
+  return { daysAgo, movedQuickly, quickDays, ...limits, items }
 }
 
 function parseOutlier(value: unknown) {

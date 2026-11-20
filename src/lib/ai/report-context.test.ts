@@ -253,4 +253,85 @@ describe('AI report context', () => {
       },
     ])
   })
+  it('says where finished work’s time went and what happened to last week’s flagged items', () => {
+    const base = {
+      generatedAt: '2026-09-18T09:00:00Z',
+      sourceLabel: 'DEMO · Fictional board',
+      boardName: 'Fictional board',
+      filters: {
+        ticketTypes: [],
+        windowDays: 30,
+        selectedColumnIds: ['progress', 'review'],
+      },
+      selectedColumnNames: ['In Progress', 'Review'],
+      metrics,
+      exitThroughputPerWeek: 0.7,
+      focusSignals: [],
+      weeklyCycleTimeTrend: [],
+      delayedWorkInProgress: [],
+      completedOutliers: [],
+      reenteredWorkInProgress: [],
+    }
+    const context = buildAiReportContext({
+      ...base,
+      stageLoads: [
+        { name: 'In Progress', timeShare: 0.604 },
+        { name: 'Review', timeShare: 0.396 },
+        // A stage with no finished work yet has no share to give.
+        { name: 'Testing' },
+      ],
+      flagged: {
+        flaggedAt: '2026-09-11T09:00:00.000Z',
+        daysAgo: 7,
+        movedQuickly: 1,
+        limitThen: 7.04,
+        limitNow: null,
+        items: [
+          {
+            item: 'FICT-4',
+            title: 'A fictional title that must stay out',
+            browseUrl: 'https://jira.example.test/browse/FICT-4',
+            reason: 'late',
+            flaggedAs: '12 days in progress',
+            outcome: 'waiting',
+            detail: 'Still in Review.',
+            movedAfterDays: null,
+          },
+          {
+            item: 'FICT-9',
+            reason: 'reentered',
+            flaggedAs: 'came back',
+            outcome: 'moved',
+            detail: 'Moved after a day.',
+            movedAfterDays: 1.26,
+          },
+        ],
+      },
+    })
+    expect(context.stageTime).toEqual([
+      { stage: 'In Progress', sharePercent: 60 },
+      { stage: 'Review', sharePercent: 40 },
+    ])
+    expect(context.flaggedLastWeek).toEqual({
+      daysAgo: 7,
+      movedQuickly: 1,
+      quickDays: 2,
+      limitThenDays: 7,
+      items: [
+        { key: 'FICT-4', reason: 'late', outcome: 'waiting' },
+        {
+          key: 'FICT-9',
+          reason: 'came back',
+          outcome: 'moved',
+          movedAfterDays: 1.3,
+        },
+      ],
+    })
+    // Keys and numbers only: no titles, links or sentences.
+    expect(JSON.stringify(context)).not.toMatch(/fictional title|jira\.example/)
+    // Nothing to say: nothing is sent.
+    const quiet = buildAiReportContext({ ...base, flagged: null })
+    expect(quiet).not.toHaveProperty('stageTime')
+    expect(quiet).not.toHaveProperty('flaggedLastWeek')
+  })
 })

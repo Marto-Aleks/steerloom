@@ -124,6 +124,11 @@ export interface AiChatDraftRequest {
   prompt: string
   autoSend?: boolean
   fallback?: string
+  /**
+   * What the person sees as their question, when the prompt also carries
+   * guidance for the assistant. The prompt is what is sent.
+   */
+  label?: string
 }
 
 export function AiChatPanel({
@@ -189,6 +194,8 @@ export function AiChatPanel({
   const panelRef = useRef<HTMLElement>(null)
   const previouslyOpened = useRef(false)
   const startedInvestigation = useRef<number | null>(null)
+  /** A button's question waiting in the composer under its label. */
+  const labelled = useRef<{ label: string; prompt: string } | null>(null)
   const reportIdentity = useMemo(
     () =>
       JSON.stringify({
@@ -239,7 +246,10 @@ export function AiChatPanel({
   useEffect(() => {
     if (!draftRequest) return
     setOpen(true)
-    setDraft(draftRequest.prompt)
+    labelled.current = draftRequest.label
+      ? { label: draftRequest.label, prompt: draftRequest.prompt }
+      : null
+    setDraft(draftRequest.label ?? draftRequest.prompt)
     setError('')
     setPendingConfirmation(null)
   }, [draftRequest])
@@ -445,7 +455,14 @@ export function AiChatPanel({
   }
 
   const ask = async (question: string) => {
-    const content = question.trim()
+    const typed = question.trim()
+    // The label left as it was stands for the button's question; once the
+    // person edits it, what they typed is the question.
+    const behind =
+      labelled.current && typed === labelled.current.label
+        ? labelled.current.prompt
+        : null
+    const content = behind ?? typed
     if (replay) {
       if (content && !sending) await replayAnswer(content)
       return
@@ -453,13 +470,17 @@ export function AiChatPanel({
     if (!content || !configured || sending) return
     // Typing stops at the limit; a question a button wrote must respect it too.
     if (content.length > AI_USER_MESSAGE_CHAR_LIMIT) {
-      setDraft(content)
+      setDraft(typed)
       setError(
         `This question is ${content.length.toLocaleString()} characters; the most is ${AI_USER_MESSAGE_CHAR_LIMIT.toLocaleString()}. Shorten it and send again.`,
       )
       return
     }
-    const userMessage: AiConversationMessage = { role: 'user', content }
+    const userMessage: AiConversationMessage = {
+      role: 'user',
+      content,
+      ...(behind ? { display: typed } : {}),
+    }
     const nextMessages: AiConversationMessage[] = [
       ...messages,
       userMessage,
@@ -470,7 +491,7 @@ export function AiChatPanel({
     const completed = await requestChat(nextMessages)
     if (!completed) {
       setMessages(nextMessages.slice(0, -1))
-      setDraft(content)
+      setDraft(typed)
     }
   }
 
@@ -487,7 +508,7 @@ export function AiChatPanel({
     )
       return
     startedInvestigation.current = draftRequest.id
-    startInvestigation(draftRequest.prompt)
+    startInvestigation(draftRequest.label ?? draftRequest.prompt)
   }, [draftRequest, configured, sending])
 
   const resolveConfirmation = async (allowJira: boolean) => {
@@ -1036,7 +1057,11 @@ export function AiMessageContent({
 }) {
   const [expanded, setExpanded] = useState(false)
   if (message.role === 'user') {
-    return <p className="ai-chat__message-content">{message.content}</p>
+    return (
+      <p className="ai-chat__message-content">
+        {message.display ?? message.content}
+      </p>
+    )
   }
   const blocks = formatAiResponse(message.content)
   const words = (block: (typeof blocks)[number]) =>

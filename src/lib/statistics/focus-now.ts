@@ -139,21 +139,21 @@ export function focusSignalActionLabel(signal: FocusSignal): string {
 }
 
 export function focusSignalAgentPrompt(signal: FocusSignal): string {
-  return `${signal.title}\n${signal.evidence}\n\n${focusSignalInvestigationPrompt(signal)} Cite relevant ticket evidence, distinguish observed facts from possible causes, and end with a concrete team action and a measurable checkpoint.`
+  return `${signal.title}\n${signal.evidence}\n\n${focusSignalInvestigationPrompt(signal)}`
 }
 
 function focusSignalInvestigationPrompt(signal: FocusSignal): string {
   switch (signal.id) {
     case 'delayed-wip':
-      return 'Help me decide what to address first in the delayed WIP. Use the report evidence, distinguish age from cause, and propose the smallest useful board check before recommending action.'
+      return 'Help me decide what to address first in the late work. Read the oldest of these items to see what each waits on: age alone is not a cause.'
     case 'wip-concentration':
-      return 'Assess the work concentration signal in this report. Treat possible causes as hypotheses, explain what decision the team may need to make, and identify the smallest evidence check that would reduce uncertainty.'
+      return 'Why is work piling up here, and what does the team need to decide? Read the oldest items in this stage to see what they wait on.'
     case 'owner-concentration':
       return "One person holds much of the active work. Treat it as a load and single-point-of-failure problem, never as that person's performance. Check which of the items others could take or finish together, and propose what to hand over this week with a measurable checkpoint."
     case 'no-owner':
       return 'Active items have no owner. Check whether each one is really in progress, who could own it, or whether it should go back to the backlog, and propose a checkpoint for the next refresh.'
     case 'active-reentry':
-      return 'Review the active re-entry signal. Explain what the report proves, what it does not prove, and the smallest board check that could distinguish rework from an unclear flow policy.'
+      return 'Why did this work come back? Read its history and comments to tell rework from a card that was moved too early.'
     case 'start-finish':
       return 'More items were started than finished. List what was started, whether it was pulled or pushed, and what the team could finish first before starting more. Frame the decision as a limit on work in progress with a measurable checkpoint.'
     case 'throughput-drop':

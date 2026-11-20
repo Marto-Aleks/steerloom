@@ -83,9 +83,11 @@ describe('hero signal', () => {
         name: 'Investigate aging items with Steerloom AI',
       }),
     )
+    // The chat shows the signal's title as the question; the rest is sent.
     expect(onAsk).toHaveBeenCalledWith(
       expect.stringContaining('2 items past the usual 7 days'),
       signals[0]!.action,
+      signals[0]!.title,
     )
     // Every active item opens in place, not further down the page.
     fireEvent.click(

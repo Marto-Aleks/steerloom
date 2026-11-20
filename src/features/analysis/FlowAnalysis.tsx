@@ -29,7 +29,10 @@ import {
   type AiChatDraftRequest,
   type AiReplay,
 } from './AiChatPanel'
-import { standupPrompt, periodSummaryPrompt } from '../../lib/ai/review-prompts'
+import {
+  periodSummaryPrompt,
+  raiseTodayPrompt,
+} from '../../lib/ai/review-prompts'
 import { AgingWorkPanel } from './AgingWorkPanel'
 import { formatNumber, metricTitle } from './format'
 import { MetricEvidenceView } from './MetricEvidenceView'
@@ -111,7 +114,16 @@ export function FlowAnalysis({
   // Data appears at once: managers read numbers, they do not watch them grow.
   const animate = false
   const [aiInvite, setAiInvite] = useState(false)
-  const requestAiDraft = (prompt: string, fallback?: string) => {
+  /**
+   * Hands a question to the chat. With a label, the chat shows the label as
+   * what the person asked and sends the prompt, which may carry guidance for
+   * the assistant that nobody needs to read.
+   */
+  const requestAiDraft = (
+    prompt: string,
+    fallback?: string,
+    label?: string,
+  ) => {
     if (!aiChat) {
       setAiInvite(true)
       return
@@ -121,6 +133,7 @@ export function FlowAnalysis({
       prompt,
       autoSend: Boolean(fallback),
       fallback,
+      ...(label ? { label } : {}),
     }))
   }
   const report = useMemo(
@@ -562,14 +575,7 @@ export function FlowAnalysis({
                       type="button"
                       className="briefing-link"
                       title="Opens Steerloom AI with this question, ready to send"
-                      onClick={() =>
-                        requestAiDraft(
-                          standupPrompt(
-                            agingWork,
-                            metrics.percentile85CycleTime,
-                          ),
-                        )
-                      }
+                      onClick={() => requestAiDraft(raiseTodayPrompt)}
                     >
                       What to raise today <span aria-hidden="true">→</span>
                     </button>
@@ -577,7 +583,13 @@ export function FlowAnalysis({
                       type="button"
                       className="briefing-link"
                       title="Opens Steerloom AI with this question, ready to send"
-                      onClick={() => requestAiDraft(periodSummaryPrompt)}
+                      onClick={() =>
+                        requestAiDraft(
+                          periodSummaryPrompt,
+                          undefined,
+                          'Draft a flow summary for this period',
+                        )
+                      }
                     >
                       Summarise this period <span aria-hidden="true">→</span>
                     </button>

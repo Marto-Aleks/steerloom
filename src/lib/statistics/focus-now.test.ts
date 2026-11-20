@@ -182,7 +182,7 @@ describe('Focus now summary', () => {
     expect(summary.signals[4]?.jiraFilter).toBeUndefined()
   })
 
-  it('grounds investigations in the selected signal and requests supported decisions', () => {
+  it('grounds investigations in the selected signal, and leaves how to answer to the assistant', () => {
     const summary = buildFocusNowSummary({
       snapshot,
       selectedColumnIds: ['progress-column', 'review-column'],
@@ -193,11 +193,10 @@ describe('Focus now summary', () => {
       const prompt = focusSignalAgentPrompt(signal)
       expect(prompt).toContain(signal.title)
       expect(prompt).toContain(signal.evidence)
-      expect(prompt).toContain('Cite relevant ticket evidence')
-      expect(prompt).toContain(
-        'distinguish observed facts from possible causes',
-      )
-      expect(prompt).toContain('measurable checkpoint')
+      // The assistant's own instructions say how to answer; a question
+      // that repeated them said things twice, and sometimes differently.
+      expect(prompt).not.toContain('Cite relevant ticket evidence')
+      expect(prompt).not.toMatch(/smallest .*check/)
     }
     expect(summary.signals.map(focusSignalActionLabel)).toEqual([
       'Investigate aging items',
@@ -291,7 +290,7 @@ describe('Focus now summary', () => {
       'throughput-drop',
     ])
     expect(focusSignalAgentPrompt(selection.priorities[0]!)).toContain(
-      'distinguish age from cause',
+      'age alone is not a cause',
     )
   })
 })

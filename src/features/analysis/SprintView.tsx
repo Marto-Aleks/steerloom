@@ -36,7 +36,7 @@ import { StatusSpot, TodayPanel } from './TodayPanel'
  * its item with the title on hover, lists open on click, nothing per person.
  */
 
-type Ask = (prompt: string, fallback?: string) => void
+type Ask = (prompt: string, fallback?: string, label?: string) => void
 
 // The chart library loads on demand, as for the briefing's charts.
 const SprintHistoryChart = lazy(() => import('./SprintHistoryChart'))

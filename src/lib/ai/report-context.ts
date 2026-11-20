@@ -13,6 +13,7 @@ import type {
   WorkInProgressAgePoint,
 } from '../../types'
 import type { FocusSignal } from '../statistics/focus-now'
+import type { FlaggedReplay } from '../statistics/flagged-replay'
 import type { FlowPeriodComparison } from '../statistics/flow-evidence'
 import type {
   ThroughputForecast,
@@ -85,6 +86,13 @@ export interface AiReportContext {
   }>
   /** Where active work sits now: each stage with its items, longest in the stage first */
   workInProgressByStage?: AiStageWork[]
+  /**
+   * Where finished work's time went: each measured stage's share of it, in
+   * board order. What the briefing shows as "40% of time".
+   */
+  stageTime?: Array<{ stage: string; sharePercent: number }>
+  /** What the briefing flagged a week ago, and what happened to it since. */
+  flaggedLastWeek?: AiFlaggedLastWeek
   forecast?: AiForecast
   /** Steerloom's own data checks: how far the numbers can be trusted, and why. */
   dataChecks?: AiDataChecks
@@ -177,6 +185,24 @@ export interface AiSprintContext {
   }>
 }
 
+/** "Flagged last week" on the briefing, as keys and numbers. */
+export interface AiFlaggedLastWeek {
+  daysAgo: number
+  /** Items that changed column within quickDays of being flagged. */
+  movedQuickly: number
+  quickDays: number
+  /** The usual limit (P85) then and now, in days, when each was known. */
+  limitThenDays?: number
+  limitNowDays?: number
+  items: Array<{
+    key: string
+    reason: 'late' | 'came back'
+    /** finished, moved on and still in progress, waiting in the same column, or returned to before the measured stages. */
+    outcome: FlaggedReplay['items'][number]['outcome']
+    movedAfterDays?: number
+  }>
+}
+
 export interface AiDataChecks {
   verdict: 'strong' | 'directional' | 'weak'
   summary: string
@@ -228,6 +254,11 @@ interface BuildAiReportContextInput {
     currentStageAgeDays: number
   }>
   dataQuality?: Pick<DataQualityReport, 'verdict' | 'findings'>
+  /** Each measured stage with its share (0–1) of finished work's time. */
+  stageLoads?: Array<{ name: string; timeShare?: number }>
+  flagged?: FlaggedReplay | null
+  /** Days after a flag that still count as moving quickly. */
+  quickMoveDays?: number
   teamNotes?: string
   pullRequests?: AiPullRequestEvidence
   codeLookup?: AiItemPullRequests[]
@@ -255,10 +286,23 @@ export function buildAiReportContext({
   forecast,
   currentWork,
   dataQuality,
+  stageLoads,
+  flagged,
+  quickMoveDays = 2,
   teamNotes,
   pullRequests,
   codeLookup,
 }: BuildAiReportContextInput): AiReportContext {
+  const stageTime = (stageLoads ?? []).flatMap((load) =>
+    load.timeShare === undefined
+      ? []
+      : [
+          {
+            stage: load.name.slice(0, 160),
+            sharePercent: Math.round(load.timeShare * 100),
+          },
+        ],
+  )
   return {
     generatedAt,
     sourceLabel,
@@ -326,6 +370,33 @@ export function buildAiReportContext({
       })),
     ...(currentWork?.length
       ? { workInProgressByStage: stageWork(currentWork, selectedColumnNames) }
+      : {}),
+    ...(stageTime.length ? { stageTime: stageTime.slice(0, STAGE_LIMIT) } : {}),
+    ...(flagged?.items.length
+      ? {
+          flaggedLastWeek: {
+            daysAgo: flagged.daysAgo,
+            movedQuickly: flagged.movedQuickly,
+            quickDays: quickMoveDays,
+            ...(flagged.limitThen !== null
+              ? { limitThenDays: roundDays(flagged.limitThen) }
+              : {}),
+            ...(flagged.limitNow !== null
+              ? { limitNowDays: roundDays(flagged.limitNow) }
+              : {}),
+            items: flagged.items.slice(0, TICKET_LIMIT).map((item) => ({
+              key: item.item,
+              reason:
+                item.reason === 'late'
+                  ? ('late' as const)
+                  : ('came back' as const),
+              outcome: item.outcome,
+              ...(item.movedAfterDays !== null
+                ? { movedAfterDays: roundDays(item.movedAfterDays) }
+                : {}),
+            })),
+          },
+        }
       : {}),
     ...(forecast ? { forecast: toAiForecast(forecast) } : {}),
     ...(dataQuality

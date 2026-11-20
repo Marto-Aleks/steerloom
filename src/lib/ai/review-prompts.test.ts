@@ -3,47 +3,40 @@ import { demoSnapshot } from '../workspace/demo'
 import { collectAgingWork } from '../statistics/aging-work'
 import { AI_USER_MESSAGE_CHAR_LIMIT } from './conversation'
 import {
-  selectedWorkPrompt,
-  standupPrompt,
   periodSummaryPrompt,
+  raiseTodayPrompt,
+  selectedWorkPrompt,
 } from './review-prompts'
 
 const items = collectAgingWork(demoSnapshot(), ['stage-1', 'stage-2'])
-describe('guided review evidence', () => {
-  it('includes only selected items and never sends histories or source URLs in the draft', () => {
-    const prompt = selectedWorkPrompt(items.slice(0, 2), 10)
-    expect(prompt).toContain(items[0]!.item)
-    expect(prompt).toContain(items[1]!.item)
-    expect(prompt).not.toContain(items[2]!.item)
-    expect(prompt).toContain('2 of 2 items supplied')
-    expect(prompt).toContain('10 days')
-    expect(prompt).not.toMatch(/browseUrl|enteredAt/)
+describe('the briefing’s questions for Steerloom AI', () => {
+  it('asks about the selected items by key, in a sentence', () => {
+    const prompt = selectedWorkPrompt(items.slice(0, 2))
+    expect(prompt).toBe(
+      `Why are ${items[0]!.item} and ${items[1]!.item} taking so long, and what should happen next?`,
+    )
+    expect(selectedWorkPrompt(items.slice(0, 1))).toBe(
+      `Why is ${items[0]!.item} taking so long, and what should happen next?`,
+    )
+    // No data in the question: ages and stages travel with the briefing.
+    expect(prompt).not.toMatch(/[{[]|ageDays|browseUrl|enteredAt/)
   })
-  it('caps review drafts within chat limits even with long escaped source names', () => {
-    const oversized = items.map((item) => ({
-      ...item,
-      column: '"\\'.repeat(300),
-      currentStatus: '"\\'.repeat(300),
+  it('names five items at most and counts the rest, however long the keys', () => {
+    const oversized = Array.from({ length: 12 }, (_, index) => ({
+      ...items[0]!,
+      item: `VERY-LONG-SOURCE-IDENTIFIER-${'X'.repeat(60)}-${index}`,
     }))
-    for (const prompt of [
-      selectedWorkPrompt(oversized, null),
-      standupPrompt(oversized, null),
-      periodSummaryPrompt,
-    ]) {
-      expect(prompt.length).toBeLessThanOrEqual(AI_USER_MESSAGE_CHAR_LIMIT)
-    }
-    expect(selectedWorkPrompt(oversized, null)).toContain(
-      '5 of 9 items supplied',
-    )
-    expect(selectedWorkPrompt(oversized, null)).toContain('P85: unavailable')
+    const prompt = selectedWorkPrompt(oversized)
+    expect(prompt.length).toBeLessThan(700)
+    expect(prompt.length).toBeLessThan(AI_USER_MESSAGE_CHAR_LIMIT)
+    expect(prompt).toContain('(and 7 more selected)')
   })
-  it('samples the oldest items for stand-up and explains empty scope without an all-clear claim', () => {
-    const prompt = standupPrompt([...items].reverse(), 7)
-    expect(prompt.indexOf(items[0]!.item)).toBeLessThan(
-      prompt.indexOf(items[1]!.item),
-    )
-    expect(prompt).toContain('9 active items')
-    expect(prompt).not.toContain(items[6]!.item)
-    expect(standupPrompt([], null)).toContain('No active items were observed')
+  it('asks what to raise today without assuming a meeting', () => {
+    expect(raiseTodayPrompt).toBe('What should the team raise today?')
+    expect(raiseTodayPrompt).not.toMatch(/stand-?up/i)
+  })
+  it('keeps the period summary a bounded draft', () => {
+    expect(periodSummaryPrompt.length).toBeLessThan(AI_USER_MESSAGE_CHAR_LIMIT)
+    expect(periodSummaryPrompt).toContain('at most 150 words')
   })
 })

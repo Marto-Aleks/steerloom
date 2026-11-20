@@ -413,3 +413,53 @@ it('accepts a change to planning that names a sprint and the number to move', ()
     checkAnswerCard(sprintCard, EVAL_CONTEXT, { checked: new Set() })!.options,
   ).toBeUndefined()
 })
+
+it('accepts a change to how the board works that names a stage and a number', () => {
+  const stage = EVAL_CONTEXT.scope.selectedColumns[0]!
+  const result = checkAnswerCard(
+    JSON.stringify({
+      verdict: `**${stage} is where the time goes.**`,
+      next: `The team agrees a limit for ${stage}.`,
+      reasons: [
+        {
+          kind: 'supports',
+          source: 'Jira',
+          keys: [stage],
+          fact: `${stage} holds most of the active items.`,
+        },
+      ],
+      options: [
+        {
+          what: `Limit ${stage} to four items at a time`,
+          tradeOff: 'New work waits when it is full.',
+          checkpoint: `${stage} holds 4 items or fewer by the next refresh.`,
+          keys: [],
+        },
+        {
+          what: 'Start less at once',
+          tradeOff: 'New work waits.',
+          checkpoint: 'Fewer than 4 items started this week.',
+          keys: [],
+        },
+        {
+          what: `Review ${stage} more often`,
+          tradeOff: 'Takes time.',
+          checkpoint: 'It feels faster.',
+          keys: [],
+        },
+      ],
+    }),
+    EVAL_CONTEXT,
+    { checked: new Set() },
+  )!
+  // A fact about a stage is the board's own, with no item chip.
+  expect(result.reasons).toEqual([
+    expect.objectContaining({ kind: 'supports', source: 'Board', keys: [] }),
+  ])
+  // Tied to this board's stage and a number: kept. Naming no stage, or no
+  // number to check: still removed.
+  expect(result.options?.map((option) => option.what)).toEqual([
+    `Limit ${stage} to four items at a time`,
+  ])
+  expect(result.removed).toHaveLength(2)
+})

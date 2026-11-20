@@ -33,6 +33,11 @@ export interface AiConfigurationInfo {
 export interface AiConversationMessage {
   role: 'user' | 'assistant'
   content: string
+  /**
+   * What the chat shows for a question a button asked, when the question
+   * sent carries more than the person needs to read. Never sent.
+   */
+  display?: string
   checkedJiraKeys?: string[]
   unavailableJiraKeys?: string[]
   jiraLookupMode?: AiJiraLookupMode

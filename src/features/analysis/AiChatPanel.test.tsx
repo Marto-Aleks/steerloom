@@ -102,6 +102,63 @@ describe('Steerloom AI contextual drafts', () => {
     expect(aiMocks.sendAiChat).toHaveBeenCalledTimes(1)
   })
 
+  it('shows a button’s question under its label and sends the full question', async () => {
+    const prompt =
+      'Work is piling up in Review\n7 of 9 items sit there.\n\nRead the oldest items in this stage to see what they wait on.'
+    const label = 'Work is piling up in Review'
+    render(
+      <AiChatPanel
+        context={context}
+        draftRequest={{ id: 1, prompt, label, autoSend: true }}
+      />,
+    )
+    await screen.findByText('Fictional review ready.')
+    // The assistant gets the guidance; the person reads their question.
+    expect(aiMocks.sendAiChat.mock.calls[0]?.[1]).toEqual([
+      { role: 'user', content: prompt, display: label },
+    ])
+    expect(screen.getByText(label)).toBeInTheDocument()
+    expect(screen.queryByText(/Read the oldest items/)).not.toBeInTheDocument()
+  })
+
+  it('sends what the person typed once they change a labelled question', async () => {
+    render(
+      <AiChatPanel
+        context={context}
+        draftRequest={{
+          id: 1,
+          prompt: 'Draft a flow summary of at most 150 words.',
+          label: 'Draft a flow summary for this period',
+        }}
+      />,
+    )
+    const composer = await screen.findByLabelText(
+      'Ask a question about this report',
+    )
+    expect(composer).toHaveValue('Draft a flow summary for this period')
+    fireEvent.change(composer, {
+      target: { value: 'Draft a flow summary for the product owner' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+    await waitFor(() => expect(aiMocks.sendAiChat).toHaveBeenCalledTimes(1))
+    expect(aiMocks.sendAiChat.mock.calls[0]?.[1]).toEqual([
+      { role: 'user', content: 'Draft a flow summary for the product owner' },
+    ])
+  })
+
+  it('says so when a question is longer than the chat can send', async () => {
+    render(
+      <AiChatPanel
+        context={context}
+        draftRequest={{ id: 1, prompt: 'x'.repeat(2_455), autoSend: true }}
+      />,
+    )
+    expect(
+      await screen.findByText(/This question is 2,455 characters/),
+    ).toBeInTheDocument()
+    expect(aiMocks.sendAiChat).not.toHaveBeenCalled()
+  })
+
   it('offers rule-based guidance without sending when AI is unavailable', async () => {
     aiMocks.getAiConfiguration.mockResolvedValue({
       configured: false,

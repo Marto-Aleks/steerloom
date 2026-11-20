@@ -25,7 +25,10 @@ import {
   buildFlowPeriodComparison,
   buildMetricEvidence,
 } from '../../lib/statistics/flow-evidence'
-import { replayFlaggedItems } from '../../lib/statistics/flagged-replay'
+import {
+  QUICK_MOVE_DAYS,
+  replayFlaggedItems,
+} from '../../lib/statistics/flagged-replay'
 import { buildFocusNowSummary } from '../../lib/statistics/focus-now'
 import { forecastThroughput } from '../../lib/statistics/forecast'
 import { pullRequestInsight } from '../../lib/statistics/pull-requests'
@@ -403,6 +406,8 @@ export function dashboardAiContext({
     agingWork,
     forecast,
     dataQuality,
+    loads,
+    flagged,
   } = report
   const reportSourceLabel = snapshot.source.projectKey
     ? `${snapshot.source.projectKey} · ${snapshot.source.label}`
@@ -425,6 +430,9 @@ export function dashboardAiContext({
     forecast,
     currentWork: agingWork,
     dataQuality,
+    stageLoads: loads,
+    flagged,
+    quickMoveDays: QUICK_MOVE_DAYS,
     teamNotes,
     ...(pullRequests && review
       ? {

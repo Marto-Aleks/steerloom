@@ -3,8 +3,8 @@ import type { AnswerCard } from '../../lib/ai/answer-card'
 import type { AiReportContext } from '../../lib/ai/report-context'
 import {
   codeMismatchQuestion,
+  raiseTodayPrompt,
   selectedWorkPrompt,
-  standupPrompt,
 } from '../../lib/ai/review-prompts'
 import { demoCodeTrail } from '../../lib/workspace/demo-github'
 import { DEMO_FILTERS, demoSnapshot } from '../../lib/workspace/demo'
@@ -82,7 +82,6 @@ export function demoAiSetup(now = new Date(), team: DemoTeam = 'kanban') {
     pullRequests: code.pullRequests,
     branches: code.branches,
   })
-  const p85 = report.metrics.percentile85CycleTime
   const disagree = (codeTrailGroups(report, review)?.groups ?? [])
     .flatMap((group) => group.items)
     .filter((item) => item.mismatch)
@@ -111,7 +110,7 @@ export function demoAiSetup(now = new Date(), team: DemoTeam = 'kanban') {
   const questions: DemoAiQuestion[] = [
     {
       label: 'What should we raise today?',
-      question: standupPrompt(report.agingWork, p85),
+      question: raiseTodayPrompt,
       starter: true,
     },
     ...(disagree.length
@@ -127,7 +126,7 @@ export function demoAiSetup(now = new Date(), team: DemoTeam = 'kanban') {
       ? [
           {
             label: `Why is ${oldest.item} taking so long?`,
-            question: selectedWorkPrompt([oldest], p85),
+            question: selectedWorkPrompt([oldest]),
             starter: true,
           },
         ]

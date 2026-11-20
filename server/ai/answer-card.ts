@@ -58,8 +58,22 @@ function knownKeys(context: AiReportContext) {
     ...(context.sprint?.running?.items ?? []).map((item) => item.key),
     ...(context.sprint?.running?.scopeChange.removed ?? []),
     ...(context.sprint?.planning?.items ?? []).map((item) => item.key),
+    ...(context.flaggedLastWeek?.items ?? []).map((item) => item.key),
   ])
   return { code, board }
+}
+
+/** The stages this briefing shows, by name. */
+function stageNames(context: AiReportContext): string[] {
+  return [
+    ...new Set([
+      ...context.scope.selectedColumns,
+      ...(context.workInProgressByStage ?? []).map((stage) => stage.stage),
+      ...(context.stageTime ?? []).map((stage) => stage.stage),
+    ]),
+  ]
+    .map((name) => name.trim().toUpperCase())
+    .filter((name) => name.length >= 3)
 }
 
 /** The sprints this briefing shows, by name, as a model may write them. */
@@ -132,6 +146,16 @@ export function checkAnswerCard(
   const sprints = sprintNames(context)
   const isSprint = (name: string) =>
     sprints.some((sprint) => sprint === name || sprint.endsWith(` ${name}`))
+  const stages = stageNames(context)
+  /** A stage of this board, named as a whole word in the text. */
+  const namesStage = (words: string) => {
+    const upper = words.toUpperCase()
+    return stages.some((stage) =>
+      new RegExp(
+        `(^|[^A-Z0-9])${stage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^A-Z0-9])`,
+      ).test(upper),
+    )
+  }
   /** Each removal is said once, however often the model repeated it. */
   const removed = new Set<string>()
 
@@ -156,7 +180,8 @@ export function checkAnswerCard(
     // source; the confidence depends on getting it right.
     const from: AnswerSource = PULL_REQUEST_REF.test(fact)
       ? 'GitHub'
-      : !keys.length && listed.some(isSprint)
+      : !keys.length &&
+          listed.some((name) => isSprint(name) || stages.includes(name))
         ? 'Board'
         : source(entry.source)
     // A claim from a source about an item that source was not read for.
@@ -188,15 +213,15 @@ export function checkAnswerCard(
     const keys = keyList(entry.keys).filter(isKnown)
     const mentions = `${what} ${checkpoint}`
     // A way forward is tied to this board: to an item, a pull request, or,
-    // for a change to how the team plans, a sprint and the number that
-    // should move in it.
+    // for a change to how the team works, a sprint or a stage of this board
+    // and the number that should move.
     const namesItem =
       keys.length > 0 ||
       (mentions.match(KEY) ?? []).some(isKnown) ||
       PULL_REQUEST.test(mentions) ||
-      (Boolean(context.sprint) &&
-        /\bsprint\b/i.test(mentions) &&
-        /\d/.test(checkpoint))
+      (/\d/.test(checkpoint) &&
+        ((Boolean(context.sprint) && /\bsprint\b/i.test(mentions)) ||
+          namesStage(mentions)))
     if (!checkpoint || !namesItem || GENERIC.test(mentions)) {
       removed.add(
         `option “${what}”: ${GENERIC.test(mentions) ? 'generic advice' : !checkpoint ? 'no checkpoint' : 'no item named'}`,

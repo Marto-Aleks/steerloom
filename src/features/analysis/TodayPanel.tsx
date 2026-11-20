@@ -90,7 +90,7 @@ export function TodayPanel({
   signals: FocusSignal[]
   /** The signal shown as the hero card above this list: counted, not repeated. */
   heroSignal?: FocusSignal
-  onAsk: (prompt: string, fallback?: string) => void
+  onAsk: (prompt: string, fallback?: string, label?: string) => void
   /** Entrance delay of the first card, so cards follow the hero. */
   baseDelay?: number
 }) {
@@ -149,7 +149,7 @@ export function SignalCard({
   style,
 }: {
   signal: FocusSignal
-  onAsk: (prompt: string, fallback?: string) => void
+  onAsk: (prompt: string, fallback?: string, label?: string) => void
   style?: CSSProperties
 }) {
   const jiraFilterHref = externalHttpUrl(signal.jiraFilter?.href)
@@ -179,7 +179,9 @@ export function SignalCard({
           type="button"
           className="briefing-link"
           aria-label={`${actionLabel} with Steerloom AI`}
-          onClick={() => onAsk(focusSignalAgentPrompt(signal), signal.action)}
+          onClick={() =>
+            onAsk(focusSignalAgentPrompt(signal), signal.action, signal.title)
+          }
         >
           <AskAiTag /> · {actionLabel} <span aria-hidden="true">→</span>
         </button>
@@ -219,7 +221,7 @@ export function HeroSignal({
   items: WorkInProgressAgePoint[]
   activeCount: number
   limitDays: number | null
-  onAsk: (prompt: string, fallback?: string) => void
+  onAsk: (prompt: string, fallback?: string, label?: string) => void
   /** Opens the full list of active work, when it is shown. */
   onShowAll?: () => void
   /** How many of the oldest items to draw at least. */
@@ -370,7 +372,9 @@ export function HeroSignal({
           type="button"
           className="briefing-link"
           aria-label={`${actionLabel} with Steerloom AI`}
-          onClick={() => onAsk(focusSignalAgentPrompt(signal), signal.action)}
+          onClick={() =>
+            onAsk(focusSignalAgentPrompt(signal), signal.action, signal.title)
+          }
         >
           <AskAiTag /> · {actionLabel} <span aria-hidden="true">→</span>
         </button>

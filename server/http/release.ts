@@ -7,8 +7,13 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.20.3',
+  version: '2026.11.20.4',
   notes: [
+    'Flow briefing: Steerloom AI knows where the time goes. It gets each stage’s share of finished work’s time, the same number the briefing shows as “40% of time”',
+    'Flow briefing: Steerloom AI knows “Flagged last week”: what the briefing named a week ago, and whether each item finished, moved, still waits or went back',
+    'The Ask AI buttons ask one short question. The chat shows that question, where it used to show Steerloom’s own instructions and a block of data as if you had typed them',
+    'Steerloom AI can recommend a change to how the board works, such as a limit on a stage, with the number that should move. Such options were being removed for not naming a ticket',
+    'The open demo: both teams’ recorded Steerloom AI answers are new',
     'Sprint tab: a sprint is as long as its dates in Jira say. Four weeks are 28 days, where Steerloom showed 29',
     'Sprint tab: unfinished work is told apart by where it went. Work that continued in a later sprint is carried over, whether Jira moved it when the sprint was completed or someone took it out and added it to the next sprint. Only work taken out for good counts as removed. Click a sprint in the chart to see both lists',
     'Steerloom AI reads carried-over work as a plan larger than what gets finished, not as a change of scope, and says how much of each sprint was carried over and how much went back to the backlog',

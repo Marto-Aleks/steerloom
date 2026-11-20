@@ -172,7 +172,7 @@ export function AgingWorkPanel({
                   variant="secondary"
                   size="compact"
                   disabled={!selected.length}
-                  onClick={() => onAsk(selectedWorkPrompt(selected, p85))}
+                  onClick={() => onAsk(selectedWorkPrompt(selected))}
                 >
                   <AskAiTag /> about selected work{' '}
                   <span aria-hidden="true">→</span>
@@ -315,7 +315,7 @@ export function AgingWorkPanel({
                                     variant="secondary"
                                     size="compact"
                                     onClick={() =>
-                                      onAsk(selectedWorkPrompt([item], p85))
+                                      onAsk(selectedWorkPrompt([item]))
                                     }
                                   >
                                     <AskAiTag /> about {item.item}{' '}
