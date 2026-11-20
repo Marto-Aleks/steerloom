@@ -99,6 +99,8 @@ export interface ClosedSprintView {
   carriedOver: SprintRef[]
   /** Planned items that finished: the say/do numerator. */
   finishedPlanned: number
+  /** Points in the plan on its first day. */
+  plannedPoints: number
   /** Points finished, added work included: the sprint's velocity. */
   finishedPoints: number
 }
@@ -257,6 +259,10 @@ export function buildSprintBriefing(
         movedOn: removed.filter(wentOn).map((id) => ref(id, end)),
         carriedOver: carriedOver.map((id) => ref(id, end)),
         finishedPlanned: finished.filter((id) => plannedSet.has(id)).length,
+        plannedPoints: planned.reduce(
+          (sum, id) => sum + (pointsAt(records.get(id), start) ?? 0),
+          0,
+        ),
         finishedPoints: finished.reduce(
           (sum, id) => sum + (pointsAt(records.get(id), end) ?? 0),
           0,

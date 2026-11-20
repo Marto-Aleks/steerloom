@@ -558,10 +558,14 @@ describe('unfinished work leaves a sprint in three ways', () => {
     const ai = toAiSprintContext(briefing)!.lastSprints.at(-1)!
     expect(ai).toMatchObject({
       name: 'Sprint 23',
-      removed: 3,
       backToBacklog: 1,
       carriedOver: 3,
     })
+    // "Removed" alone would lump the two together again: it is not sent.
+    expect(ai).not.toHaveProperty('removed')
+    // Points finished stand next to points planned, never next to items.
+    expect(ai.plannedPoints).toBeGreaterThan(0)
+    expect(ai.finishedPoints).toBeGreaterThan(0)
   })
 
   it('does not call finished work carried over, wherever it went next', () => {

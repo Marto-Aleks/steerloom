@@ -1,35 +1,35 @@
 {
   "model": "claude-sonnet-5-5",
-  "recordedAt": "2026-11-20T10:55:35.767Z",
-  "boardNow": "2026-11-20T10:53:30.986Z",
+  "recordedAt": "2026-11-20T11:53:36.035Z",
+  "boardNow": "2026-11-20T11:51:35.459Z",
   "fingerprint": "517f0de8",
   "answers": [
     {
       "label": "What should we raise today?",
       "question": "What should the team raise today?",
       "starter": true,
-      "message": "Raise **DEMO-35's dependency on the accounts team first**, then the paused DEMO-36, the red build on DEMO-33 and the unreviewed DEMO-34.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- DEMO-35: Blocked by the accounts team's ACC-118. Ask Priya what date they gave, and who owns the chase.\n- DEMO-36: Has no assignee and was paused 12 days ago for the checkout incident. Ask Sam whether it is still theirs.\n- DEMO-33: Approved, but the e2e checkout test fails on CI. Ask Ana whether it is flaky and can be re-run or fixed.\n- DEMO-34: Large change with no first review after 5 days. Ask Tom whether it can be split, and who can review it.\nNext step: Ask Priya whether the accounts team has given a date for ACC-118, and descope or park DEMO-35 if there isn't one. Check: ACC-118 has a date, or DEMO-35 leaves In progress. DEMO-33 merges and DEMO-34 gets a first review.\nIs the checkout incident over, so that DEMO-36 can get an owner again?\n\nWhy:\n- DEMO-35: The form part is done. The item is blocked by ACC-118, which is still In progress in the accounts team's work (Priya's comment, 3 days ago). (Jira)\n- DEMO-36: Sam paused it 12 days ago to help with the checkout incident and said they'd be back 'next week'. Nothing has changed since, and the item has no assignee. (Jira)\n- DEMO-33: Pull request acme/shop#203 was approved 1 day ago but its checks fail. Jonas's comment says the e2e checkout test passes locally. (GitHub)\n- DEMO-34: Pull request acme/shop#202 changes 920 lines in 23 files. It has been ready for 5 days with no review and no activity. A typical first look takes about 1.1 days. (GitHub)\n- DEMO-31, DEMO-30: Both pull requests merged, 4 and 2 days ago, but the cards are still In progress. This inflates the work in progress shown on the board. (GitHub)\n- Ruled out: DEMO-33: Not waiting for reviewers. Jonas approved it, and the red build is what stands between it and the merge. (GitHub)\n\nOptions:\nA. Get a date for ACC-118 from the accounts team, or descope the saved-address part of DEMO-35 and ship the form without it. Needs a conversation with another team, and descoping delivers less than planned. Check: DEMO-35 has a date or a smaller scope by the next refresh. (recommended)\nB. Swarm on finishing: re-run or fix the e2e test on DEMO-33, and get DEMO-34 reviewed or split. Uses review time that new work would otherwise get. Check: DEMO-33 is merged and DEMO-34 has a first review within 2 days. (recommended)\nC. Give DEMO-36 an owner and a date, or move it back to the backlog until the incident work is done. Moving it back loses the work done so far but frees up work in progress. Check: DEMO-36 has an assignee or has left In progress.\nRecommended because The blocker needs the most lead time, and DEMO-33 and DEMO-34 are the quickest items to finish.",
+      "message": "Raise **DEMO-35's dependency on the accounts team first**, then an ownerless DEMO-36, an unreviewed large DEMO-34 and a red build on DEMO-33.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- DEMO-35: Blocked by the accounts team's ACC-118, not live yet. Ask Priya for a date, or ship the form part alone?\n- DEMO-36: No owner and paused for the checkout incident. Ask Sam whether it resumes now or goes back to the backlog.\n- DEMO-34: Pull request ready 5 days with no activity, and large. Ask Tom whether it can be split so a reviewer can start.\n- DEMO-33: Approved but the e2e check fails on CI. Ask Ana and Jonas whether the test is flaky and who fixes it.\nNext step: Ask Priya to get a go-live date for ACC-118 from the accounts team today, or to decide whether DEMO-35 ships without the saved address. Check: DEMO-35 has a dated ACC-118 answer, and DEMO-33 and DEMO-34 are no longer waiting.\nIs anyone free to take DEMO-36 now that the checkout incident is over?\n\nWhy:\n- DEMO-35: Priya wrote 3 days ago that the form is done and the work waits on ACC-118, which is still In progress on the accounts team's side. (Jira)\n- DEMO-36: Sam paused it 12 days ago for the checkout incident, saying 'back next week'. It has no assignee and no commit for 12 days. (Jira)\n- DEMO-34: Pull request 202 has been ready for review for 5 days with no activity. It changes 920 lines in 23 files, while the card sits in In progress. (GitHub)\n- DEMO-33: Jonas approved it 1 day ago and noted that the e2e checkout test fails on CI but passes locally. The checks are failing. (Jira)\n- DEMO-31, DEMO-30: Both pull requests merged (4 and 2 days ago) but the cards still sit in In progress, so the board overstates open work. (GitHub)\n\nOptions:\nA. Get a date for ACC-118 from the accounts team, or ship DEMO-35's form part without the saved address Needs the accounts team to commit, or a narrower scope Check: DEMO-35 has a dated answer or a reduced scope by tomorrow (recommended)\nB. Give DEMO-36 an owner now, or return it to the backlog Returning it drops 20 days of age but frees capacity Check: DEMO-36 has an assignee or has left In progress by the next refresh\nC. Finish before starting: get DEMO-34 split and reviewed, fix or rerun the flaky test on DEMO-33, and move DEMO-31 and DEMO-30 Reviewers' time goes here before new starts Check: DEMO-33 merged, DEMO-34 in review or split, DEMO-31 and DEMO-30 moved, by the next refresh (recommended)\nRecommended because A is the only cause the team cannot clear alone, and C finishes work that is already almost done.",
       "card": {
-        "verdict": "Raise **DEMO-35's dependency on the accounts team first**, then the paused DEMO-36, the red build on DEMO-33 and the unreviewed DEMO-34.",
+        "verdict": "Raise **DEMO-35's dependency on the accounts team first**, then an ownerless DEMO-36, an unreviewed large DEMO-34 and a red build on DEMO-33.",
         "confidence": "likely",
         "basis": "Jira and GitHub agree",
         "sources": ["Jira", "GitHub"],
         "list": [
           {
             "keys": ["DEMO-35"],
-            "text": "Blocked by the accounts team's ACC-118. Ask Priya what date they gave, and who owns the chase."
+            "text": "Blocked by the accounts team's ACC-118, not live yet. Ask Priya for a date, or ship the form part alone?"
           },
           {
             "keys": ["DEMO-36"],
-            "text": "Has no assignee and was paused 12 days ago for the checkout incident. Ask Sam whether it is still theirs."
-          },
-          {
-            "keys": ["DEMO-33"],
-            "text": "Approved, but the e2e checkout test fails on CI. Ask Ana whether it is flaky and can be re-run or fixed."
+            "text": "No owner and paused for the checkout incident. Ask Sam whether it resumes now or goes back to the backlog."
           },
           {
             "keys": ["DEMO-34"],
-            "text": "Large change with no first review after 5 days. Ask Tom whether it can be split, and who can review it."
+            "text": "Pull request ready 5 days with no activity, and large. Ask Tom whether it can be split so a reviewer can start."
+          },
+          {
+            "keys": ["DEMO-33"],
+            "text": "Approved but the e2e check fails on CI. Ask Ana and Jonas whether the test is flaky and who fixes it."
           }
         ],
         "reasons": [
@@ -37,65 +37,59 @@
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-35"],
-            "fact": "The form part is done. The item is blocked by ACC-118, which is still In progress in the accounts team's work (Priya's comment, 3 days ago)."
+            "fact": "Priya wrote 3 days ago that the form is done and the work waits on ACC-118, which is still In progress on the accounts team's side."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-36"],
-            "fact": "Sam paused it 12 days ago to help with the checkout incident and said they'd be back 'next week'. Nothing has changed since, and the item has no assignee."
-          },
-          {
-            "kind": "supports",
-            "source": "GitHub",
-            "keys": ["DEMO-33"],
-            "fact": "Pull request acme/shop#203 was approved 1 day ago but its checks fail. Jonas's comment says the e2e checkout test passes locally."
+            "fact": "Sam paused it 12 days ago for the checkout incident, saying 'back next week'. It has no assignee and no commit for 12 days."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-34"],
-            "fact": "Pull request acme/shop#202 changes 920 lines in 23 files. It has been ready for 5 days with no review and no activity. A typical first look takes about 1.1 days."
+            "fact": "Pull request 202 has been ready for review for 5 days with no activity. It changes 920 lines in 23 files, while the card sits in In progress."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["DEMO-33"],
+            "fact": "Jonas approved it 1 day ago and noted that the e2e checkout test fails on CI but passes locally. The checks are failing."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-31", "DEMO-30"],
-            "fact": "Both pull requests merged, 4 and 2 days ago, but the cards are still In progress. This inflates the work in progress shown on the board."
-          },
-          {
-            "kind": "rules-out",
-            "source": "GitHub",
-            "keys": ["DEMO-33"],
-            "fact": "Not waiting for reviewers. Jonas approved it, and the red build is what stands between it and the merge."
+            "fact": "Both pull requests merged (4 and 2 days ago) but the cards still sit in In progress, so the board overstates open work."
           }
         ],
         "options": [
           {
-            "what": "Get a date for ACC-118 from the accounts team, or descope the saved-address part of DEMO-35 and ship the form without it.",
-            "tradeOff": "Needs a conversation with another team, and descoping delivers less than planned.",
-            "checkpoint": "DEMO-35 has a date or a smaller scope by the next refresh.",
+            "what": "Get a date for ACC-118 from the accounts team, or ship DEMO-35's form part without the saved address",
+            "tradeOff": "Needs the accounts team to commit, or a narrower scope",
+            "checkpoint": "DEMO-35 has a dated answer or a reduced scope by tomorrow",
             "keys": ["DEMO-35"],
             "recommended": true
           },
           {
-            "what": "Swarm on finishing: re-run or fix the e2e test on DEMO-33, and get DEMO-34 reviewed or split.",
-            "tradeOff": "Uses review time that new work would otherwise get.",
-            "checkpoint": "DEMO-33 is merged and DEMO-34 has a first review within 2 days.",
-            "keys": ["DEMO-33", "DEMO-34"],
-            "recommended": true
+            "what": "Give DEMO-36 an owner now, or return it to the backlog",
+            "tradeOff": "Returning it drops 20 days of age but frees capacity",
+            "checkpoint": "DEMO-36 has an assignee or has left In progress by the next refresh",
+            "keys": ["DEMO-36"]
           },
           {
-            "what": "Give DEMO-36 an owner and a date, or move it back to the backlog until the incident work is done.",
-            "tradeOff": "Moving it back loses the work done so far but frees up work in progress.",
-            "checkpoint": "DEMO-36 has an assignee or has left In progress.",
-            "keys": ["DEMO-36"]
+            "what": "Finish before starting: get DEMO-34 split and reviewed, fix or rerun the flaky test on DEMO-33, and move DEMO-31 and DEMO-30",
+            "tradeOff": "Reviewers' time goes here before new starts",
+            "checkpoint": "DEMO-33 merged, DEMO-34 in review or split, DEMO-31 and DEMO-30 moved, by the next refresh",
+            "keys": ["DEMO-34", "DEMO-33", "DEMO-31", "DEMO-30"],
+            "recommended": true
           }
         ],
-        "why": "The blocker needs the most lead time, and DEMO-33 and DEMO-34 are the quickest items to finish.",
-        "next": "Ask Priya whether the accounts team has given a date for ACC-118, and descope or park DEMO-35 if there isn't one.",
-        "checkpoint": "ACC-118 has a date, or DEMO-35 leaves In progress. DEMO-33 merges and DEMO-34 gets a first review.",
-        "question": "Is the checkout incident over, so that DEMO-36 can get an owner again?"
+        "why": "A is the only cause the team cannot clear alone, and C finishes work that is already almost done.",
+        "next": "Ask Priya to get a go-live date for ACC-118 from the accounts team today, or to decide whether DEMO-35 ships without the saved address.",
+        "checkpoint": "DEMO-35 has a dated ACC-118 answer, and DEMO-33 and DEMO-34 are no longer waiting.",
+        "question": "Is anyone free to take DEMO-36 now that the checkout incident is over?"
       },
       "checkedJiraKeys": [
         "DEMO-36",
@@ -104,7 +98,9 @@
         "DEMO-33",
         "DEMO-32",
         "DEMO-31",
-        "DEMO-30"
+        "DEMO-30",
+        "DEMO-90",
+        "DEMO-89"
       ],
       "skill": {
         "id": "flow-diagnosis",
@@ -114,22 +110,22 @@
         {
           "step": "plan",
           "label": "Planning",
-          "at": 2
+          "at": 1
         },
         {
           "step": "jira",
           "label": "Read DEMO-36, DEMO-35, DEMO-34, DEMO-33 and 1 more in detail: description, comments, history and links",
-          "at": 3148
+          "at": 2083
         },
         {
           "step": "jira",
-          "label": "Read DEMO-31, DEMO-30 in detail: description, comments, history and links",
-          "at": 3148
+          "label": "Read DEMO-31, DEMO-30, DEMO-90, DEMO-89 in detail: description, comments, history and links",
+          "at": 2083
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 3148
+          "at": 2084
         }
       ]
     },
@@ -137,20 +133,24 @@
       "label": "Where do the board and the code disagree?",
       "question": "DEMO-33, DEMO-31, DEMO-30: the board and the code disagree about where these items are. What does each mean, and what should happen next?",
       "starter": true,
-      "message": "**DEMO-33 is stuck on a red build** after approval. **DEMO-31 and DEMO-30 look finished in code**, but their cards still sit in In progress.\nLikely · GitHub + Jira: GitHub and Jira agree.\n- DEMO-33: Approved but the build is red. Ask Ana whether the e2e failure is flaky and whether a re-run or a fix is next.\n- DEMO-31, DEMO-30: Code merged, cards not moved. Ask Tom and Ana whether anything is left, such as testing, or whether the cards can move on.\nNext step: Ask Ana whether the failing e2e checkout test on DEMO-33 is flaky and can be re-run, so the approved pull request can merge. Check: DEMO-33's checks pass and it merges. DEMO-31 and DEMO-30 move on or get a comment saying what they still wait for.\nDoes the team test after merge, in which case DEMO-31 and DEMO-30 are correctly in progress, or are they simply done?\n\nWhy:\n- DEMO-33: Pull request acme/shop#203 was approved 1 day ago and its latest checks are failing, so the red build is what stands between it and the merge. (GitHub)\n- DEMO-33: Jonas commented 1 day ago: approved, the e2e checkout test fails on CI but passes locally, flaky? Nobody has answered. (Jira)\n- Ruled out: DEMO-33: Not waiting for reviewers: the first look came after 3 days and there are no requested changes. (GitHub)\n- DEMO-31: Pull request acme/shop#204 merged 4 days ago, yet the card has been in In progress for 5 days with no comment on what remains. (GitHub)\n- DEMO-30: Pull request acme/shop#205 was ready 7 days ago and merged 2 days ago. The card only moved to In progress 2 days ago, so the board lagged the work. (GitHub)\n\nOptions:\nA. Settle the DEMO-33 build first: re-run the e2e check, or fix it if it fails again, then merge. Ana needs a short look at the test. A flaky test may keep coming back. Check: acme/shop#203 shows passing checks and is merged by the next refresh. (recommended)\nB. Ask Tom and Ana whether DEMO-31 and DEMO-30 are done. Move them on if so, or name the remaining step. Costs a quick conversation. It makes any hidden wait visible, such as testing after the merge. Check: Both cards leave In progress or carry a comment within two days. (recommended)\nC. Agree that a card moves when its pull request is ready or merged, not days later. Needs a team habit. It also hides nothing, but the board will be more accurate and the age numbers more reliable. Check: No new item shows a gap between merge and card move next week.\nRecommended because A frees the oldest of the three, which is already past the usual limit, and B is a cheap check that may clear two cards.",
+      "message": "**DEMO-33 is approved but blocked by a red build**, while DEMO-31 and DEMO-30 are merged and their cards were never moved on.\nLikely · GitHub + Jira: GitHub and Jira agree.\n- DEMO-33: Approved with failing checks; Jonas suspects a flaky e2e test. Ask Ana: re-run, fix, or merge over it?\n- DEMO-31: Merged 4 days ago, card still In progress. Ask Tom whether anything remains to test or the card can move on.\n- DEMO-30: Merged 2 days ago, card still In progress. Ask Ana whether it is finished or waits on testing.\nNext step: Ask Ana whether the failing checkout test on DEMO-33 is flaky, so it can be re-run or fixed and the pull request merged. Check: DEMO-33's checks pass and it merges. DEMO-31 and DEMO-30 leave In progress by the next refresh.\nDoes DEMO-33's e2e checkout test fail on other recent pull requests too?\n\nWhy:\n- DEMO-33: The pull request was approved 1 day ago, but checks on its latest commit are failing. It is the only thing between the item and a merge. (GitHub)\n- DEMO-33: Jonas commented 1 day ago: approved, the e2e checkout test fails on CI but passes locally, flaky? Nobody has replied. (Jira)\n- DEMO-31: Its pull request was approved 5 days ago and merged 4 days ago. The card moved to In progress 5 days ago and has no comments since. (GitHub)\n- DEMO-30: Its pull request was ready 7 days ago and merged 2 days ago. The card only moved to In progress 2 days ago, so the board lagged the code. (GitHub)\n- Ruled out: DEMO-33: Not waiting for a reviewer: the first look came after 3 days and the approval followed, with no changes requested. (GitHub)\n\nOptions:\nA. Settle the DEMO-33 build: decide whether the e2e test is flaky, re-run or fix it, then merge. Merging over a red build risks a real checkout bug if the test is not flaky. Check: DEMO-33 checks green and merged within 2 days. (recommended)\nB. Ask Tom and Ana to confirm DEMO-31 and DEMO-30 are done, then move the cards out of In progress. Takes a short conversation. If testing remains, the card should say so. Check: Both cards leave In progress by the next refresh. (recommended)\nC. Agree that a card moves when its pull request is ready and again when it merges. A small habit change. The board will show review time honestly. Check: No item shows a board and code disagreement at the next refresh.\nRecommended because DEMO-33 is already past the usual 7 days and one answer unblocks it, while the other two just need their cards moved.",
       "card": {
-        "verdict": "**DEMO-33 is stuck on a red build** after approval. **DEMO-31 and DEMO-30 look finished in code**, but their cards still sit in In progress.",
+        "verdict": "**DEMO-33 is approved but blocked by a red build**, while DEMO-31 and DEMO-30 are merged and their cards were never moved on.",
         "confidence": "likely",
         "basis": "GitHub and Jira agree",
         "sources": ["GitHub", "Jira"],
         "list": [
           {
             "keys": ["DEMO-33"],
-            "text": "Approved but the build is red. Ask Ana whether the e2e failure is flaky and whether a re-run or a fix is next."
+            "text": "Approved with failing checks; Jonas suspects a flaky e2e test. Ask Ana: re-run, fix, or merge over it?"
           },
           {
-            "keys": ["DEMO-31", "DEMO-30"],
-            "text": "Code merged, cards not moved. Ask Tom and Ana whether anything is left, such as testing, or whether the cards can move on."
+            "keys": ["DEMO-31"],
+            "text": "Merged 4 days ago, card still In progress. Ask Tom whether anything remains to test or the card can move on."
+          },
+          {
+            "keys": ["DEMO-30"],
+            "text": "Merged 2 days ago, card still In progress. Ask Ana whether it is finished or waits on testing."
           }
         ],
         "reasons": [
@@ -158,59 +158,59 @@
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-33"],
-            "fact": "Pull request acme/shop#203 was approved 1 day ago and its latest checks are failing, so the red build is what stands between it and the merge."
+            "fact": "The pull request was approved 1 day ago, but checks on its latest commit are failing. It is the only thing between the item and a merge."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-33"],
-            "fact": "Jonas commented 1 day ago: approved, the e2e checkout test fails on CI but passes locally, flaky? Nobody has answered."
-          },
-          {
-            "kind": "rules-out",
-            "source": "GitHub",
-            "keys": ["DEMO-33"],
-            "fact": "Not waiting for reviewers: the first look came after 3 days and there are no requested changes."
+            "fact": "Jonas commented 1 day ago: approved, the e2e checkout test fails on CI but passes locally, flaky? Nobody has replied."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-31"],
-            "fact": "Pull request acme/shop#204 merged 4 days ago, yet the card has been in In progress for 5 days with no comment on what remains."
+            "fact": "Its pull request was approved 5 days ago and merged 4 days ago. The card moved to In progress 5 days ago and has no comments since."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-30"],
-            "fact": "Pull request acme/shop#205 was ready 7 days ago and merged 2 days ago. The card only moved to In progress 2 days ago, so the board lagged the work."
+            "fact": "Its pull request was ready 7 days ago and merged 2 days ago. The card only moved to In progress 2 days ago, so the board lagged the code."
+          },
+          {
+            "kind": "rules-out",
+            "source": "GitHub",
+            "keys": ["DEMO-33"],
+            "fact": "Not waiting for a reviewer: the first look came after 3 days and the approval followed, with no changes requested."
           }
         ],
         "options": [
           {
-            "what": "Settle the DEMO-33 build first: re-run the e2e check, or fix it if it fails again, then merge.",
-            "tradeOff": "Ana needs a short look at the test. A flaky test may keep coming back.",
-            "checkpoint": "acme/shop#203 shows passing checks and is merged by the next refresh.",
+            "what": "Settle the DEMO-33 build: decide whether the e2e test is flaky, re-run or fix it, then merge.",
+            "tradeOff": "Merging over a red build risks a real checkout bug if the test is not flaky.",
+            "checkpoint": "DEMO-33 checks green and merged within 2 days.",
             "keys": ["DEMO-33"],
             "recommended": true
           },
           {
-            "what": "Ask Tom and Ana whether DEMO-31 and DEMO-30 are done. Move them on if so, or name the remaining step.",
-            "tradeOff": "Costs a quick conversation. It makes any hidden wait visible, such as testing after the merge.",
-            "checkpoint": "Both cards leave In progress or carry a comment within two days.",
+            "what": "Ask Tom and Ana to confirm DEMO-31 and DEMO-30 are done, then move the cards out of In progress.",
+            "tradeOff": "Takes a short conversation. If testing remains, the card should say so.",
+            "checkpoint": "Both cards leave In progress by the next refresh.",
             "keys": ["DEMO-31", "DEMO-30"],
             "recommended": true
           },
           {
-            "what": "Agree that a card moves when its pull request is ready or merged, not days later.",
-            "tradeOff": "Needs a team habit. It also hides nothing, but the board will be more accurate and the age numbers more reliable.",
-            "checkpoint": "No new item shows a gap between merge and card move next week.",
-            "keys": ["DEMO-31", "DEMO-30", "DEMO-33"]
+            "what": "Agree that a card moves when its pull request is ready and again when it merges.",
+            "tradeOff": "A small habit change. The board will show review time honestly.",
+            "checkpoint": "No item shows a board and code disagreement at the next refresh.",
+            "keys": ["DEMO-33", "DEMO-31", "DEMO-30"]
           }
         ],
-        "why": "A frees the oldest of the three, which is already past the usual limit, and B is a cheap check that may clear two cards.",
-        "next": "Ask Ana whether the failing e2e checkout test on DEMO-33 is flaky and can be re-run, so the approved pull request can merge.",
-        "checkpoint": "DEMO-33's checks pass and it merges. DEMO-31 and DEMO-30 move on or get a comment saying what they still wait for.",
-        "question": "Does the team test after merge, in which case DEMO-31 and DEMO-30 are correctly in progress, or are they simply done?"
+        "why": "DEMO-33 is already past the usual 7 days and one answer unblocks it, while the other two just need their cards moved.",
+        "next": "Ask Ana whether the failing checkout test on DEMO-33 is flaky, so it can be re-run or fixed and the pull request merged.",
+        "checkpoint": "DEMO-33's checks pass and it merges. DEMO-31 and DEMO-30 leave In progress by the next refresh.",
+        "question": "Does DEMO-33's e2e checkout test fail on other recent pull requests too?"
       },
       "checkedJiraKeys": ["DEMO-33", "DEMO-31", "DEMO-30"],
       "skill": {
@@ -221,22 +221,22 @@
         {
           "step": "plan",
           "label": "Planning",
-          "at": 3
+          "at": 2
         },
         {
           "step": "jira",
           "label": "Read DEMO-33, DEMO-31, DEMO-30 in detail: description, comments, history and links",
-          "at": 2558
+          "at": 1703
         },
         {
           "step": "jira",
           "label": "Read the code trail of DEMO-33, DEMO-31, DEMO-30: branch, pull requests and review timing",
-          "at": 2558
+          "at": 1703
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 2558
+          "at": 1704
         }
       ]
     },
@@ -244,79 +244,77 @@
       "label": "Why is DEMO-36 taking so long?",
       "question": "Why is DEMO-36 taking so long, and what should happen next?",
       "starter": true,
-      "message": "DEMO-36 is **parked, not slow**: Sam paused it 12 days ago for the checkout incident, and it has no assignee and no commits since.\nLikely · Jira + GitHub: Jira and GitHub agree.\nNext step: Ask Sam whether the promised return happened, then either give DEMO-36 a named owner this week or move it back to the backlog. Check: DEMO-36 has an assignee, or has left In progress, by the next refresh.\nIs Sam back from the checkout incident, and does anyone have room to take DEMO-36?\n\nWhy:\n- DEMO-36: Sam's comment 12 days ago says: \"Pausing this to help with the checkout incident. Back on it next week.\" Nothing has been added since. (Jira)\n- DEMO-36: The item has no assignee, and its last update was 20 days ago, when it moved from Backlog to In progress. (Jira)\n- DEMO-36: The branch's last commit was 12 days ago, which matches the pause. There is no pull request. (GitHub)\n- Ruled out: DEMO-36: Not blocked by another item or team: the item has no links, and the only comment is about the pause. (Jira)\n- Ruled out: DEMO-36: Not slow in review: no pull request exists yet, so the time went into a pause before any review. (GitHub)\n\nOptions:\nA. Give DEMO-36 a named owner and a restart date now. Adds to a board that is starting more than it finishes. Check: A new commit on the DEMO-36 branch within 2 days. (recommended)\nB. Move DEMO-36 back to the backlog until someone has room. Its age resets and the story stays undelivered. Check: In progress holds 6 items instead of 7 at the next refresh.\nC. Ask Sam to finish DEMO-36 before taking anything new. Depends on Sam being free of the checkout incident. Check: A pull request is ready for review within a week.\nRecommended because an unowned item stays parked unless someone is named, and Sam already knows the context.",
+      "message": "DEMO-36 has been **paused for 12 days with no owner**: Sam stopped it to help with the checkout incident, and nobody has picked it up since.\nLikely · Jira + GitHub + Board: Jira, GitHub and the board agree.\nNext step: Ask Sam whether the checkout incident is over and whether they will resume DEMO-36 this week. If not, the team names a new owner today. Check: DEMO-36 has an assignee and a new commit or pull request by the next refresh.\nIs the checkout incident over, and is Sam free to return to DEMO-36?\n\nWhy:\n- DEMO-36: Sam commented 12 days ago: \"Pausing this to help with the checkout incident. Back on it next week.\" No later comment follows. (Jira)\n- DEMO-36: The item has no assignee, and its last update was 20 days ago, when it moved to In progress. (Jira)\n- DEMO-36: The branch's last commit was 12 days ago, the same day as the pause. There is no pull request, so the code has been parked since then. (GitHub)\n- DEMO-36, DEMO-35: DEMO-36 was flagged as late 7 days ago and is still in the same column. It did not move after being raised. (Board)\n- Ruled out: DEMO-36: Not blocked by another item or waiting on a decision: no links or other comments appear on the ticket. (Jira)\n- Ruled out: DEMO-36: Not waiting for reviewers: no pull request has been opened yet. (GitHub)\n\nOptions:\nA. Sam resumes DEMO-36 now that the incident is over, and the item gets Sam as assignee Sam has the context, but they may already be loaded with other work Check: A new commit on the DEMO-36 branch within 2 days (recommended)\nB. Hand DEMO-36 to someone else and have them start from the existing branch Some context is lost, and a handover takes time Check: An assignee is named today and a pull request is ready for review within a week\nC. If the zoom bug is no longer a priority, move DEMO-36 back to the backlog or close it The bug stays unfixed, but the work in progress shrinks and the late item stops distorting the board Check: DEMO-36 is out of In progress by the next refresh\nRecommended because The incident that caused the pause may be over, and Sam has the context; fall back to B if Sam cannot return this week.",
       "card": {
-        "verdict": "DEMO-36 is **parked, not slow**: Sam paused it 12 days ago for the checkout incident, and it has no assignee and no commits since.",
+        "verdict": "DEMO-36 has been **paused for 12 days with no owner**: Sam stopped it to help with the checkout incident, and nobody has picked it up since.",
         "confidence": "likely",
-        "basis": "Jira and GitHub agree",
-        "sources": ["Jira", "GitHub"],
+        "basis": "Jira, GitHub and the board agree",
+        "sources": ["Jira", "GitHub", "Board"],
         "reasons": [
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-36"],
-            "fact": "Sam's comment 12 days ago says: \"Pausing this to help with the checkout incident. Back on it next week.\" Nothing has been added since."
+            "fact": "Sam commented 12 days ago: \"Pausing this to help with the checkout incident. Back on it next week.\" No later comment follows."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-36"],
-            "fact": "The item has no assignee, and its last update was 20 days ago, when it moved from Backlog to In progress."
+            "fact": "The item has no assignee, and its last update was 20 days ago, when it moved to In progress."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-36"],
-            "fact": "The branch's last commit was 12 days ago, which matches the pause. There is no pull request."
+            "fact": "The branch's last commit was 12 days ago, the same day as the pause. There is no pull request, so the code has been parked since then."
+          },
+          {
+            "kind": "supports",
+            "source": "Board",
+            "keys": ["DEMO-36", "DEMO-35"],
+            "fact": "DEMO-36 was flagged as late 7 days ago and is still in the same column. It did not move after being raised."
           },
           {
             "kind": "rules-out",
             "source": "Jira",
             "keys": ["DEMO-36"],
-            "fact": "Not blocked by another item or team: the item has no links, and the only comment is about the pause."
+            "fact": "Not blocked by another item or waiting on a decision: no links or other comments appear on the ticket."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
             "keys": ["DEMO-36"],
-            "fact": "Not slow in review: no pull request exists yet, so the time went into a pause before any review."
+            "fact": "Not waiting for reviewers: no pull request has been opened yet."
           }
         ],
         "options": [
           {
-            "what": "Give DEMO-36 a named owner and a restart date now.",
-            "tradeOff": "Adds to a board that is starting more than it finishes.",
-            "checkpoint": "A new commit on the DEMO-36 branch within 2 days.",
+            "what": "Sam resumes DEMO-36 now that the incident is over, and the item gets Sam as assignee",
+            "tradeOff": "Sam has the context, but they may already be loaded with other work",
+            "checkpoint": "A new commit on the DEMO-36 branch within 2 days",
             "keys": ["DEMO-36"],
             "recommended": true
           },
           {
-            "what": "Move DEMO-36 back to the backlog until someone has room.",
-            "tradeOff": "Its age resets and the story stays undelivered.",
-            "checkpoint": "In progress holds 6 items instead of 7 at the next refresh.",
+            "what": "Hand DEMO-36 to someone else and have them start from the existing branch",
+            "tradeOff": "Some context is lost, and a handover takes time",
+            "checkpoint": "An assignee is named today and a pull request is ready for review within a week",
             "keys": ["DEMO-36"]
           },
           {
-            "what": "Ask Sam to finish DEMO-36 before taking anything new.",
-            "tradeOff": "Depends on Sam being free of the checkout incident.",
-            "checkpoint": "A pull request is ready for review within a week.",
+            "what": "If the zoom bug is no longer a priority, move DEMO-36 back to the backlog or close it",
+            "tradeOff": "The bug stays unfixed, but the work in progress shrinks and the late item stops distorting the board",
+            "checkpoint": "DEMO-36 is out of In progress by the next refresh",
             "keys": ["DEMO-36"]
           }
         ],
-        "why": "an unowned item stays parked unless someone is named, and Sam already knows the context.",
-        "next": "Ask Sam whether the promised return happened, then either give DEMO-36 a named owner this week or move it back to the backlog.",
-        "checkpoint": "DEMO-36 has an assignee, or has left In progress, by the next refresh.",
-        "question": "Is Sam back from the checkout incident, and does anyone have room to take DEMO-36?"
+        "why": "The incident that caused the pause may be over, and Sam has the context; fall back to B if Sam cannot return this week.",
+        "next": "Ask Sam whether the checkout incident is over and whether they will resume DEMO-36 this week. If not, the team names a new owner today.",
+        "checkpoint": "DEMO-36 has an assignee and a new commit or pull request by the next refresh.",
+        "question": "Is the checkout incident over, and is Sam free to return to DEMO-36?"
       },
-      "checkedJiraKeys": [
-        "DEMO-36",
-        "DEMO-30",
-        "DEMO-31",
-        "DEMO-32",
-        "DEMO-33",
-        "DEMO-34",
-        "DEMO-35"
-      ],
+      "checkedJiraKeys": ["DEMO-36"],
       "skill": {
         "id": "item-investigation",
         "name": "Item investigation"
@@ -330,17 +328,17 @@
         {
           "step": "jira",
           "label": "Read DEMO-36 in detail: description, comments, history and links",
-          "at": 2574
+          "at": 2454
         },
         {
           "step": "jira",
-          "label": "Search Jira: items in In progress",
-          "at": 2574
+          "label": "Read the code trail of DEMO-36: branch, pull requests and review timing",
+          "at": 2454
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 2575
+          "at": 2454
         }
       ]
     },
@@ -348,98 +346,96 @@
       "label": "What do we address first in the late work?",
       "question": "4 items past the usual 7 days\nOldest: DEMO-36, 20 days in progress, 2.9× the usual. 85% of finished items were done within 7 days, so these are already late.\n\nHelp me decide what to address first in the late work. Read the oldest of these items to see what each waits on: age alone is not a cause.",
       "starter": true,
-      "message": "Four late items have four different causes, and **DEMO-33 is closest to done**: it is approved and waits only on a failing end-to-end check.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- DEMO-35: Blocked by ACC-118 (accounts team, in progress). Ask Priya what date accounts gave for the saved-address API.\n- DEMO-36: Unassigned and paused for the checkout incident. Ask Sam whether they are back on it, or who takes it.\n- DEMO-34: Large pull request open for 5 days with no review recorded. Ask Tom whether a reviewer is lined up.\n- DEMO-33: Approved but the end-to-end check fails on CI. Ask Ana whether the failure is flaky.\nNext step: Ask Ana whether the failing checkout end-to-end test on DEMO-33 is flaky and can be rerun or fixed today, since it is approved and one green build from merging. Check: DEMO-33 merged and out of In progress; DEMO-34 has a first review.\nDoes the accounts team have a date for ACC-118?\n\nWhy:\n- DEMO-35: DEMO-35 is blocked by ACC-118, which is still in progress. Priya wrote 3 days ago that the form part is done and the API is not live. (Jira)\n- DEMO-36: Sam commented 12 days ago that they paused it to help with the checkout incident. It has no assignee, and the branch has had no commit for 12 days. (Jira)\n- DEMO-34: Pull request acme/shop#202 changes 920 lines in 23 files and has been open 5 days with no review. Tom wrote it was bigger than planned. (GitHub)\n- DEMO-33: Pull request acme/shop#203 was approved 1 day ago, and its latest build is failing. Jonas notes the end-to-end test passes locally. (GitHub)\n- Ruled out: DEMO-33: Not waiting for reviewers: it is approved, and the pull request is only 140 lines in 4 files. (Jira)\n\nOptions:\nA. Finish what the team can control: fix or rerun the DEMO-33 check, and get a reviewer on DEMO-34 before starting anything new. Needs reviewer time on a 920-line change. DEMO-35 and DEMO-36 stay waiting. Check: DEMO-33 merged and DEMO-34 reviewed within 2 days. (recommended)\nB. Give the ACC-118 dependency a date: ask the accounts team when it goes live. If there is no date, take DEMO-35 off the active board. The form work sits unreleased. Parking it drops the item from the late count but does not finish it. Check: A committed date for ACC-118, or DEMO-35 moved out, by the next refresh.\nC. Give DEMO-36 an owner or send it back to the backlog. A new owner means a context switch. Backlog means the fix waits. Check: DEMO-36 has an assignee or has left In progress by the next refresh. (recommended)\nRecommended because A finishes the two items the team controls, and C stops DEMO-36 sitting with no owner.",
+      "message": "Address **DEMO-33 first**: it is approved and only a failing end-to-end checkout test stands between it and a merge. Then give DEMO-36 an owner.\nLikely · Jira + GitHub: Jira and GitHub agree.\n- DEMO-33: Approved, but the checkout end-to-end test fails on CI and passes locally. Ask Ana whether it is flaky and who can fix it.\n- DEMO-36: Paused for the checkout incident and has no assignee. Ask Sam whether to resume it or return it to the backlog.\n- DEMO-35: Blocked by ACC-118, the accounts team's saved-address API. Ask Priya for the date the accounts team expects it to be live.\n- DEMO-34: The pull request is large and has had no activity for 5 days. Ask Tom whether it can be split or who can review it.\nNext step: Ask Ana whether the failing end-to-end checkout test on DEMO-33 is flaky, and whether Jonas or someone else can re-run it or fix it today. Check: DEMO-33 merged and moved out of In progress; DEMO-36 has a named owner.\nDoes anyone have time to review the 920-line pull request on DEMO-34 while DEMO-36 and DEMO-33 are sorted?\n\nWhy:\n- DEMO-33: Jonas commented 1 day ago: approved, but the end-to-end checkout test fails on CI and passes locally. (Jira)\n- DEMO-33: Pull request acme/shop#203 was approved 1 day ago and its checks are failing. The red build is what stands between it and the merge. (GitHub)\n- DEMO-36: Sam commented 12 days ago that the item was paused to help with the checkout incident, to resume the next week. Nothing has changed since, and the item has no assignee. (Jira)\n- DEMO-35: Priya commented 3 days ago that the form part is done and the item waits on the saved-address API ACC-118, which is still In progress. I could not read ACC-118 itself. (Jira)\n- DEMO-34: Pull request acme/shop#202 changes 920 lines in 23 files and has had no activity for 5 days since it was ready for review. (GitHub)\n- Ruled out: DEMO-33: Not waiting for reviewers: the first look came after 3 days and the approval followed. The wait now is the red build. (GitHub)\n\nOptions:\nA. Clear the red build on DEMO-33 and merge it now, then move the card on. Needs someone to look at the CI failure. It can hide a real checkout bug if it is not flaky. Check: acme/shop#203 shows green checks and merged by the next refresh. (recommended)\nB. Give DEMO-36 an owner and a date, or send it back to the backlog. Returning it loses 20 days of age but stops it counting as work in progress while nobody works on it. Check: DEMO-36 has an assignee or is back in the backlog by the next refresh. (recommended)\nC. Ask the accounts team for a date for ACC-118 and descope DEMO-35 to the finished form part if the date is far out. Ships less than planned, but stops DEMO-35 waiting on another team with no end date. Check: A committed date for ACC-118 is on DEMO-35, or the descoped scope is agreed, by the next refresh.\nRecommended because DEMO-33 is closest to done and needs one fix, and DEMO-36 is the only late item nobody owns.",
       "card": {
-        "verdict": "Four late items have four different causes, and **DEMO-33 is closest to done**: it is approved and waits only on a failing end-to-end check.",
+        "verdict": "Address **DEMO-33 first**: it is approved and only a failing end-to-end checkout test stands between it and a merge. Then give DEMO-36 an owner.",
         "confidence": "likely",
         "basis": "Jira and GitHub agree",
         "sources": ["Jira", "GitHub"],
         "list": [
           {
-            "keys": ["DEMO-35"],
-            "text": "Blocked by ACC-118 (accounts team, in progress). Ask Priya what date accounts gave for the saved-address API."
+            "keys": ["DEMO-33"],
+            "text": "Approved, but the checkout end-to-end test fails on CI and passes locally. Ask Ana whether it is flaky and who can fix it."
           },
           {
             "keys": ["DEMO-36"],
-            "text": "Unassigned and paused for the checkout incident. Ask Sam whether they are back on it, or who takes it."
+            "text": "Paused for the checkout incident and has no assignee. Ask Sam whether to resume it or return it to the backlog."
+          },
+          {
+            "keys": ["DEMO-35"],
+            "text": "Blocked by ACC-118, the accounts team's saved-address API. Ask Priya for the date the accounts team expects it to be live."
           },
           {
             "keys": ["DEMO-34"],
-            "text": "Large pull request open for 5 days with no review recorded. Ask Tom whether a reviewer is lined up."
-          },
-          {
-            "keys": ["DEMO-33"],
-            "text": "Approved but the end-to-end check fails on CI. Ask Ana whether the failure is flaky."
+            "text": "The pull request is large and has had no activity for 5 days. Ask Tom whether it can be split or who can review it."
           }
         ],
         "reasons": [
           {
             "kind": "supports",
             "source": "Jira",
-            "keys": ["DEMO-35"],
-            "fact": "DEMO-35 is blocked by ACC-118, which is still in progress. Priya wrote 3 days ago that the form part is done and the API is not live."
+            "keys": ["DEMO-33"],
+            "fact": "Jonas commented 1 day ago: approved, but the end-to-end checkout test fails on CI and passes locally."
+          },
+          {
+            "kind": "supports",
+            "source": "GitHub",
+            "keys": ["DEMO-33"],
+            "fact": "Pull request acme/shop#203 was approved 1 day ago and its checks are failing. The red build is what stands between it and the merge."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-36"],
-            "fact": "Sam commented 12 days ago that they paused it to help with the checkout incident. It has no assignee, and the branch has had no commit for 12 days."
+            "fact": "Sam commented 12 days ago that the item was paused to help with the checkout incident, to resume the next week. Nothing has changed since, and the item has no assignee."
+          },
+          {
+            "kind": "supports",
+            "source": "Jira",
+            "keys": ["DEMO-35"],
+            "fact": "Priya commented 3 days ago that the form part is done and the item waits on the saved-address API ACC-118, which is still In progress. I could not read ACC-118 itself."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-34"],
-            "fact": "Pull request acme/shop#202 changes 920 lines in 23 files and has been open 5 days with no review. Tom wrote it was bigger than planned."
-          },
-          {
-            "kind": "supports",
-            "source": "GitHub",
-            "keys": ["DEMO-33"],
-            "fact": "Pull request acme/shop#203 was approved 1 day ago, and its latest build is failing. Jonas notes the end-to-end test passes locally."
+            "fact": "Pull request acme/shop#202 changes 920 lines in 23 files and has had no activity for 5 days since it was ready for review."
           },
           {
             "kind": "rules-out",
-            "source": "Jira",
+            "source": "GitHub",
             "keys": ["DEMO-33"],
-            "fact": "Not waiting for reviewers: it is approved, and the pull request is only 140 lines in 4 files."
+            "fact": "Not waiting for reviewers: the first look came after 3 days and the approval followed. The wait now is the red build."
           }
         ],
         "options": [
           {
-            "what": "Finish what the team can control: fix or rerun the DEMO-33 check, and get a reviewer on DEMO-34 before starting anything new.",
-            "tradeOff": "Needs reviewer time on a 920-line change. DEMO-35 and DEMO-36 stay waiting.",
-            "checkpoint": "DEMO-33 merged and DEMO-34 reviewed within 2 days.",
-            "keys": ["DEMO-33", "DEMO-34"],
+            "what": "Clear the red build on DEMO-33 and merge it now, then move the card on.",
+            "tradeOff": "Needs someone to look at the CI failure. It can hide a real checkout bug if it is not flaky.",
+            "checkpoint": "acme/shop#203 shows green checks and merged by the next refresh.",
+            "keys": ["DEMO-33"],
             "recommended": true
           },
           {
-            "what": "Give the ACC-118 dependency a date: ask the accounts team when it goes live. If there is no date, take DEMO-35 off the active board.",
-            "tradeOff": "The form work sits unreleased. Parking it drops the item from the late count but does not finish it.",
-            "checkpoint": "A committed date for ACC-118, or DEMO-35 moved out, by the next refresh.",
-            "keys": ["DEMO-35"]
-          },
-          {
-            "what": "Give DEMO-36 an owner or send it back to the backlog.",
-            "tradeOff": "A new owner means a context switch. Backlog means the fix waits.",
-            "checkpoint": "DEMO-36 has an assignee or has left In progress by the next refresh.",
+            "what": "Give DEMO-36 an owner and a date, or send it back to the backlog.",
+            "tradeOff": "Returning it loses 20 days of age but stops it counting as work in progress while nobody works on it.",
+            "checkpoint": "DEMO-36 has an assignee or is back in the backlog by the next refresh.",
             "keys": ["DEMO-36"],
             "recommended": true
+          },
+          {
+            "what": "Ask the accounts team for a date for ACC-118 and descope DEMO-35 to the finished form part if the date is far out.",
+            "tradeOff": "Ships less than planned, but stops DEMO-35 waiting on another team with no end date.",
+            "checkpoint": "A committed date for ACC-118 is on DEMO-35, or the descoped scope is agreed, by the next refresh.",
+            "keys": ["DEMO-35", "DEMO-34"]
           }
         ],
-        "why": "A finishes the two items the team controls, and C stops DEMO-36 sitting with no owner.",
-        "next": "Ask Ana whether the failing checkout end-to-end test on DEMO-33 is flaky and can be rerun or fixed today, since it is approved and one green build from merging.",
-        "checkpoint": "DEMO-33 merged and out of In progress; DEMO-34 has a first review.",
-        "question": "Does the accounts team have a date for ACC-118?"
+        "why": "DEMO-33 is closest to done and needs one fix, and DEMO-36 is the only late item nobody owns.",
+        "next": "Ask Ana whether the failing end-to-end checkout test on DEMO-33 is flaky, and whether Jonas or someone else can re-run it or fix it today.",
+        "checkpoint": "DEMO-33 merged and moved out of In progress; DEMO-36 has a named owner.",
+        "question": "Does anyone have time to review the 920-line pull request on DEMO-34 while DEMO-36 and DEMO-33 are sorted?"
       },
-      "checkedJiraKeys": [
-        "DEMO-36",
-        "DEMO-35",
-        "DEMO-34",
-        "DEMO-33",
-        "DEMO-32",
-        "DEMO-30",
-        "DEMO-31"
-      ],
+      "checkedJiraKeys": ["DEMO-36", "DEMO-35", "DEMO-34", "DEMO-33"],
       "skill": {
         "id": "item-investigation",
         "name": "Item investigation"
@@ -452,27 +448,32 @@
         },
         {
           "step": "jira",
-          "label": "Read DEMO-36, DEMO-35, DEMO-34, DEMO-33 and 1 more in detail: description, comments, history and links",
-          "at": 2219
-        },
-        {
-          "step": "jira",
-          "label": "Search Jira: items in In progress",
-          "at": 2219
+          "label": "Read DEMO-36, DEMO-35, DEMO-34, DEMO-33 in detail: description, comments, history and links",
+          "at": 2043
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 2220
+          "at": 2043
+        },
+        {
+          "step": "jira",
+          "label": "Read ACC-118 in detail: description, comments, history and links",
+          "at": 3467
+        },
+        {
+          "step": "plan",
+          "label": "Thinking",
+          "at": 3468
         }
       ]
     },
     {
       "label": "Why did an item come back?",
       "question": "1 active item re-entered the flow\n1 item came back after leaving the measured stages: often rework or an unclear done policy.\n\nWhy did this work come back? Read its history and comments to tell rework from a card that was moved too early.",
-      "message": "**DEMO-32 came back because of rework**: it was marked Done after one day, and Ana reopened it the next day because the sort bug was still there.\nLikely · Jira + GitHub: Jira and GitHub agree.\nNext step: Ask Priya whether the fix from the first pass can be reused, or whether the sort problem needs a different approach. Check: DEMO-32 should reach Review within a few days and stay out of In progress after that.\nWas DEMO-32 tested with items added today before it moved to Done?\n\nWhy:\n- DEMO-32: Ana's comment 6 days ago reads 'Reopened: items added today still sort below last week's', so the fix did not solve the reported behaviour. (Jira)\n- DEMO-32: History shows In progress 8 days ago, Done 7 days ago and In progress again 6 days ago. It was Done for about a day. (Jira)\n- DEMO-32: No pull request is linked, but the branch had a commit today, so work on the second attempt is going on. (GitHub)\n- Ruled out: DEMO-32: Not a new request: the reopen comment describes the same sorting symptom as the original title, and no new scope or link was added. (Jira)\n\nOptions:\nA. Agree that a card is Done only after the reporter, or someone else who can check, has seen the fix with fresh data. A little more waiting at the end of each card. Check: No item reopened in the next report, which is the next refresh. (recommended)\nB. Ask Priya to open a pull request for DEMO-32 early, so a reviewer can check the sort case Ana described before the card moves on. Review effort lands on a card that is still being worked on. Check: A pull request linked to DEMO-32 within the next few days.\nRecommended because One reopened card is too small a sample to prove a pattern, but a check against the reporter's case costs little and would have caught this one.",
+      "message": "**DEMO-32 was closed too early**: it went to Done about a day after starting, skipped Review, and Ana reopened it the next day because the bug still reproduced.\nLikely · Jira + GitHub: Jira and GitHub agree.\nNext step: Ask Priya whether the fix is now checked against Ana's case (items added today still sorting below last week's) before the card moves to Review again. Check: DEMO-32 reaches Review with a linked pull request, and does not come back to In progress.\nDid anyone check the first fix against the sorting case before DEMO-32 moved to Done?\n\nWhy:\n- DEMO-32: History shows In progress 8 days ago, Done 7 days ago and In progress again 6 days ago. The first pass lasted about a day. (Jira)\n- DEMO-32: Ana's comment 6 days ago says \"Reopened: items added today still sort below last week's\". The original symptom was still there, so the first fix did not solve it. (Jira)\n- DEMO-32: No pull request names the item, and the branch's last commit was today. The rework is under way, but nothing is up for review yet. (GitHub)\n- Ruled out: DEMO-32: Not a new request after delivery: the reopening comment describes the same sorting bug as the title, and the ticket has no links or other comments about changed scope. (Jira)\n\nOptions:\nA. Agree that a card needs a reviewed pull request or a check against the reported case before it moves to Done. Adds a short check before closing. Check: Next refresh: no item in the measured stages shows a Done-then-reopened history. (recommended)\nB. Keep DEMO-32 in progress and ask Ana to confirm the fix on the same case once Review passes. Needs Ana's time, but the person who found the bug confirms the fix. Check: Ana confirms on DEMO-32 within a day or two of the fix reaching Review. (recommended)\nRecommended because Together they stop the early close and make the second try verifiable, but they are different changes.",
       "card": {
-        "verdict": "**DEMO-32 came back because of rework**: it was marked Done after one day, and Ana reopened it the next day because the sort bug was still there.",
+        "verdict": "**DEMO-32 was closed too early**: it went to Done about a day after starting, skipped Review, and Ana reopened it the next day because the bug still reproduced.",
         "confidence": "likely",
         "basis": "Jira and GitHub agree",
         "sources": ["Jira", "GitHub"],
@@ -481,46 +482,47 @@
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-32"],
-            "fact": "Ana's comment 6 days ago reads 'Reopened: items added today still sort below last week's', so the fix did not solve the reported behaviour."
+            "fact": "History shows In progress 8 days ago, Done 7 days ago and In progress again 6 days ago. The first pass lasted about a day."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-32"],
-            "fact": "History shows In progress 8 days ago, Done 7 days ago and In progress again 6 days ago. It was Done for about a day."
+            "fact": "Ana's comment 6 days ago says \"Reopened: items added today still sort below last week's\". The original symptom was still there, so the first fix did not solve it."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-32"],
-            "fact": "No pull request is linked, but the branch had a commit today, so work on the second attempt is going on."
+            "fact": "No pull request names the item, and the branch's last commit was today. The rework is under way, but nothing is up for review yet."
           },
           {
             "kind": "rules-out",
             "source": "Jira",
             "keys": ["DEMO-32"],
-            "fact": "Not a new request: the reopen comment describes the same sorting symptom as the original title, and no new scope or link was added."
+            "fact": "Not a new request after delivery: the reopening comment describes the same sorting bug as the title, and the ticket has no links or other comments about changed scope."
           }
         ],
         "options": [
           {
-            "what": "Agree that a card is Done only after the reporter, or someone else who can check, has seen the fix with fresh data.",
-            "tradeOff": "A little more waiting at the end of each card.",
-            "checkpoint": "No item reopened in the next report, which is the next refresh.",
+            "what": "Agree that a card needs a reviewed pull request or a check against the reported case before it moves to Done.",
+            "tradeOff": "Adds a short check before closing.",
+            "checkpoint": "Next refresh: no item in the measured stages shows a Done-then-reopened history.",
             "keys": ["DEMO-32"],
             "recommended": true
           },
           {
-            "what": "Ask Priya to open a pull request for DEMO-32 early, so a reviewer can check the sort case Ana described before the card moves on.",
-            "tradeOff": "Review effort lands on a card that is still being worked on.",
-            "checkpoint": "A pull request linked to DEMO-32 within the next few days.",
-            "keys": ["DEMO-32"]
+            "what": "Keep DEMO-32 in progress and ask Ana to confirm the fix on the same case once Review passes.",
+            "tradeOff": "Needs Ana's time, but the person who found the bug confirms the fix.",
+            "checkpoint": "Ana confirms on DEMO-32 within a day or two of the fix reaching Review.",
+            "keys": ["DEMO-32"],
+            "recommended": true
           }
         ],
-        "why": "One reopened card is too small a sample to prove a pattern, but a check against the reporter's case costs little and would have caught this one.",
-        "next": "Ask Priya whether the fix from the first pass can be reused, or whether the sort problem needs a different approach.",
-        "checkpoint": "DEMO-32 should reach Review within a few days and stay out of In progress after that.",
-        "question": "Was DEMO-32 tested with items added today before it moved to Done?"
+        "why": "Together they stop the early close and make the second try verifiable, but they are different changes.",
+        "next": "Ask Priya whether the fix is now checked against Ana's case (items added today still sorting below last week's) before the card moves to Review again.",
+        "checkpoint": "DEMO-32 reaches Review with a linked pull request, and does not come back to In progress.",
+        "question": "Did anyone check the first fix against the sorting case before DEMO-32 moved to Done?"
       },
       "checkedJiraKeys": ["DEMO-32"],
       "skill": {
@@ -531,92 +533,102 @@
         {
           "step": "plan",
           "label": "Planning",
-          "at": 1
+          "at": 2
         },
         {
           "step": "jira",
           "label": "Read DEMO-32 in detail: description, comments, history and links",
-          "at": 1194
+          "at": 2741
         },
         {
           "step": "jira",
           "label": "Read the code trail of DEMO-32: branch, pull requests and review timing",
-          "at": 1194
+          "at": 2741
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 1194
+          "at": 2741
         }
       ]
     },
     {
       "label": "Why do pull requests wait for review?",
       "question": "Pull requests wait 1.1 days for a first review\n58% of the time inside Review passes before anyone looks at the code. DEMO-34 has waited 5 days with no review yet.\n\nPull requests wait long for a first review. Treat it as a team agreement problem, never as any reviewer’s performance. Check which items wait now and propose a review agreement with a measurable checkpoint.",
-      "message": "Only **DEMO-34 is waiting for a first review now**: 5 days, 920 lines, and its card still sits in In progress, not Review.\nLikely · Jira + GitHub: Jira and GitHub agree.\nNext step: Ask Tom whether DEMO-34 can be split by area (basket, checkout, order emails) and the card moved to Review, so a reviewer can start on the first part today. Check: DEMO-34 has a first review, and no open pull request has waited more than one working day by the next refresh.\nDo reviewers look at the Review column or at the pull request list to find work?\n\nWhy:\n- DEMO-34: Tom commented 5 days ago that it was ready for review and bigger than planned. The card never moved to Review. (Jira)\n- DEMO-34: acme/shop#202 has 920 lines in 23 files with passing checks and no activity for 5 days. Other open pull requests are 120 to 260 lines. (GitHub)\n- DEMO-33, DEMO-31, DEMO-30: The earlier slow first looks were 3 days on DEMO-33, 2 days on DEMO-31 and 3 days on DEMO-30. All three cards were still in In progress, not Review. (GitHub)\n- Ruled out: DEMO-89, DEMO-90: Both cards in Review got a first look within 0.7 and 1 day, in line with the usual 1.1 days. The queue is not general. (GitHub)\n- Ruled out: DEMO-33: No longer waiting for a reviewer. Jonas approved it 1 day ago, and it now waits on a failing e2e checkout test that he suspects is flaky. (Jira)\n\nOptions:\nA. Agree that a card moves to Review when its pull request is ready, and that a reviewer gives a first look within one working day. Needs a daily glance at the Review column. A reviewer's focus time is interrupted. Check: Every pull request ready from now on has a first review within one working day, checked at the next refresh. (recommended)\nB. Split DEMO-34 into smaller pull requests by area, and agree on a rough size limit for new ones. Extra work now to split the change. Each part needs its own check. Check: The first part of DEMO-34 is in review by the next refresh. No new pull request is over about 400 lines. (recommended)\nC. Have a reviewer walk through DEMO-34 with Tom as it is, without splitting. Takes hours of two people's time. A 23-file change gets a shallower review. Check: DEMO-34 is approved or has comments within 2 days.\nRecommended because the agreement stops cards waiting unseen in In progress, and splitting fixes the one oversized change.",
+      "message": "Only **DEMO-34 waits for a first review now**, and its 920-line change across 23 files looks like the cause. The other open pull requests got a first look within a day.\nLikely · GitHub + Jira + Board: GitHub, Jira and the board agree.\n- DEMO-34: Ready for review for 5 days with no first look, and the card is still In progress. Ask Tom about splitting it.\n- DEMO-33: Approved, but the e2e checkout check fails on CI. Ask Ana and Jonas whether it is flaky and who fixes it.\nNext step: Ask Tom whether DEMO-34 can be split into basket, checkout and order emails, so a reviewer can start on the first part today. Check: DEMO-34 gets a first review, and the card moves to Review by the next refresh.\nCan DEMO-34 be split by area, or must the basket, checkout and email changes ship together?\n\nWhy:\n- DEMO-34: acme/shop#202 has been ready for 5 days with no review and no activity since. It changes 920 lines in 23 files, and the checks pass. (GitHub)\n- DEMO-34: Tom's comment 5 days ago says the change is bigger than planned and touches the basket, checkout and order emails. (Jira)\n- Ruled out: DEMO-89, DEMO-90: The other pull requests in Review got a first look within 0.7 and 1 day, so this is not a general reviewer queue. (GitHub)\n- DEMO-33: acme/shop#203 waited 3 days for a first review, about three times the usual 1.1 days. It is now approved, and a failing check stands between it and the merge. (GitHub)\n- DEMO-34, DEMO-33: Both cards are still In progress while their pull requests are in review or approved, so the Review column hides this wait. (Board)\n\nOptions:\nA. Agree a first look within one working day. If none comes, the assignee asks in the team channel. Reviewers must interrupt their own work. It works best for small changes. Check: No open pull request waits over 1 day for a first review by the next refresh. (recommended)\nB. Split DEMO-34 into smaller changes, one per area, and review the first part now. Tom must re-cut work already done. Several merges are needed. Check: The first part of DEMO-34 has a first review within 1 working day of being split. (recommended)\nC. Move the card to Review when the pull request is ready, and to testing or done on merge. The Review column looks fuller at first. Waiting becomes visible. Check: DEMO-34 and DEMO-33 sit in the stage their code is in by the next refresh.\nRecommended because the agreement fixes the typical wait, and the split fixes the one large change that no agreement will speed up",
       "card": {
-        "verdict": "Only **DEMO-34 is waiting for a first review now**: 5 days, 920 lines, and its card still sits in In progress, not Review.",
+        "verdict": "Only **DEMO-34 waits for a first review now**, and its 920-line change across 23 files looks like the cause. The other open pull requests got a first look within a day.",
         "confidence": "likely",
-        "basis": "Jira and GitHub agree",
-        "sources": ["Jira", "GitHub"],
+        "basis": "GitHub, Jira and the board agree",
+        "sources": ["GitHub", "Jira", "Board"],
+        "list": [
+          {
+            "keys": ["DEMO-34"],
+            "text": "Ready for review for 5 days with no first look, and the card is still In progress. Ask Tom about splitting it."
+          },
+          {
+            "keys": ["DEMO-33"],
+            "text": "Approved, but the e2e checkout check fails on CI. Ask Ana and Jonas whether it is flaky and who fixes it."
+          }
+        ],
         "reasons": [
+          {
+            "kind": "supports",
+            "source": "GitHub",
+            "keys": ["DEMO-34"],
+            "fact": "acme/shop#202 has been ready for 5 days with no review and no activity since. It changes 920 lines in 23 files, and the checks pass."
+          },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-34"],
-            "fact": "Tom commented 5 days ago that it was ready for review and bigger than planned. The card never moved to Review."
-          },
-          {
-            "kind": "supports",
-            "source": "GitHub",
-            "keys": ["DEMO-34"],
-            "fact": "acme/shop#202 has 920 lines in 23 files with passing checks and no activity for 5 days. Other open pull requests are 120 to 260 lines."
-          },
-          {
-            "kind": "supports",
-            "source": "GitHub",
-            "keys": ["DEMO-33", "DEMO-31", "DEMO-30"],
-            "fact": "The earlier slow first looks were 3 days on DEMO-33, 2 days on DEMO-31 and 3 days on DEMO-30. All three cards were still in In progress, not Review."
+            "fact": "Tom's comment 5 days ago says the change is bigger than planned and touches the basket, checkout and order emails."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
             "keys": ["DEMO-89", "DEMO-90"],
-            "fact": "Both cards in Review got a first look within 0.7 and 1 day, in line with the usual 1.1 days. The queue is not general."
+            "fact": "The other pull requests in Review got a first look within 0.7 and 1 day, so this is not a general reviewer queue."
           },
           {
-            "kind": "rules-out",
-            "source": "Jira",
+            "kind": "supports",
+            "source": "GitHub",
             "keys": ["DEMO-33"],
-            "fact": "No longer waiting for a reviewer. Jonas approved it 1 day ago, and it now waits on a failing e2e checkout test that he suspects is flaky."
+            "fact": "acme/shop#203 waited 3 days for a first review, about three times the usual 1.1 days. It is now approved, and a failing check stands between it and the merge."
+          },
+          {
+            "kind": "supports",
+            "source": "Board",
+            "keys": ["DEMO-34", "DEMO-33"],
+            "fact": "Both cards are still In progress while their pull requests are in review or approved, so the Review column hides this wait."
           }
         ],
         "options": [
           {
-            "what": "Agree that a card moves to Review when its pull request is ready, and that a reviewer gives a first look within one working day.",
-            "tradeOff": "Needs a daily glance at the Review column. A reviewer's focus time is interrupted.",
-            "checkpoint": "Every pull request ready from now on has a first review within one working day, checked at the next refresh.",
+            "what": "Agree a first look within one working day. If none comes, the assignee asks in the team channel.",
+            "tradeOff": "Reviewers must interrupt their own work. It works best for small changes.",
+            "checkpoint": "No open pull request waits over 1 day for a first review by the next refresh.",
             "keys": ["DEMO-34", "DEMO-33"],
             "recommended": true
           },
           {
-            "what": "Split DEMO-34 into smaller pull requests by area, and agree on a rough size limit for new ones.",
-            "tradeOff": "Extra work now to split the change. Each part needs its own check.",
-            "checkpoint": "The first part of DEMO-34 is in review by the next refresh. No new pull request is over about 400 lines.",
+            "what": "Split DEMO-34 into smaller changes, one per area, and review the first part now.",
+            "tradeOff": "Tom must re-cut work already done. Several merges are needed.",
+            "checkpoint": "The first part of DEMO-34 has a first review within 1 working day of being split.",
             "keys": ["DEMO-34"],
             "recommended": true
           },
           {
-            "what": "Have a reviewer walk through DEMO-34 with Tom as it is, without splitting.",
-            "tradeOff": "Takes hours of two people's time. A 23-file change gets a shallower review.",
-            "checkpoint": "DEMO-34 is approved or has comments within 2 days.",
-            "keys": ["DEMO-34"]
+            "what": "Move the card to Review when the pull request is ready, and to testing or done on merge.",
+            "tradeOff": "The Review column looks fuller at first. Waiting becomes visible.",
+            "checkpoint": "DEMO-34 and DEMO-33 sit in the stage their code is in by the next refresh.",
+            "keys": ["DEMO-34", "DEMO-33"]
           }
         ],
-        "why": "the agreement stops cards waiting unseen in In progress, and splitting fixes the one oversized change.",
-        "next": "Ask Tom whether DEMO-34 can be split by area (basket, checkout, order emails) and the card moved to Review, so a reviewer can start on the first part today.",
-        "checkpoint": "DEMO-34 has a first review, and no open pull request has waited more than one working day by the next refresh.",
-        "question": "Do reviewers look at the Review column or at the pull request list to find work?"
+        "why": "the agreement fixes the typical wait, and the split fixes the one large change that no agreement will speed up",
+        "next": "Ask Tom whether DEMO-34 can be split into basket, checkout and order emails, so a reviewer can start on the first part today.",
+        "checkpoint": "DEMO-34 gets a first review, and the card moves to Review by the next refresh.",
+        "question": "Can DEMO-34 be split by area, or must the basket, checkout and email changes ship together?"
       },
       "checkedJiraKeys": [
         "DEMO-34",
@@ -633,86 +645,91 @@
         {
           "step": "plan",
           "label": "Planning",
-          "at": 1
+          "at": 3
         },
         {
           "step": "jira",
           "label": "Read DEMO-34, DEMO-33, DEMO-90, DEMO-89 and 1 more in detail: description, comments, history and links",
-          "at": 4378
+          "at": 3534
         },
         {
           "step": "jira",
-          "label": "Read the code trail of DEMO-34: branch, pull requests and review timing",
-          "at": 4378
+          "label": "Read the code trail of DEMO-34, DEMO-33: branch, pull requests and review timing",
+          "at": 3534
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 4378
+          "at": 3534
         }
       ]
     },
     {
       "label": "Why are merged items not Done?",
       "question": "2 items are merged but not Done\nTheir code was merged 2 to 4 days ago, but the cards are still in progress. Either testing happens after the merge, or the cards were not moved.\n\nItems are merged but still in progress on the board. Check for each whether testing happens after the merge or the card was not moved, and propose the smallest board or policy change.",
-      "message": "DEMO-31 and DEMO-30 look like **cards moved late, not held for testing**: both reached In progress only after their code was ready for review.\nLikely · GitHub + Jira: GitHub and Jira agree.\nNext step: Ask Tom about DEMO-31 and Ana about DEMO-30 whether anything is left to check after the merge. If not, move both cards out of In progress today. Check: DEMO-31 and DEMO-30 leave In progress by the next refresh, and the 9 active items drop to 7.\nDoes any check happen after merge on this team, such as a manual test or a release step?\n\nWhy:\n- DEMO-31: The pull request was ready 8 days ago and approved 5 days ago. The card moved to In progress 5 days ago, so the board caught up only at approval. (GitHub)\n- DEMO-30: The pull request was ready 7 days ago. The card moved to In progress 2 days ago, the same time the code merged, so the card never showed the work. (GitHub)\n- DEMO-31, DEMO-30: Neither card has a comment or a status change that mentions testing or a handover. Their only moves are Backlog to In progress. (Jira)\n- Ruled out: DEMO-31, DEMO-30: Not rework: neither pull request had changes requested, and each was approved and then merged within about a day. (GitHub)\n\nOptions:\nA. Ask Tom and Ana whether any check remains after the merge. If none, move both cards on today. Needs a quick conversation. It fixes only these two cards. Check: DEMO-31 and DEMO-30 out of In progress by the next refresh. (recommended)\nB. Agree that a card moves to In progress when work starts and moves on when its pull request merges. A small habit change. The team must keep to it, or cards lag again. Check: No active card marked as disagreeing with its code over the next two refreshes. (recommended)\nC. If Tom or Ana say testing does happen after the merge, add a Testing column and include it in the measured stages. Changes the board and the cycle-time baseline. Do it only if the check is real. Check: Merged cards sit in Testing, not In progress, by the next refresh.\nRecommended because nothing on the cards points to a testing step, so fix the two cards first and then the habit that left them behind.",
+      "message": "Nothing on the board shows testing after the merge, so **the cards most likely moved late**. DEMO-31 and DEMO-30 went to In progress only after their code was ready.\nLikely · Jira + GitHub: Jira and GitHub agree.\nNext step: Ask Tom and Ana whether any testing is left on DEMO-31 and DEMO-30. If none is, move both to Done today. Check: DEMO-31 and DEMO-30 leave In progress by the next refresh, and active work drops from 9 to 7.\nDoes anything, such as testing or a release check, still happen on these cards after the merge?\n\nWhy:\n- DEMO-31: The card moved from Backlog to In progress 5 days ago, and its pull request had been ready for review for 8 days. The board lagged the work. (Jira)\n- DEMO-30: The pull request acme/shop#205 was ready 7 days ago and merged 2 days ago. The card moved to In progress 2 days ago, at about the time of the merge. (GitHub)\n- DEMO-31: The pull request acme/shop#204 was merged 4 days ago. Of the card's 5 days in progress, 4 came after the merge. (GitHub)\n- Ruled out: DEMO-31, DEMO-30: Neither card has comments, links or a status change that points to testing or a hand-off after the merge. Testing after the merge is not confirmed. (Jira)\n- Ruled out: DEMO-31, DEMO-30: The code was not stuck in review. Both pull requests were first reviewed within 2 to 3 days and neither had changes requested. (GitHub)\n\nOptions:\nA. Move both cards to Done now if Tom and Ana confirm nothing is left. Agree that a card moves when its pull request merges. Costs one short conversation. It only works if the merge really ends the work. Check: DEMO-31 and DEMO-30 are out of In progress by the next refresh. No merged pull request sits on an In progress card after one day. (recommended)\nB. If testing does happen after the merge, add a Testing column and move merged cards into it. Changes the board and the measured stages. Testing time will then show up as its own queue. Check: Both cards sit in Testing, not In progress, by the next refresh. Their waiting time is visible.\nC. Move each card to In progress when its branch is created, not when the pull request is nearly done. Needs a habit change. It makes item age more honest and shows more work in progress up front. Check: The next cards have a pull request start no earlier than the card's move to In progress.\nRecommended because The cards' history shows late moves, not a testing step, so the smallest fix is moving on merge.",
       "card": {
-        "verdict": "DEMO-31 and DEMO-30 look like **cards moved late, not held for testing**: both reached In progress only after their code was ready for review.",
+        "verdict": "Nothing on the board shows testing after the merge, so **the cards most likely moved late**. DEMO-31 and DEMO-30 went to In progress only after their code was ready.",
         "confidence": "likely",
-        "basis": "GitHub and Jira agree",
-        "sources": ["GitHub", "Jira"],
+        "basis": "Jira and GitHub agree",
+        "sources": ["Jira", "GitHub"],
         "reasons": [
           {
             "kind": "supports",
-            "source": "GitHub",
+            "source": "Jira",
             "keys": ["DEMO-31"],
-            "fact": "The pull request was ready 8 days ago and approved 5 days ago. The card moved to In progress 5 days ago, so the board caught up only at approval."
+            "fact": "The card moved from Backlog to In progress 5 days ago, and its pull request had been ready for review for 8 days. The board lagged the work."
           },
           {
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-30"],
-            "fact": "The pull request was ready 7 days ago. The card moved to In progress 2 days ago, the same time the code merged, so the card never showed the work."
+            "fact": "The pull request acme/shop#205 was ready 7 days ago and merged 2 days ago. The card moved to In progress 2 days ago, at about the time of the merge."
           },
           {
             "kind": "supports",
+            "source": "GitHub",
+            "keys": ["DEMO-31"],
+            "fact": "The pull request acme/shop#204 was merged 4 days ago. Of the card's 5 days in progress, 4 came after the merge."
+          },
+          {
+            "kind": "rules-out",
             "source": "Jira",
             "keys": ["DEMO-31", "DEMO-30"],
-            "fact": "Neither card has a comment or a status change that mentions testing or a handover. Their only moves are Backlog to In progress."
+            "fact": "Neither card has comments, links or a status change that points to testing or a hand-off after the merge. Testing after the merge is not confirmed."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
             "keys": ["DEMO-31", "DEMO-30"],
-            "fact": "Not rework: neither pull request had changes requested, and each was approved and then merged within about a day."
+            "fact": "The code was not stuck in review. Both pull requests were first reviewed within 2 to 3 days and neither had changes requested."
           }
         ],
         "options": [
           {
-            "what": "Ask Tom and Ana whether any check remains after the merge. If none, move both cards on today.",
-            "tradeOff": "Needs a quick conversation. It fixes only these two cards.",
-            "checkpoint": "DEMO-31 and DEMO-30 out of In progress by the next refresh.",
+            "what": "Move both cards to Done now if Tom and Ana confirm nothing is left. Agree that a card moves when its pull request merges.",
+            "tradeOff": "Costs one short conversation. It only works if the merge really ends the work.",
+            "checkpoint": "DEMO-31 and DEMO-30 are out of In progress by the next refresh. No merged pull request sits on an In progress card after one day.",
             "keys": ["DEMO-31", "DEMO-30"],
             "recommended": true
           },
           {
-            "what": "Agree that a card moves to In progress when work starts and moves on when its pull request merges.",
-            "tradeOff": "A small habit change. The team must keep to it, or cards lag again.",
-            "checkpoint": "No active card marked as disagreeing with its code over the next two refreshes.",
-            "keys": ["DEMO-31", "DEMO-30"],
-            "recommended": true
+            "what": "If testing does happen after the merge, add a Testing column and move merged cards into it.",
+            "tradeOff": "Changes the board and the measured stages. Testing time will then show up as its own queue.",
+            "checkpoint": "Both cards sit in Testing, not In progress, by the next refresh. Their waiting time is visible.",
+            "keys": ["DEMO-31", "DEMO-30"]
           },
           {
-            "what": "If Tom or Ana say testing does happen after the merge, add a Testing column and include it in the measured stages.",
-            "tradeOff": "Changes the board and the cycle-time baseline. Do it only if the check is real.",
-            "checkpoint": "Merged cards sit in Testing, not In progress, by the next refresh.",
+            "what": "Move each card to In progress when its branch is created, not when the pull request is nearly done.",
+            "tradeOff": "Needs a habit change. It makes item age more honest and shows more work in progress up front.",
+            "checkpoint": "The next cards have a pull request start no earlier than the card's move to In progress.",
             "keys": ["DEMO-31", "DEMO-30"]
           }
         ],
-        "why": "nothing on the cards points to a testing step, so fix the two cards first and then the habit that left them behind.",
-        "next": "Ask Tom about DEMO-31 and Ana about DEMO-30 whether anything is left to check after the merge. If not, move both cards out of In progress today.",
-        "checkpoint": "DEMO-31 and DEMO-30 leave In progress by the next refresh, and the 9 active items drop to 7.",
-        "question": "Does any check happen after merge on this team, such as a manual test or a release step?"
+        "why": "The cards' history shows late moves, not a testing step, so the smallest fix is moving on merge.",
+        "next": "Ask Tom and Ana whether any testing is left on DEMO-31 and DEMO-30. If none is, move both to Done today.",
+        "checkpoint": "DEMO-31 and DEMO-30 leave In progress by the next refresh, and active work drops from 9 to 7.",
+        "question": "Does anything, such as testing or a release check, still happen on these cards after the merge?"
       },
       "checkedJiraKeys": ["DEMO-31", "DEMO-30"],
       "skill": {
@@ -728,26 +745,26 @@
         {
           "step": "jira",
           "label": "Read DEMO-31, DEMO-30 in detail: description, comments, history and links",
-          "at": 2473
+          "at": 2666
         },
         {
           "step": "jira",
           "label": "Read the code trail of DEMO-31, DEMO-30: branch, pull requests and review timing",
-          "at": 2473
+          "at": 2666
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 2473
+          "at": 2666
         }
       ]
     },
     {
       "label": "What is the failing build holding up?",
       "question": "An approved pull request is held by failing checks\nDEMO-33: the checks on its latest commit fail. It is already approved, so only the checks stand between it and the merge.\n\nPull requests have failing checks on their latest commit. For each, say how long it has been open, whether it is already approved, and what the red build holds back on the board. Propose the smallest team agreement, such as fixing a red build before new work, with a measurable checkpoint. Never blame whoever wrote the code.",
-      "message": "Only **DEMO-33** has a red build: its pull request acme/shop#203 is approved and open, and a failing end-to-end checkout test is the only thing holding the merge.\nLikely · GitHub + Jira + Board: GitHub, Jira and the board agree.\nNext step: Ask Ana whether the failing end-to-end checkout test can be re-run or fixed today, since Jonas's approval comment already suspects it is flaky. Check: acme/shop#203 shows passing checks and merged, and DEMO-33 leaves In progress, by the next refresh.\nHas the checkout test failed on CI before for other pull requests, or only on acme/shop#203?\n\nWhy:\n- DEMO-33: acme/shop#203 has been ready for review for 6 days and approved for 1 day, with no changes requested. The latest commit's checks are failing. (GitHub)\n- DEMO-33: Jonas commented 1 day ago: 'Approved. The e2e checkout test fails on CI but passes locally. Flaky?' This points to an unstable test, though nobody has confirmed it. (Jira)\n- DEMO-33: The card has sat in In progress for 11 days and is now late. It still counts as active work, and a bundle-discount bug fix is waiting on a merge it already has approval for. (Board)\n- Ruled out: DEMO-34, DEMO-35, DEMO-90, DEMO-89: No other open pull request has failing checks. DEMO-34 and DEMO-89 pass, and DEMO-35 and DEMO-90 are still running. (GitHub)\n- Ruled out: DEMO-33: Not waiting for reviewers: the first look came after 3 days, the approval is in, and the pull request is small at 140 lines. (GitHub)\n\nOptions:\nA. Re-run the checkout test on acme/shop#203 and merge if it goes green. Cheap and quick, but it hides a flaky test if the re-run happens to pass. Check: acme/shop#203 merged and DEMO-33 moved on within 1 working day. (recommended)\nB. Treat the checkout test as a bug of its own: quarantine or fix it, then merge. Takes longer for DEMO-33 but stops the same red build hitting later pull requests. Check: Checkout test passes on 5 consecutive builds by the next refresh.\nC. Agree a team rule: a red build on an approved pull request is fixed or re-run before anyone starts new work. Slows new starts slightly. Active work has already grown from 4 to 9 items. Check: Zero approved pull requests with failing checks older than 1 working day at each weekly review. (recommended)\nRecommended because A clears the single red build today, and C is the smallest agreement that stops approved work waiting on CI.",
+      "message": "Only **DEMO-33** has a failing build. Its pull request is approved, so the red build is the only thing holding back the merge.\nLikely · GitHub + Jira + Board: GitHub, Jira and the board agree.\nNext step: Ask Ana whether the e2e checkout test on acme/shop#203 has been re-run on CI, and whether it is flaky or really broken. Check: acme/shop#203 shows green checks and is merged, and DEMO-33 leaves In progress by the next refresh.\nHas the e2e checkout test failed on CI for other pull requests recently, or only on DEMO-33?\n\nWhy:\n- DEMO-33: acme/shop#203 was ready for review 6 days ago, approved 1 day ago, and the checks on its latest commit fail. (GitHub)\n- DEMO-33: Jonas approved 1 day ago and wrote that the e2e checkout test fails on CI but passes locally, so it may be flaky. (Jira)\n- DEMO-33: The card has been In progress for 11 days, past the usual 7 days. It counts as late and the board and the code disagree. (Board)\n- Ruled out: DEMO-35, DEMO-90: acme/shop#201 and acme/shop#207 have checks still running, not failing, so no other red build holds work. (GitHub)\n- Ruled out: DEMO-34, DEMO-89: acme/shop#202 and acme/shop#206 have passing checks, so their waits have another cause. (GitHub)\n- Ruled out: DEMO-33: Not waiting for a reviewer: the first look came 3 days after ready, and approval is already in. (GitHub)\n\nOptions:\nA. Re-run the e2e checkout test on acme/shop#203 and merge if it goes green Quick, but it hides a flaky test if it passes by luck Check: Green checks and DEMO-33 merged by the next refresh (recommended)\nB. If the test fails again, fix or quarantine the flaky e2e checkout test in a separate change Takes extra effort now, but stops the same red build hitting the next pull request Check: The next three pull requests on acme/shop pass without a manual re-run (recommended)\nC. Merge DEMO-33 with the red build once Jonas and Ana agree the failure is unrelated Fastest, but a real defect could reach checkout Check: DEMO-33 merged and no new checkout failure seen after release\nRecommended because Re-running first confirms whether the test is flaky, and the separate fix keeps it from recurring.",
       "card": {
-        "verdict": "Only **DEMO-33** has a red build: its pull request acme/shop#203 is approved and open, and a failing end-to-end checkout test is the only thing holding the merge.",
+        "verdict": "Only **DEMO-33** has a failing build. Its pull request is approved, so the red build is the only thing holding back the merge.",
         "confidence": "likely",
         "basis": "GitHub, Jira and the board agree",
         "sources": ["GitHub", "Jira", "Board"],
@@ -756,61 +773,67 @@
             "kind": "supports",
             "source": "GitHub",
             "keys": ["DEMO-33"],
-            "fact": "acme/shop#203 has been ready for review for 6 days and approved for 1 day, with no changes requested. The latest commit's checks are failing."
+            "fact": "acme/shop#203 was ready for review 6 days ago, approved 1 day ago, and the checks on its latest commit fail."
           },
           {
             "kind": "supports",
             "source": "Jira",
             "keys": ["DEMO-33"],
-            "fact": "Jonas commented 1 day ago: 'Approved. The e2e checkout test fails on CI but passes locally. Flaky?' This points to an unstable test, though nobody has confirmed it."
+            "fact": "Jonas approved 1 day ago and wrote that the e2e checkout test fails on CI but passes locally, so it may be flaky."
           },
           {
             "kind": "supports",
             "source": "Board",
             "keys": ["DEMO-33"],
-            "fact": "The card has sat in In progress for 11 days and is now late. It still counts as active work, and a bundle-discount bug fix is waiting on a merge it already has approval for."
+            "fact": "The card has been In progress for 11 days, past the usual 7 days. It counts as late and the board and the code disagree."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
-            "keys": ["DEMO-34", "DEMO-35", "DEMO-90", "DEMO-89"],
-            "fact": "No other open pull request has failing checks. DEMO-34 and DEMO-89 pass, and DEMO-35 and DEMO-90 are still running."
+            "keys": ["DEMO-35", "DEMO-90"],
+            "fact": "acme/shop#201 and acme/shop#207 have checks still running, not failing, so no other red build holds work."
+          },
+          {
+            "kind": "rules-out",
+            "source": "GitHub",
+            "keys": ["DEMO-34", "DEMO-89"],
+            "fact": "acme/shop#202 and acme/shop#206 have passing checks, so their waits have another cause."
           },
           {
             "kind": "rules-out",
             "source": "GitHub",
             "keys": ["DEMO-33"],
-            "fact": "Not waiting for reviewers: the first look came after 3 days, the approval is in, and the pull request is small at 140 lines."
+            "fact": "Not waiting for a reviewer: the first look came 3 days after ready, and approval is already in."
           }
         ],
         "options": [
           {
-            "what": "Re-run the checkout test on acme/shop#203 and merge if it goes green.",
-            "tradeOff": "Cheap and quick, but it hides a flaky test if the re-run happens to pass.",
-            "checkpoint": "acme/shop#203 merged and DEMO-33 moved on within 1 working day.",
+            "what": "Re-run the e2e checkout test on acme/shop#203 and merge if it goes green",
+            "tradeOff": "Quick, but it hides a flaky test if it passes by luck",
+            "checkpoint": "Green checks and DEMO-33 merged by the next refresh",
             "keys": ["DEMO-33"],
             "recommended": true
           },
           {
-            "what": "Treat the checkout test as a bug of its own: quarantine or fix it, then merge.",
-            "tradeOff": "Takes longer for DEMO-33 but stops the same red build hitting later pull requests.",
-            "checkpoint": "Checkout test passes on 5 consecutive builds by the next refresh.",
+            "what": "If the test fails again, fix or quarantine the flaky e2e checkout test in a separate change",
+            "tradeOff": "Takes extra effort now, but stops the same red build hitting the next pull request",
+            "checkpoint": "The next three pull requests on acme/shop pass without a manual re-run",
+            "keys": ["DEMO-33"],
+            "recommended": true
+          },
+          {
+            "what": "Merge DEMO-33 with the red build once Jonas and Ana agree the failure is unrelated",
+            "tradeOff": "Fastest, but a real defect could reach checkout",
+            "checkpoint": "DEMO-33 merged and no new checkout failure seen after release",
             "keys": ["DEMO-33"]
-          },
-          {
-            "what": "Agree a team rule: a red build on an approved pull request is fixed or re-run before anyone starts new work.",
-            "tradeOff": "Slows new starts slightly. Active work has already grown from 4 to 9 items.",
-            "checkpoint": "Zero approved pull requests with failing checks older than 1 working day at each weekly review.",
-            "keys": ["DEMO-33"],
-            "recommended": true
           }
         ],
-        "why": "A clears the single red build today, and C is the smallest agreement that stops approved work waiting on CI.",
-        "next": "Ask Ana whether the failing end-to-end checkout test can be re-run or fixed today, since Jonas's approval comment already suspects it is flaky.",
-        "checkpoint": "acme/shop#203 shows passing checks and merged, and DEMO-33 leaves In progress, by the next refresh.",
-        "question": "Has the checkout test failed on CI before for other pull requests, or only on acme/shop#203?"
+        "why": "Re-running first confirms whether the test is flaky, and the separate fix keeps it from recurring.",
+        "next": "Ask Ana whether the e2e checkout test on acme/shop#203 has been re-run on CI, and whether it is flaky or really broken.",
+        "checkpoint": "acme/shop#203 shows green checks and is merged, and DEMO-33 leaves In progress by the next refresh.",
+        "question": "Has the e2e checkout test failed on CI for other pull requests recently, or only on DEMO-33?"
       },
-      "checkedJiraKeys": ["DEMO-33"],
+      "checkedJiraKeys": ["DEMO-33", "DEMO-34", "DEMO-36", "DEMO-35"],
       "skill": {
         "id": "item-investigation",
         "name": "Item investigation"
@@ -823,18 +846,18 @@
         },
         {
           "step": "jira",
-          "label": "Read DEMO-33 in detail: description, comments, history and links",
-          "at": 3487
+          "label": "Read DEMO-33, DEMO-34, DEMO-36, DEMO-35 in detail: description, comments, history and links",
+          "at": 3315
         },
         {
           "step": "jira",
-          "label": "Read the code trail of DEMO-33, DEMO-34, DEMO-35, DEMO-90 and 3 more: branch, pull requests and review timing",
-          "at": 3487
+          "label": "Read the code trail of DEMO-33, DEMO-34, DEMO-35, DEMO-90 and 1 more: branch, pull requests and review timing",
+          "at": 3315
         },
         {
           "step": "plan",
           "label": "Thinking",
-          "at": 3487
+          "at": 3316
         }
       ]
     }

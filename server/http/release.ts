@@ -7,8 +7,15 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.20.4',
+  version: '2026.11.20.5',
   notes: [
+    'Steerloom AI keeps story points and items apart. It gets each sprint’s planned points beside its finished points, and no longer sets points against a number of items',
+    'Steerloom AI reads work carried into a later sprint as a plan larger than what gets finished, and recommends a smaller plan. It used to call it churn and recommend a scope freeze',
+    'Answers use plain words where the AI copied Steerloom’s internal names, such as “carried over” for carriedOver, in plain answers as well as in cards. Times under a day read as hours',
+    'A draft is the message alone, with nothing before or after it',
+    'On a board without sprints, Steerloom AI no longer speaks of sprints',
+    'A ticket comment addressed to an AI assistant is set aside, and what it says about a person is not repeated',
+    'The open demo: both teams’ recorded Steerloom AI answers are new',
     'Flow briefing: Steerloom AI knows where the time goes. It gets each stage’s share of finished work’s time, the same number the briefing shows as “40% of time”',
     'Flow briefing: Steerloom AI knows “Flagged last week”: what the briefing named a week ago, and whether each item finished, moved, still waits or went back',
     'The Ask AI buttons ask one short question. The chat shows that question, where it used to show Steerloom’s own instructions and a block of data as if you had typed them',

@@ -463,3 +463,20 @@ it('accepts a change to how the board works that names a stage and a number', ()
   ])
   expect(result.removed).toHaveLength(2)
 })
+
+it('puts a plain answer in the board’s words too, keeping its lines', () => {
+  const plain = [
+    'Most of the time goes to review: **Code Review takes 65%**.',
+    '',
+    '- A first look takes 1 day and merging 0.5 days.',
+    '- carriedOver was 6 in the last sprint.',
+  ].join('\n')
+  expect(finishAnswer(plain, EVAL_CONTEXT, { checked: new Set() })).toEqual({
+    message: [
+      'Most of the time goes to review: **Code Review takes 65%**.',
+      '',
+      '- A first look takes 1 day and merging 12 hours.',
+      '- carried over was 6 in the last sprint.',
+    ].join('\n'),
+  })
+})

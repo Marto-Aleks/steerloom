@@ -120,10 +120,16 @@ export function toAiSprintContext(
       planned: view.planned.length,
       finishedPlanned: view.finishedPlanned,
       added: view.added.length,
-      removed: view.removed.length,
+      // What did not finish, by where it went. "Removed" alone would lump
+      // work carried into the next sprint with work taken out for good.
       backToBacklog: view.removed.length - view.movedOn.length,
       carriedOver: view.carriedOver.length,
-      ...(unit === 'points' ? { finishedPoints: view.finishedPoints } : {}),
+      ...(unit === 'points'
+        ? {
+            plannedPoints: view.plannedPoints,
+            finishedPoints: view.finishedPoints,
+          }
+        : {}),
     })),
   }
 }

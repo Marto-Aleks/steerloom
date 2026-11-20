@@ -52,13 +52,45 @@ const CODE_WORDS: Record<string, string> = {
   merged: 'merged',
 }
 
+/** Names of the briefing's data, as a model copies them, in plain words. */
+const FIELD_WORDS: Array<[RegExp, string]> = (
+  [
+    ['carriedOver', 'carried over'],
+    ['backToBacklog', 'back to the backlog'],
+    ['finishedPlanned', 'planned items finished'],
+    ['plannedPoints', 'planned points'],
+    ['finishedPoints', 'points finished'],
+    ['plannedItems', 'planned items'],
+    ['addedMidSprint', 'added mid-sprint'],
+    ['sprintsSoFar', 'sprints so far'],
+    ['chancePercent', 'chance'],
+    ['daysLeft', 'days left'],
+    ['likelyDone', 'likely done'],
+    ['daysInStage', 'days in its stage'],
+    ['ageDays', 'age in days'],
+    ['sharePercent', 'share'],
+    ['movedQuickly', 'moved quickly'],
+    ['lastSprints', 'the last sprints'],
+    ['flaggedLastWeek', 'flagged last week'],
+    ['stageTime', 'time by stage'],
+    ['unestimatedItems', 'unestimated items'],
+    ['withinTwoWeeksPercent', 'chance within two weeks'],
+    ['workInProgressByStage', 'work in progress by stage'],
+    ['delayedWorkInProgress', 'late work in progress'],
+  ] as const
+).map(([name, words]) => [new RegExp(`\\b${name}\\b`, 'g'), words])
+
 /**
  * The board's words, not the data's: field names the model copies from the
  * briefing are rewritten, and fractions of a day become hours.
  */
 export function boardWords(value: string): string {
+  const named = FIELD_WORDS.reduce(
+    (text, [name, words]) => text.replace(name, words),
+    value,
+  )
   return (
-    value
+    named
       .replace(
         /\s*\((?:code(?: state)?)[:\s]*[“"']?(nocode|coding|review|approved|merged)[”"']?\)/gi,
         '',

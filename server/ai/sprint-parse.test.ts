@@ -120,3 +120,20 @@ describe('free text a team wrote in Jira', () => {
     expect(parseSprintContext(built)).toEqual(built)
   })
 })
+
+describe('boards with and without sprints', () => {
+  const skill = getAiSkill('flow-diagnosis')
+  it('tells the assistant not to speak of sprints where the board shows none', () => {
+    const prompt = buildAiSystemPrompt(context, skill)
+    expect(prompt).toContain('This board shows no sprints')
+    expect(prompt).not.toContain('END_SPRINT')
+  })
+  it('tells it how to read carried-over work, and to keep points and items apart', () => {
+    const prompt = buildAiSystemPrompt({ ...context, sprint }, skill)
+    expect(prompt).not.toContain('This board shows no sprints')
+    expect(prompt).toContain(
+      'never set a number of items against a number of points',
+    )
+    expect(prompt).toContain('never call carried-over work churn')
+  })
+})

@@ -310,7 +310,18 @@ export function finishAnswer(
       message:
         'Steerloom AI answered in a shape Steerloom could not read. Ask again, or ask a narrower question.',
     }
-  return { message: answer }
+  return { message: plainWords(answer) }
+}
+
+/**
+ * A plain answer in the board's words, as a card's fields are: line by line,
+ * so its paragraphs and lists stay as written.
+ */
+export function plainWords(answer: string): string {
+  return answer
+    .split('\n')
+    .map((line) => (line.trim() ? boardWords(line) : ''))
+    .join('\n')
 }
 
 /** "a and b", "a, b and c". */
