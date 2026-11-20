@@ -7,7 +7,7 @@ import { WorkspaceStore } from '../../workspace/store'
 import type { AnswerCard } from '../../../src/lib/ai/answer-card'
 import { finishAnswer } from '../answer-card'
 import { runAgent } from '../agent'
-import { AiClient } from '../client'
+import { AiClient, type AiUsage } from '../client'
 import { loadAiServerConfig, type AiServerConfig } from '../config'
 import { aiConfigFromKey } from '../workspace-key'
 import { EVAL_CONTEXT, evalBoard } from './board'
@@ -73,6 +73,13 @@ function rescore(path: string) {
   console.log(`\n${passed} of ${saved.results.length} passed (re-scored)`)
 }
 
+/** "38400 in (31000 cached), 2100 out": what the provider counted. */
+function tokens(
+  usage: Pick<AiUsage, 'inputTokens' | 'cachedTokens' | 'outputTokens'>,
+): string {
+  return `${usage.inputTokens} in (${usage.cachedTokens} cached), ${usage.outputTokens} out`
+}
+
 async function main() {
   const saved = option('rescore')
   if (saved) return rescore(saved)
@@ -81,15 +88,22 @@ async function main() {
     throw new Error(
       `The AI is not set up: ${[...config.missing, ...config.invalid].join(', ')}. Use --workspace with the Steerloom app's .flowlens folder.`,
     )
-  const client = new AiClient(config)
   const only = option('only')?.split(',')
   const cases = EVAL_CASES.filter((test) => !only || only.includes(test.id))
   const results = []
+  const total = {
+    requests: 0,
+    inputTokens: 0,
+    cachedTokens: 0,
+    outputTokens: 0,
+  }
   console.log(
     `Steerloom AI test questions · ${config.model} · ${cases.length} questions\n`,
   )
   for (const test of cases) {
     const board = evalBoard()
+    // One client per question, so its counts are that question's cost.
+    const client = new AiClient(config)
     const started = Date.now()
     let answer = ''
     let card: AnswerCard | undefined
@@ -122,6 +136,11 @@ async function main() {
       error = caught instanceof Error ? caught.message : String(caught)
     }
     const seconds = Math.round((Date.now() - started) / 1000)
+    const usage = client.usage()
+    total.inputTokens += usage.inputTokens
+    total.cachedTokens += usage.cachedTokens
+    total.outputTokens += usage.outputTokens
+    total.requests += usage.requests
     const score = error
       ? { pass: false, failures: [`error: ${error}`] }
       : scoreAnswer(test, answer, board.readKeys())
@@ -135,14 +154,16 @@ async function main() {
       searches: board.searches,
       seconds,
       words: answer.split(/\s+/).filter(Boolean).length,
+      usage,
       ...score,
     })
     console.log(
-      `${score.pass ? '✓' : '✗'} ${test.id.padEnd(20)} ${String(seconds).padStart(4)}s  ${card ? 'card' : 'text'}  ${score.failures.join('; ')}`,
+      `${score.pass ? '✓' : '✗'} ${test.id.padEnd(20)} ${String(seconds).padStart(4)}s  ${card ? 'card' : 'text'}  ${String(usage.requests).padStart(2)} calls ${tokens(usage)}  ${score.failures.join('; ')}`,
     )
   }
   const passed = results.filter((result) => result.pass).length
   console.log(`\n${passed} of ${results.length} passed`)
+  console.log(`${total.requests} model calls · ${tokens(total)}`)
 
   const out = expand(option('out') ?? '.eval')
   mkdirSync(out, { recursive: true })
@@ -151,7 +172,13 @@ async function main() {
   writeFileSync(
     json,
     JSON.stringify(
-      { model: config.model, when: new Date().toISOString(), passed, results },
+      {
+        model: config.model,
+        when: new Date().toISOString(),
+        passed,
+        total,
+        results,
+      },
       null,
       2,
     ),

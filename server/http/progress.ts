@@ -24,9 +24,18 @@ export function wantsProgress(request: IncomingMessage): boolean {
 }
 
 /**
+ * A line sent when nothing else has been for this long. Proxies close a
+ * connection that stays silent (Cloudflare after 100 seconds), and an AI
+ * model can think for longer than that between two steps. The browser's
+ * reader skips the line.
+ */
+export const KEEP_ALIVE_MS = 25_000
+
+/**
  * Streams progress lines, then exactly one result or error line. Headers go
  * out with the first event; `no-transform` keeps proxies from buffering for
- * compression.
+ * compression. Once the first line is out, a silent stretch is bridged with
+ * keep-alive lines until the result.
  */
 export function progressStream(
   response: ServerResponse,
@@ -34,6 +43,8 @@ export function progressStream(
 ) {
   let started = false
   let ended = false
+  let quiet: ReturnType<typeof setTimeout> | undefined
+  response.on('close', () => clearTimeout(quiet))
   // The result line is the whole board: several MB of JSON that shrinks
   // about tenfold. Compress here, flushing per line so progress still shows.
   const gzip = (request?.headers['accept-encoding'] ?? '').includes('gzip')
@@ -64,10 +75,15 @@ export function progressStream(
       gzip.write(line)
       gzip.flush()
     } else response.write(line)
+    clearTimeout(quiet)
+    quiet = setTimeout(() => write({ type: 'ping' }), KEEP_ALIVE_MS)
+    // A waiting keep-alive never holds the server open.
+    quiet.unref()
   }
   const end = () => {
     if (ended) return
     ended = true
+    clearTimeout(quiet)
     if (gzip) gzip.end()
     else response.end()
   }

@@ -323,9 +323,16 @@ export async function runBoardTool(
             'The reading limit for this answer is used up. Answer with what you have and say which items you could not check.',
         })
       const keys = all.slice(0, room)
-      const { items, unavailable } = await reader.items(keys, detail, signal)
+      // Counted before the read: reads running side by side share one limit.
       if (detail) usage.detailed += keys.length
       usage.items += keys.length
+      const { items, unavailable } = await reader
+        .items(keys, detail, signal)
+        .catch((caught: unknown) => {
+          if (detail) usage.detailed -= keys.length
+          usage.items -= keys.length
+          throw caught
+        })
       return answer(
         {
           items,

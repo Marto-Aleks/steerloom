@@ -9,11 +9,26 @@ import type { AiServerConfig } from './config'
 
 type Format = AiServerConfig['format']
 
-/** The request body with streaming switched on, in the provider's terms. */
-export function streamingBody(body: string, format: Format): string {
+/**
+ * The request body with streaming switched on, in the provider's terms.
+ * With `usage`, OpenAI is asked to end the stream with its token counts; it
+ * sends none otherwise. Only for OpenAI's own API: a company gateway may not
+ * know the option.
+ */
+export function streamingBody(
+  body: string,
+  format: Format,
+  usage = false,
+): string {
   if (format === 'gemini') return body // Gemini streams by address instead.
   const parsed = JSON.parse(body) as Record<string, unknown>
-  return JSON.stringify({ ...parsed, stream: true })
+  return JSON.stringify({
+    ...parsed,
+    stream: true,
+    ...(usage && format === 'openai'
+      ? { stream_options: { include_usage: true } }
+      : {}),
+  })
 }
 
 /**
@@ -87,10 +102,18 @@ export async function readStreamedPayload(
     const blocks: Array<Record<string, unknown>> = []
     const inputs: string[] = []
     let stopReason: unknown
+    // Token counts: what was read comes first, what was written last.
+    let usage: Record<string, unknown> | undefined
     for await (const event of events(body)) {
       if (!isRecord(event)) continue
       const index = typeof event.index === 'number' ? event.index : 0
       if (
+        event.type === 'message_start' &&
+        isRecord(event.message) &&
+        isRecord(event.message.usage)
+      )
+        usage = { ...event.message.usage }
+      else if (
         event.type === 'content_block_start' &&
         isRecord(event.content_block)
       ) {
@@ -124,8 +147,10 @@ export async function readStreamedPayload(
           typeof event.delta.signature === 'string'
         )
           block.signature = `${typeof block.signature === 'string' ? block.signature : ''}${event.delta.signature}`
-      } else if (event.type === 'message_delta' && isRecord(event.delta))
-        stopReason = event.delta.stop_reason
+      } else if (event.type === 'message_delta') {
+        if (isRecord(event.delta)) stopReason = event.delta.stop_reason
+        if (isRecord(event.usage)) usage = { ...usage, ...event.usage }
+      }
     }
     blocks.forEach((block, index) => {
       if (block.type !== 'tool_use') return
@@ -137,13 +162,21 @@ export async function readStreamedPayload(
         block.input = {}
       }
     })
-    return { content: blocks.filter(Boolean), stop_reason: stopReason }
+    return {
+      content: blocks.filter(Boolean),
+      stop_reason: stopReason,
+      ...(usage ? { usage } : {}),
+    }
   }
 
   if (format === 'gemini') {
     const parts: Array<Record<string, unknown>> = []
     let finishReason: unknown
+    // Each piece repeats the token counts so far; the last one is the total.
+    let usageMetadata: unknown
     for await (const event of events(body)) {
+      if (isRecord(event) && isRecord(event.usageMetadata))
+        usageMetadata = event.usageMetadata
       const candidate =
         isRecord(event) && Array.isArray(event.candidates)
           ? (event.candidates[0] as unknown)
@@ -166,14 +199,18 @@ export async function readStreamedPayload(
     }
     return {
       candidates: [{ content: { role: 'model', parts }, finishReason }],
+      ...(usageMetadata ? { usageMetadata } : {}),
     }
   }
 
   // OpenAI and compatible gateways.
   let content = ''
   let finishReason: unknown
+  // Sent once, in a last piece without an answer, when it was asked for.
+  let usage: unknown
   const calls: Array<{ id?: string; name: string; args: string }> = []
   for await (const event of events(body)) {
+    if (isRecord(event) && isRecord(event.usage)) usage = event.usage
     const choice =
       isRecord(event) && Array.isArray(event.choices)
         ? (event.choices[0] as unknown)
@@ -219,5 +256,6 @@ export async function readStreamedPayload(
         },
       },
     ],
+    ...(usage ? { usage } : {}),
   }
 }

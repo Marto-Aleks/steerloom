@@ -2,8 +2,14 @@
 import { MockAgent } from 'undici'
 import { afterEach, expect, it } from 'vitest'
 import { readProgressResponse } from '../../src/lib/progress'
-import { AiClient, nonStreamingEndpoints, readAgentStep } from './client'
-import { readStreamedPayload } from './stream'
+import {
+  AiClient,
+  learnedStyles,
+  nonStreamingEndpoints,
+  readAgentStep,
+  readUsage,
+} from './client'
+import { readStreamedPayload, streamingBody } from './stream'
 import { aiConfigFromKey } from './workspace-key'
 
 /*
@@ -12,7 +18,10 @@ import { aiConfigFromKey } from './workspace-key'
  * provider that refuses to stream gets the same request without it.
  */
 
-afterEach(() => nonStreamingEndpoints.clear())
+afterEach(() => {
+  nonStreamingEndpoints.clear()
+  learnedStyles.clear()
+})
 
 const sse = (events: unknown[]) =>
   new Response(
@@ -306,4 +315,122 @@ it('reads text pieces from the progress stream as they arrive', async () => {
   )
   expect(pieces.join('')).toBe('{"verdict":"Late."}')
   expect(read).toEqual({ ok: true, status: 200, value: { message: 'done' } })
+})
+
+it('keeps the token counts a stream reports, for each provider', async () => {
+  const anthropic = await readStreamedPayload(
+    sse([
+      {
+        type: 'message_start',
+        message: {
+          usage: { input_tokens: 120, cache_read_input_tokens: 6_000 },
+        },
+      },
+      {
+        type: 'content_block_start',
+        index: 0,
+        content_block: { type: 'text', text: '' },
+      },
+      {
+        type: 'content_block_delta',
+        index: 0,
+        delta: { type: 'text_delta', text: 'Done.' },
+      },
+      {
+        type: 'message_delta',
+        delta: { stop_reason: 'end_turn' },
+        usage: { output_tokens: 90 },
+      },
+    ]),
+    'anthropic',
+    () => undefined,
+  )
+  expect(readUsage(anthropic)).toEqual({
+    inputTokens: 6_120,
+    cachedTokens: 6_000,
+    cacheWriteTokens: 0,
+    outputTokens: 90,
+  })
+
+  // OpenAI ends with a piece that has the counts and no answer.
+  const openai = await readStreamedPayload(
+    sse([
+      { choices: [{ delta: { content: 'Done.' }, finish_reason: 'stop' }] },
+      { choices: [], usage: { prompt_tokens: 7_000, completion_tokens: 300 } },
+    ]),
+    'openai',
+    () => undefined,
+  )
+  expect(readUsage(openai)).toMatchObject({
+    inputTokens: 7_000,
+    outputTokens: 300,
+  })
+  expect(readAgentStep(openai, 'openai').text).toBe('Done.')
+
+  const gemini = await readStreamedPayload(
+    sse([
+      {
+        candidates: [{ content: { parts: [{ text: 'Done.' }] } }],
+        usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 1 },
+      },
+      {
+        candidates: [{ content: { parts: [] }, finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 5_000, candidatesTokenCount: 200 },
+      },
+    ]),
+    'gemini',
+    () => undefined,
+  )
+  expect(readUsage(gemini)).toMatchObject({
+    inputTokens: 5_000,
+    outputTokens: 200,
+  })
+})
+
+it('asks only OpenAI itself to add token counts to a stream', () => {
+  const body = JSON.stringify({ model: 'fictional-model', messages: [] })
+  expect(JSON.parse(streamingBody(body, 'openai', true))).toMatchObject({
+    stream: true,
+    stream_options: { include_usage: true },
+  })
+  // A company gateway may not know the option.
+  expect(JSON.parse(streamingBody(body, 'openai'))).not.toHaveProperty(
+    'stream_options',
+  )
+  expect(JSON.parse(streamingBody(body, 'anthropic', true))).not.toHaveProperty(
+    'stream_options',
+  )
+})
+
+it('corrects a refused parameter without giving up streaming', async () => {
+  const { client, bodies } = openAi((body) =>
+    'tool_choice' in body
+      ? {
+          statusCode: 400,
+          data: JSON.stringify({
+            error: { message: 'Unsupported parameter: tool_choice.' },
+          }),
+        }
+      : {
+          statusCode: 200,
+          data:
+            'data: {"choices":[{"delta":{"content":"FICT-4 is blocked."},"finish_reason":"stop"}]}\n\n' +
+            'data: [DONE]\n\n',
+          responseOptions: { headers: { 'content-type': 'text/event-stream' } },
+        },
+  )
+  const pieces: string[] = []
+  const step = await client.agentStep(
+    'system',
+    [{ role: 'user', content: 'Why?' }],
+    [],
+    undefined,
+    false,
+    (text) => pieces.push(text),
+  )
+  expect(step.text).toBe('FICT-4 is blocked.')
+  // Both requests streamed: the parameter was the problem, not streaming.
+  expect(bodies.map((body) => Boolean(body.stream))).toEqual([true, true])
+  expect(pieces).toEqual(['FICT-4 is blocked.'])
+  expect(nonStreamingEndpoints.size).toBe(0)
 })

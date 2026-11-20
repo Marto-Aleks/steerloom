@@ -16,7 +16,10 @@ import {
 import type { JiraServerConnection } from '../jira/config'
 import { JiraUpstreamError, JiraClient } from '../jira/jira-client'
 import type { BoardReader } from './board-reader'
-import { finishAnswer } from './answer-card'
+import { finishAnswer, looksLikeCard } from './answer-card'
+import { answerStats, statsLine, type AnswerOutcome } from './answer-stats'
+import type { AgentStats } from './agent'
+import type { AnswerCard } from '../../src/lib/ai/answer-card'
 import { jiraReader } from './board-readers'
 import { endpointKey, rejectsTools, runAgent, toollessEndpoints } from './agent'
 import {
@@ -31,7 +34,7 @@ import {
   jiraLookupFingerprint,
   mergeAiJiraEvidence,
 } from './agent-loop'
-import { AiClient, AiUpstreamError } from './client'
+import { AiClient, AiUpstreamError, type AiUsage } from './client'
 import { loadAiServerConfig, type AiServerConfig } from './config'
 import { parseAiChatRequest } from './request'
 import { publicMessage } from '../http/public-error'
@@ -191,6 +194,27 @@ export function createAiHandler(
           flushTimer ??= setTimeout(flushText, 120)
         }
       : undefined
+    const startedAt = Date.now()
+    let spent: (() => AiUsage) | undefined
+    /**
+     * Every question leaves one line in the log and takes the same counts
+     * back with it: what it cost and took, never what was asked or read.
+     */
+    const measured = (
+      outcome: AnswerOutcome,
+      payload: Record<string, unknown> = {},
+      status?: number,
+    ) => {
+      const stats = answerStats({
+        outcome,
+        startedAt,
+        usage: spent?.(),
+        agent: payload.stats as Partial<AgentStats> | undefined,
+        card: payload.card as AnswerCard | undefined,
+      })
+      console.info(statsLine(config, stats, status))
+      return stats
+    }
     const reply = (status: number, payload: Record<string, unknown>) => {
       if (flushTimer) clearTimeout(flushTimer)
       flushText()
@@ -215,6 +239,7 @@ export function createAiHandler(
       report({ step: 'read', label: 'Reading the report' })
       const latestQuestion = chatRequest.messages.at(-1)?.content ?? ''
       const client = new AiClient(config)
+      spent = () => client.usage()
       const scope = chatRequest.jiraScope
       // A board that cannot be opened (a removed connection) still lets the
       // report be discussed; the reason comes back only if a read is needed.
@@ -254,7 +279,10 @@ export function createAiHandler(
             ...(streamText ? { onText: streamText } : {}),
             signal: controller.signal,
           })
-          reply(200, withCard(outcome, chatRequest.context))
+          reply(
+            200,
+            withStats(withCard(outcome, chatRequest.context), measured),
+          )
           return
         } catch (caught) {
           if (controller.signal.aborted || !rejectsTools(caught)) throw caught
@@ -307,6 +335,7 @@ export function createAiHandler(
             skill: { id: skill.id, name: skill.name },
             lookup: deterministicLookup,
           },
+          stats: measured('asked'),
         })
         return
       } else if (
@@ -345,6 +374,7 @@ export function createAiHandler(
               skill: { id: skill.id, name: skill.name },
               lookup: proposedLookup,
             },
+            stats: measured('asked'),
           })
           return
         }
@@ -425,26 +455,39 @@ export function createAiHandler(
         chatRequest.conversationSummary,
         controller.signal,
       )
+      // The planner's reads, counted as the agent's are.
+      const plannerStats: Partial<AgentStats> = {
+        toolCalls: attemptedLookups.length,
+        items: jiraEvidence?.issues.length ?? 0,
+        detailed:
+          jiraEvidence?.mode === 'detail' ? jiraEvidence.issues.length : 0,
+      }
       reply(
         200,
-        withCard(
-          {
-            message,
-            skill: { id: skill.id, name: skill.name },
-            ...(jiraEvidence
-              ? {
-                  jira: {
-                    requestedKeys: jiraEvidence.requestedKeys,
-                    checkedKeys: jiraEvidence.issues.map((issue) => issue.key),
-                    unavailableKeys: jiraEvidence.unavailableKeys,
-                    mode: jiraEvidence.mode,
-                    source: jiraEvidence.source,
-                    omittedCount: jiraEvidence.omittedCount,
-                  },
-                }
-              : {}),
-          },
-          chatRequest.context,
+        withStats(
+          withCard(
+            {
+              message,
+              skill: { id: skill.id, name: skill.name },
+              stats: plannerStats,
+              ...(jiraEvidence
+                ? {
+                    jira: {
+                      requestedKeys: jiraEvidence.requestedKeys,
+                      checkedKeys: jiraEvidence.issues.map(
+                        (issue) => issue.key,
+                      ),
+                      unavailableKeys: jiraEvidence.unavailableKeys,
+                      mode: jiraEvidence.mode,
+                      source: jiraEvidence.source,
+                      omittedCount: jiraEvidence.omittedCount,
+                    },
+                  }
+                : {}),
+            },
+            chatRequest.context,
+          ),
+          measured,
         ),
       )
     } catch (caught) {
@@ -452,15 +495,18 @@ export function createAiHandler(
       if (caught instanceof JiraUpstreamError) {
         const status =
           caught.status >= 400 && caught.status < 600 ? caught.status : 502
+        measured('failed', {}, status)
         reply(status, { error: caught.message })
         return
       }
       if (caught instanceof AiUpstreamError) {
         const status =
           caught.status >= 400 && caught.status < 600 ? caught.status : 502
+        measured('failed', {}, status)
         reply(status, { error: caught.message })
         return
       }
+      measured('failed', {}, 500)
       reply(500, {
         error: 'Steerloom could not complete the AI request.',
       })
@@ -593,10 +639,34 @@ function withCard(
 ): Record<string, unknown> {
   if (typeof outcome.message !== 'string') return outcome
   const jira = outcome.jira as { checkedKeys?: string[] } | undefined
+  const finished = finishAnswer(outcome.message, context, {
+    checked: new Set(jira?.checkedKeys ?? []),
+  })
   return {
     ...outcome,
-    ...finishAnswer(outcome.message, context, {
-      checked: new Set(jira?.checkedKeys ?? []),
-    }),
+    ...finished,
+    // Meant as a card but not readable as one: counted, never shown raw.
+    ...(!finished.card && looksLikeCard(outcome.message)
+      ? { unreadableCard: true }
+      : {}),
   }
+}
+
+/** The finished reply with what it took, in place of the agent's own counts. */
+function withStats(
+  payload: Record<string, unknown>,
+  measured: (
+    outcome: AnswerOutcome,
+    payload: Record<string, unknown>,
+  ) => unknown,
+): Record<string, unknown> {
+  const { unreadableCard, ...rest } = payload
+  const outcome: AnswerOutcome = rest.confirmation
+    ? 'asked'
+    : rest.card
+      ? 'card'
+      : unreadableCard
+        ? 'unreadable'
+        : 'text'
+  return { ...rest, stats: measured(outcome, rest) }
 }

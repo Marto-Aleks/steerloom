@@ -7,8 +7,14 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.18.6',
+  version: '2026.11.20',
   notes: [
+    'Steerloom AI costs less per question with a Claude key: the briefing and the conversation so far are kept by the provider between steps and read back at a fraction of the price',
+    'Steerloom AI gives Claude and Gemini models more room to think, so a long investigation no longer runs out and starts over',
+    'Steerloom AI reads several items from the board side by side: the same reads, a shorter wait',
+    'When the AI provider is busy or over its rate limit, Steerloom waits a moment and asks again instead of failing',
+    'On steerloom.app, a long answer no longer loses its connection while the model is thinking',
+    'The app’s log notes what each AI answer took (time, requests, tokens, board reads), in counts only: never the question, the answer or an item',
     'The open demo has two teams: a Kanban team and a Scrum team, with a switch at the top (or steerloom.app/?demo=1&team=scrum). The Scrum team’s Sprint tab answers its questions with recorded Steerloom AI answers, as the Kanban demo does',
     'Sprint tab: sprint days are calendar days, like every other number in Steerloom (“day 10 of 14”), and items added mid-sprint say on which day',
     'Steerloom AI chat accepts item keys from every project on the board, as the assistant already reads them',

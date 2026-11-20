@@ -68,9 +68,94 @@ type RequestStyle = {
   toolChoice: boolean
   /** The most output a gateway or model accepts, once it has said so. */
   tokenCap?: number
+  /** Anthropic format: mark the prompt for caching. Off once a gateway refuses it. */
+  caching: boolean
 }
+
+/** What one answer cost, added up over every request it took. Counts only. */
+export interface AiUsage {
+  /** Requests the provider answered. */
+  requests: number
+  /** Tokens the model read, cached ones included. */
+  inputTokens: number
+  /** Of those, read from the provider's cache at its lower price. */
+  cachedTokens: number
+  /** Written to the cache for the next request (Anthropic). */
+  cacheWriteTokens: number
+  /** Tokens the model wrote, thinking included. */
+  outputTokens: number
+  /** Answered requests whose token counts the provider did not report. */
+  unreported: number
+  /** Requests sent again after a busy provider or a dropped connection. */
+  retries: number
+  /** Requests sent again with more room, after the model ran out of it. */
+  roomRetries: number
+}
+
+const count = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : 0
+
+/**
+ * The token counts in a provider's answer, in one shape. Anthropic reports
+ * cached tokens beside the uncached ones; OpenAI and Gemini count them inside
+ * the prompt total. Null when the answer carries no counts.
+ */
+export function readUsage(
+  payload: unknown,
+): Pick<
+  AiUsage,
+  'inputTokens' | 'cachedTokens' | 'cacheWriteTokens' | 'outputTokens'
+> | null {
+  if (!isRecord(payload)) return null
+  const usage = payload.usage
+  if (isRecord(usage) && 'input_tokens' in usage) {
+    const cachedTokens = count(usage.cache_read_input_tokens)
+    const cacheWriteTokens = count(usage.cache_creation_input_tokens)
+    return {
+      inputTokens: count(usage.input_tokens) + cachedTokens + cacheWriteTokens,
+      cachedTokens,
+      cacheWriteTokens,
+      outputTokens: count(usage.output_tokens),
+    }
+  }
+  if (isRecord(usage) && 'prompt_tokens' in usage) {
+    const details = usage.prompt_tokens_details
+    return {
+      inputTokens: count(usage.prompt_tokens),
+      cachedTokens: isRecord(details) ? count(details.cached_tokens) : 0,
+      cacheWriteTokens: 0,
+      outputTokens: count(usage.completion_tokens),
+    }
+  }
+  const metadata = payload.usageMetadata
+  if (isRecord(metadata) && 'promptTokenCount' in metadata)
+    return {
+      inputTokens: count(metadata.promptTokenCount),
+      cachedTokens: count(metadata.cachedContentTokenCount),
+      cacheWriteTokens: 0,
+      outputTokens:
+        count(metadata.candidatesTokenCount) +
+        count(metadata.thoughtsTokenCount),
+    }
+  return null
+}
+
+/**
+ * Waits before asking a busy provider again, in milliseconds: the first and
+ * the second retry. A provider's own Retry-After wins, up to the limit.
+ */
+export const AI_RETRY = { waits: [2_000, 6_000], longestWait: 20_000 }
+
+/** A 429 that waiting will not fix: the key has no quota or credit left. */
+const OUT_OF_QUOTA = /quota|billing|credit|insufficient|payment/i
+
+/** Shorter prompts are not worth a cache entry, and providers ignore them. */
+const CACHE_FROM_CHARS = 4_000
+const CACHE_MARK = { type: 'ephemeral' } as const
 /** What gateways taught us, per address and model, so later questions skip the correction. */
-const learnedStyles = new Map<string, RequestStyle>()
+export const learnedStyles = new Map<string, RequestStyle>()
 
 /** GPT-5 and o-series reasoning models, by model or Azure deployment name. */
 const REASONING_MODEL = /(?:^|[^a-z0-9])(?:gpt-5|o[1-9])(?:[^a-z0-9]|$)/i
@@ -84,6 +169,16 @@ export class AiClient {
    * answer when it names a parameter it does not support.
    */
   private readonly style: RequestStyle
+  private readonly totals: AiUsage = {
+    requests: 0,
+    inputTokens: 0,
+    cachedTokens: 0,
+    cacheWriteTokens: 0,
+    outputTokens: 0,
+    unreported: 0,
+    retries: 0,
+    roomRetries: 0,
+  }
 
   constructor(private readonly config: AiServerConfig) {
     const deployment =
@@ -97,6 +192,7 @@ export class AiClient {
           temperature: !reasoning,
           reasoningEffort: true,
           toolChoice: true,
+          caching: true,
         }
     const tls = config.caCertificate ? { ca: config.caCertificate } : undefined
     this.dispatcher = config.dispatcher
@@ -109,6 +205,36 @@ export class AiClient {
         : tls
           ? new Agent({ connect: tls })
           : undefined
+  }
+
+  /** Everything this client has spent so far: one client serves one answer. */
+  usage(): AiUsage {
+    return { ...this.totals }
+  }
+
+  /** Adds an answered request's token counts to the totals. */
+  private note(payload: unknown): unknown {
+    this.totals.requests += 1
+    const used = readUsage(payload)
+    if (!used) this.totals.unreported += 1
+    else {
+      this.totals.inputTokens += used.inputTokens
+      this.totals.cachedTokens += used.cachedTokens
+      this.totals.cacheWriteTokens += used.cacheWriteTokens
+      this.totals.outputTokens += used.outputTokens
+    }
+    return payload
+  }
+
+  /**
+   * Anthropic's system prompt, marked so the provider keeps it: an answer
+   * sends the same long prompt on every turn, and a cached prompt is read at
+   * a fraction of the price. The text itself is unchanged.
+   */
+  private cachedSystem(system: string): unknown {
+    return this.style.caching && system.length >= CACHE_FROM_CHARS
+      ? [{ type: 'text', text: system, cache_control: CACHE_MARK }]
+      : system
   }
 
   async chat(
@@ -133,7 +259,9 @@ export class AiClient {
    * investigations, so they get far more than the answer itself needs.
    */
   private answerBudget(): number {
-    if (this.config.format !== 'openai') return 8_000
+    // Claude and Gemini count their thinking inside this limit: with less,
+    // a long investigation ran out and the whole request was sent again.
+    if (this.config.format !== 'openai') return 16_000
     return this.style.completionTokens || this.config.source === 'openai'
       ? 16_000
       : AI_ANSWER_TOKEN_BUDGET
@@ -187,6 +315,7 @@ export class AiClient {
       this.capped(budget * 2) > this.capped(budget)
     ) {
       budget *= 2
+      this.totals.roomRetries += 1
       payload = await this.post(
         () => this.agentBody(system, messages, tools, budget, final),
         signal,
@@ -202,6 +331,7 @@ export class AiClient {
       this.capped(budget * 2) > this.capped(budget)
     ) {
       budget *= 2
+      this.totals.roomRetries += 1
       const again = readAgentStep(
         await this.post(
           () => this.agentBody(system, messages, tools, budget, final),
@@ -275,9 +405,19 @@ export class AiClient {
         else push('assistant', [{ type: 'text', text: message.content }])
       })
       const firstUser = turns.findIndex((turn) => turn.role === 'user')
+      // The conversation so far is kept too: the next turn sends all of it
+      // again plus one step, and reads the rest from the cache. The mark
+      // sits on a copy, so what is replayed later stays as it was sent.
+      const newest = turns.at(-1)
+      const lastBlock = newest?.content.at(-1)
+      if (this.style.caching && newest && isRecord(lastBlock))
+        newest.content[newest.content.length - 1] = {
+          ...lastBlock,
+          cache_control: CACHE_MARK,
+        }
       return JSON.stringify({
         ...this.anthropicModel(),
-        system,
+        system: this.cachedSystem(system),
         messages: firstUser < 0 ? [] : turns.slice(firstUser),
         max_tokens: maxTokens,
         tools: tools.map((tool) => ({
@@ -530,6 +670,7 @@ export class AiClient {
       isReasoningBudgetExhausted(payload) &&
       this.capped(maxTokens * 2) > this.capped(maxTokens)
     ) {
+      this.totals.roomRetries += 1
       payload = await this.send(
         system,
         messages,
@@ -563,7 +704,7 @@ export class AiClient {
       const firstUser = messages.findIndex((item) => item.role === 'user')
       return JSON.stringify({
         ...this.anthropicModel(),
-        system,
+        system: this.cachedSystem(system),
         messages: firstUser < 0 ? [] : messages.slice(firstUser),
         max_tokens: maxTokens,
       })
@@ -628,16 +769,32 @@ export class AiClient {
       this.style.toolChoice = false
       return true
     }
-    // "max_tokens is too large": the model or gateway allows less output.
+    // A gateway in Anthropic's format that does not take cache marks: the
+    // same request without them.
     if (
       status === 400 &&
-      !this.style.tokenCap &&
-      /max_(?:completion_|output_)?tokens|maxOutputTokens/i.test(reason) &&
-      /too large|exceed|maximum|less than|at most|<=|greater than|range/i.test(
+      this.style.caching &&
+      this.config.format === 'anthropic' &&
+      /cache_control|cache control|\bsystem\b.*\b(?:string|array|list|type)\b/i.test(
         reason,
       )
     ) {
-      this.style.tokenCap = 4_096
+      this.style.caching = false
+      return true
+    }
+    // "max_tokens is too large": the model or gateway allows less output.
+    // The first time, the limit it names; if that is refused too, 4,096.
+    if (
+      status === 400 &&
+      (this.style.tokenCap ?? Infinity) > SAFE_OUTPUT_TOKENS &&
+      /max_(?:completion_|output_)?tokens|maxOutputTokens/i.test(reason) &&
+      /too large|exceed|maximum|less than|at most|<=|>|greater than|range/i.test(
+        reason,
+      )
+    ) {
+      this.style.tokenCap = this.style.tokenCap
+        ? SAFE_OUTPUT_TOKENS
+        : allowedOutputTokens(reason)
       return true
     }
     if (
@@ -693,14 +850,19 @@ export class AiClient {
     const authorization = this.config.apiKeyPrefix
       ? `${this.config.apiKeyPrefix} ${this.config.apiKey}`
       : this.config.apiKey
-    // One retry for a dropped connection or a busy provider, and up to three
-    // corrections when a gateway names a parameter it does not support.
-    let retried = false
+    // One retry for a dropped connection, two with a wait in between for a
+    // busy provider, and up to three corrections when a gateway names a
+    // parameter it does not support.
+    let retries = 0
     let adaptations = 0
     for (;;) {
       const streaming = Boolean(onText) && !nonStreamingEndpoints.has(streamKey)
       const requestBody = streaming
-        ? streamingBody(build(), this.config.format)
+        ? streamingBody(
+            build(),
+            this.config.format,
+            this.config.source === 'openai',
+          )
         : build()
       let response: Awaited<ReturnType<typeof fetch>>
       try {
@@ -734,8 +896,9 @@ export class AiClient {
         console.warn(
           `[ai] ${this.config.format} request ${timedOut ? 'timed out' : 'failed'} after ${((Date.now() - started) / 1000).toFixed(1)} s (${nestedErrorCode(caught) || errorName(caught)}), ${Math.round(requestBody.length / 1024)} KB sent`,
         )
-        if (!retried && !combinedSignal.aborted) {
-          retried = true
+        if (retries < 1 && !combinedSignal.aborted) {
+          retries += 1
+          this.totals.retries += 1
           continue
         }
         throw new AiUpstreamError(
@@ -746,30 +909,44 @@ export class AiClient {
         )
       }
 
-      if (!response.ok && streaming && STREAM_REFUSED.has(response.status)) {
-        // Streaming is not allowed here (an unverified OpenAI organisation,
-        // a gateway without it): the same request, answered in one piece.
-        await response.arrayBuffer().catch(() => undefined)
-        if (nonStreamingEndpoints.size >= 200) nonStreamingEndpoints.clear()
-        nonStreamingEndpoints.add(streamKey)
-        console.warn(
-          `[ai] ${this.config.format} refused streaming (${response.status}); answering without it`,
-        )
-        continue
-      }
-
       if (!response.ok) {
-        if (!retried && isRetryableAiStatus(response.status)) {
-          retried = true
-          await response.arrayBuffer().catch(() => undefined)
-          continue
-        }
         const reason = providerReason(
           await cappedJson(response, AI_RESPONSE_BYTES).catch(() => null),
           this.config.apiKey,
         )
+        // Busy, overloaded or over its rate limit: wait, then ask again. A
+        // key without quota is not busy, and waiting would not help.
+        if (
+          retries < AI_RETRY.waits.length &&
+          isRetryableAiStatus(response.status) &&
+          !(response.status === 429 && OUT_OF_QUOTA.test(reason))
+        ) {
+          const wait = retryWait(
+            response.headers.get('retry-after'),
+            AI_RETRY.waits[retries] ?? 0,
+          )
+          retries += 1
+          this.totals.retries += 1
+          console.warn(
+            `[ai] ${this.config.format} provider busy (${response.status}); asking again in ${(wait / 1000).toFixed(1)} s`,
+          )
+          await pause(wait, combinedSignal)
+          if (!combinedSignal.aborted) continue
+        }
+        // A parameter the gateway names is corrected first, so a refused
+        // parameter is never mistaken for refused streaming.
         if (adaptations < 3 && this.adapt(response.status, reason)) {
           adaptations += 1
+          continue
+        }
+        if (streaming && STREAM_REFUSED.has(response.status)) {
+          // Streaming is not allowed here (an unverified OpenAI organisation,
+          // a gateway without it): the same request, answered in one piece.
+          if (nonStreamingEndpoints.size >= 200) nonStreamingEndpoints.clear()
+          nonStreamingEndpoints.add(streamKey)
+          console.warn(
+            `[ai] ${this.config.format} refused streaming (${response.status}); answering without it`,
+          )
           continue
         }
         throw new AiUpstreamError(
@@ -784,10 +961,12 @@ export class AiClient {
       const type = response.headers.get('content-type') ?? ''
       if (streaming && onText && response.body && type.includes('event-stream'))
         try {
-          return await readStreamedPayload(
-            response.body,
-            this.config.format,
-            onText,
+          return this.note(
+            await readStreamedPayload(
+              response.body,
+              this.config.format,
+              onText,
+            ),
           )
         } catch (caught) {
           if (signal?.aborted) throw caught
@@ -796,9 +975,53 @@ export class AiClient {
             'The connection to the AI provider dropped while it was answering. Try again.',
           )
         }
-      return cappedJson(response, AI_RESPONSE_BYTES).catch(() => null)
+      return this.note(
+        await cappedJson(response, AI_RESPONSE_BYTES).catch(() => null),
+      )
     }
   }
+}
+
+/** The output limit every model accepts, when a provider's own is unknown. */
+const SAFE_OUTPUT_TOKENS = 4_096
+
+/**
+ * The output limit a provider names when it refuses a larger one ("16000 >
+ * 8192", "supports at most 4096 completion tokens"): the smallest plausible
+ * number in its message, since the one asked for is the larger.
+ */
+export function allowedOutputTokens(reason: string): number {
+  // A number inside a model name ("gpt-4-1106") is not a limit.
+  const numbers = (reason.match(/(?<![\w.-])\d[\d,_]*(?![\w-])/g) ?? [])
+    .map((text) => Number(text.replace(/[,_]/g, '')))
+    .filter((value) => value >= 1_024 && value <= 1_000_000)
+  return numbers.length ? Math.min(...numbers) : SAFE_OUTPUT_TOKENS
+}
+
+/** How long to wait before asking again: the provider's own word, or ours. */
+export function retryWait(header: string | null, fallback: number): number {
+  const seconds = Number(header)
+  const asked =
+    header && Number.isFinite(seconds)
+      ? seconds * 1000
+      : header && Number.isFinite(Date.parse(header))
+        ? Date.parse(header) - Date.now()
+        : fallback
+  return Math.min(AI_RETRY.longestWait, Math.max(0, asked))
+}
+
+/** Waits, unless the request is cancelled first. */
+function pause(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (ms <= 0 || signal.aborted) return resolve()
+    const done = () => {
+      clearTimeout(timer)
+      signal.removeEventListener('abort', done)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    signal.addEventListener('abort', done)
+  })
 }
 
 /** Endpoints that refused a streamed request: they answer in one piece. */
@@ -860,8 +1083,9 @@ export function readModelList(
     .slice(0, 100)
 }
 
+/** Busy, overloaded or over a rate limit: worth asking again after a wait. */
 export function isRetryableAiStatus(status: number): boolean {
-  return status === 502 || status === 503 || status === 504
+  return [408, 429, 500, 502, 503, 504, 529].includes(status)
 }
 
 /**
@@ -1319,6 +1543,8 @@ function upstreamMessage(status: number): string {
     return 'The AI provider rejected the request (HTTP 400). Check the model name.'
   if (status === 413)
     return 'The AI request exceeded the provider limit (HTTP 413).'
+  if (status === 529)
+    return 'The AI provider is overloaded right now. Try again in a minute.'
   if (status >= 500)
     return `The AI provider failed while processing the request (HTTP ${status}).`
   return `The AI provider returned an unexpected response (HTTP ${status}).`

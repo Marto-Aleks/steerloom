@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import type { AiReportContext } from '../../src/lib/ai/report-context'
 import {
   AI_PLANNER_TOKEN_BUDGET,
+  allowedOutputTokens,
   buildAiSystemPrompt,
+  readUsage,
+  retryWait,
   wholeSentences,
   extractAssistantContent,
   isRetryableAiStatus,
@@ -45,13 +48,86 @@ describe('on-prem AI response parsing', () => {
     expect(AI_PLANNER_TOKEN_BUDGET).toBeGreaterThanOrEqual(2_000)
   })
 
-  it('retries only transient enterprise gateway failures', () => {
-    expect(isRetryableAiStatus(502)).toBe(true)
-    expect(isRetryableAiStatus(503)).toBe(true)
-    expect(isRetryableAiStatus(504)).toBe(true)
-    expect(isRetryableAiStatus(400)).toBe(false)
-    expect(isRetryableAiStatus(401)).toBe(false)
-    expect(isRetryableAiStatus(429)).toBe(false)
+  it('asks again only when the provider is busy, never for a refused request', () => {
+    for (const busy of [408, 429, 500, 502, 503, 504, 529])
+      expect(isRetryableAiStatus(busy)).toBe(true)
+    for (const refused of [400, 401, 403, 404, 413, 422])
+      expect(isRetryableAiStatus(refused)).toBe(false)
+  })
+
+  it('waits as long as the provider asks, within a limit', () => {
+    expect(retryWait('3', 2_000)).toBe(3_000)
+    expect(retryWait(null, 2_000)).toBe(2_000)
+    expect(retryWait('600', 2_000)).toBe(20_000)
+    expect(retryWait('not a number', 2_000)).toBe(2_000)
+  })
+
+  it('reads token counts from each provider in one shape', () => {
+    // Anthropic counts cached tokens beside the uncached ones.
+    expect(
+      readUsage({
+        usage: {
+          input_tokens: 120,
+          cache_read_input_tokens: 6_000,
+          cache_creation_input_tokens: 400,
+          output_tokens: 90,
+        },
+      }),
+    ).toEqual({
+      inputTokens: 6_520,
+      cachedTokens: 6_000,
+      cacheWriteTokens: 400,
+      outputTokens: 90,
+    })
+    // OpenAI counts them inside the prompt total.
+    expect(
+      readUsage({
+        usage: {
+          prompt_tokens: 7_000,
+          completion_tokens: 300,
+          prompt_tokens_details: { cached_tokens: 6_400 },
+        },
+      }),
+    ).toEqual({
+      inputTokens: 7_000,
+      cachedTokens: 6_400,
+      cacheWriteTokens: 0,
+      outputTokens: 300,
+    })
+    // Gemini reports its thinking apart from the answer.
+    expect(
+      readUsage({
+        usageMetadata: {
+          promptTokenCount: 5_000,
+          cachedContentTokenCount: 1_000,
+          candidatesTokenCount: 200,
+          thoughtsTokenCount: 800,
+        },
+      }),
+    ).toEqual({
+      inputTokens: 5_000,
+      cachedTokens: 1_000,
+      cacheWriteTokens: 0,
+      outputTokens: 1_000,
+    })
+    expect(readUsage({ choices: [] })).toBeNull()
+    expect(readUsage(null)).toBeNull()
+  })
+
+  it('takes the output limit a provider names, not a number from a model name', () => {
+    expect(
+      allowedOutputTokens(
+        'max_tokens: 16000 > 8192, which is the maximum allowed number of output tokens for claude-3-5-haiku-20241022',
+      ),
+    ).toBe(8_192)
+    expect(
+      allowedOutputTokens(
+        'max_tokens is too large: 16000. This model supports at most 4096 completion tokens.',
+      ),
+    ).toBe(4_096)
+    expect(
+      allowedOutputTokens('max_tokens is too large for gpt-4-1106-preview'),
+    ).toBe(4_096)
   })
 
   it('ends an answer cut mid-sentence at its last full sentence', () => {

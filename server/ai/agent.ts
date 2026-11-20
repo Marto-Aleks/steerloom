@@ -39,6 +39,44 @@ export const endpointKey = (config: AiServerConfig) =>
 /** Calls the model may make in one turn; more are answered as skipped. */
 const CALLS_PER_TURN = 6
 
+/** Board reads running side by side: faster, without flooding the board. */
+const READS_AT_ONCE = 3
+
+/** What an answer took to find, in counts. Never what was read. */
+export interface AgentStats {
+  toolCalls: number
+  /** Different items read, and how many reads were with detail. */
+  items: number
+  detailed: number
+  searches: number
+  code: number
+  /** The model answered a why question without reading and was sent back. */
+  nudged: boolean
+  /** The turn limit ended the reading. */
+  outOfTurns: boolean
+}
+
+/** Runs a task per item, a few at a time, and keeps the items' order. */
+export async function inParallel<T, R>(
+  items: readonly T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  const worker = async () => {
+    for (;;) {
+      const index = next++
+      if (index >= items.length) return
+      results[index] = await task(items[index] as T, index)
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker),
+  )
+  return results
+}
+
 /** Why and what-to-do questions, whose answer lies in the tickets. */
 const diagnosisPattern =
   /\b(?:why|slow\w*|stuck|cause\w*|pattern|bottleneck|block\w*|coach\w*|what (?:should|would|can) (?:i|we|you) do)\b/i
@@ -117,6 +155,17 @@ export async function runAgent(
   const titles: Record<string, string> = {}
   let detail = false
   let nudged = false
+  let toolCalls = 0
+  let outOfTurns = false
+  const stats = (): AgentStats => ({
+    toolCalls,
+    items: checked.size,
+    detailed: usage.detailed,
+    searches: usage.searches,
+    code: usage.code,
+    nudged,
+    outOfTurns,
+  })
   /** Items whose code trail was read, for the progress line. */
   const codeKeys = new Set<string>()
   /** What has been read so far, so a long wait still says what it rests on. */
@@ -135,6 +184,7 @@ export async function runAgent(
     message:
       notOnBoard(askedKeys(reader, question), checked, unavailable) ?? text,
     skill: skillTrace,
+    stats: stats(),
     ...(checked.size || unavailable.size
       ? {
           jira: {
@@ -190,6 +240,7 @@ export async function runAgent(
             .map((call) => describeToolCall(reader, call)),
           skill: skillTrace,
         },
+        stats: stats(),
       }
     transcript.push({
       role: 'assistant',
@@ -197,47 +248,51 @@ export async function runAgent(
       toolCalls: step.toolCalls,
       raw: step.raw,
     })
-    const results: AgentToolResult[] = []
-    for (const [index, call] of step.toolCalls.entries()) {
-      if (index >= CALLS_PER_TURN) {
-        results.push({
-          id: call.id,
-          name: call.name,
-          content: JSON.stringify({
-            error: `Skipped: at most ${CALLS_PER_TURN} reads at a time. Ask again if it still matters.`,
-          }),
-        })
-        continue
-      }
-      if (call.name === 'get_code') {
-        if (Array.isArray(call.args.keys))
-          call.args.keys
-            .filter((key): key is string => typeof key === 'string')
-            .forEach((key) => codeKeys.add(key.toUpperCase()))
-        report({
-          step: 'jira',
-          label: describeToolCall(reader, call),
-          detail: 'Read-only · GitHub, already loaded',
-        })
-        results.push(runCodeTool(lookup, call, usage))
-        continue
-      }
+    const allowed = step.toolCalls.slice(0, CALLS_PER_TURN)
+    toolCalls += allowed.length
+    // What is about to be read, in the model's order; then the reads
+    // themselves, a few side by side.
+    for (const call of allowed) {
+      if (call.name === 'get_code' && Array.isArray(call.args.keys))
+        call.args.keys
+          .filter((key): key is string => typeof key === 'string')
+          .forEach((key) => codeKeys.add(key.toUpperCase()))
       report({
         step: 'jira',
         label: describeToolCall(reader, call),
-        detail: `Read-only · ${reader.label}`,
+        detail:
+          call.name === 'get_code'
+            ? 'Read-only · GitHub, already loaded'
+            : `Read-only · ${reader.label}`,
       })
-      const done = await runBoardTool(reader, call, usage, signal)
-      done.checked.forEach((key) => checked.add(key))
-      Object.assign(titles, done.titles)
-      done.unavailable.forEach((key) => unavailable.add(key))
-      detail ||= done.detail
-      results.push(done.result)
     }
+    const runs = await inParallel(allowed, READS_AT_ONCE, async (call) =>
+      call.name === 'get_code'
+        ? { result: runCodeTool(lookup, call, usage) }
+        : await runBoardTool(reader, call, usage, signal),
+    )
+    const results: AgentToolResult[] = runs.map((run) => run.result)
+    for (const run of runs) {
+      if (!('checked' in run)) continue
+      run.checked.forEach((key) => checked.add(key))
+      Object.assign(titles, run.titles)
+      run.unavailable.forEach((key) => unavailable.add(key))
+      detail ||= run.detail
+    }
+    // Every call gets an answer: the ones over the limit are told so.
+    for (const call of step.toolCalls.slice(CALLS_PER_TURN))
+      results.push({
+        id: call.id,
+        name: call.name,
+        content: JSON.stringify({
+          error: `Skipped: at most ${CALLS_PER_TURN} reads at a time. Ask again if it still matters.`,
+        }),
+      })
     transcript.push({ role: 'tool', results })
   }
 
   // Out of turns: answer with what was read.
+  outOfTurns = true
   report({ step: 'answer', label: 'Writing', detail: readSoFar() })
   const final = await client.agentStep(
     system,

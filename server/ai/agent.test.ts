@@ -8,9 +8,11 @@ import type { BoardReader, BoardSearch } from './board-reader'
 import {
   askedKeys,
   firstSentence,
+  inParallel,
   notOnBoard,
   toollessEndpoints,
 } from './agent'
+import { AI_RETRY, learnedStyles } from './client'
 import { aiConfigFromKey } from './workspace-key'
 import { createAiHandler } from './vite-plugin'
 
@@ -121,9 +123,12 @@ function model(
 }
 
 let server: Server | undefined
+const retryWaits = [...AI_RETRY.waits]
 afterEach(() => {
   server?.close()
   toollessEndpoints.clear()
+  learnedStyles.clear()
+  AI_RETRY.waits = [...retryWaits]
 })
 
 async function serve(
@@ -520,4 +525,192 @@ it('answers in one sentence when the asked item is not on the board', () => {
   ).toBeUndefined()
   expect(notOnBoard(['DEMO-199'], new Set(), new Set())).toBeUndefined()
   expect(notOnBoard([], new Set(), new Set())).toBeUndefined()
+})
+
+const anthropicRead = (ids: string[], usage?: object) => ({
+  content: [
+    { type: 'thinking', thinking: '', signature: 'sig-1' },
+    ...ids.map((id) => ({
+      type: 'tool_use',
+      id,
+      name: 'get_items',
+      input: { keys: ['DEMO-36'], detail: true },
+    })),
+  ],
+  stop_reason: 'tool_use',
+  ...(usage ? { usage } : {}),
+})
+
+it('marks the Anthropic prompt and the conversation so far for caching', async () => {
+  const board = fakeBoard()
+  const usage = {
+    input_tokens: 100,
+    cache_read_input_tokens: 6_000,
+    cache_creation_input_tokens: 500,
+    output_tokens: 40,
+  }
+  const { agent, bodies } = model('https://api.anthropic.com', '/v1/messages', [
+    anthropicRead(['toolu_1'], usage),
+    { content: [{ type: 'text', text: 'It waits for design.' }], usage },
+  ])
+  const ask = await serve('anthropic', agent, board.reader)
+  const answer = await ask({ allowJiraForConversation: true })
+  expect(answer.message).toBe('It waits for design.')
+
+  // The long prompt is sent as before, as one marked block.
+  const system = bodies[0]!.system as Array<Record<string, unknown>>
+  expect(system).toHaveLength(1)
+  expect(system[0]).toMatchObject({
+    type: 'text',
+    cache_control: { type: 'ephemeral' },
+  })
+  expect(String(system[0]!.text)).toContain('You are Steerloom AI')
+  expect(bodies[1]!.system).toEqual(bodies[0]!.system)
+
+  type Turn = { role: string; content: Array<Record<string, unknown>> }
+  const first = bodies[0]!.messages as Turn[]
+  expect(first.at(-1)!.content.at(-1)).toMatchObject({
+    type: 'text',
+    cache_control: { type: 'ephemeral' },
+  })
+  // One turn later the mark has moved to the newest block; the model's own
+  // turn goes back exactly as it came, thinking and signature included.
+  const second = bodies[1]!.messages as Turn[]
+  expect(second[0]!.content[0]).not.toHaveProperty('cache_control')
+  expect(second.at(-2)!.content).toEqual([
+    { type: 'thinking', thinking: '', signature: 'sig-1' },
+    expect.objectContaining({ type: 'tool_use', id: 'toolu_1' }),
+  ])
+  expect(second.at(-1)!.content.at(-1)).toMatchObject({
+    type: 'tool_result',
+    cache_control: { type: 'ephemeral' },
+  })
+
+  // What it took comes back with the answer, in counts.
+  expect(answer.stats).toMatchObject({
+    outcome: 'text',
+    modelCalls: 2,
+    retries: 0,
+    tokens: { input: 13_200, cached: 12_000, cacheWritten: 1_000, output: 80 },
+    reads: { calls: 1, items: 1, detailed: 1, searches: 0 },
+    nudged: false,
+  })
+})
+
+it('sends the same request without cache marks to a gateway that refuses them', async () => {
+  const board = fakeBoard()
+  const { agent, bodies } = model('https://api.anthropic.com', '/v1/messages', [
+    {
+      status: 400,
+      body: {
+        error: {
+          message: 'system.0.cache_control: Extra inputs are not permitted',
+        },
+      },
+    },
+    { content: [{ type: 'text', text: 'From the report alone.' }] },
+  ])
+  const ask = await serve('anthropic', agent, board.reader)
+  const answer = await ask({
+    allowJiraForConversation: true,
+    messages: [{ role: 'user', content: 'How many items finished?' }],
+  })
+  expect(answer.message).toBe('From the report alone.')
+  expect(Array.isArray(bodies[0]!.system)).toBe(true)
+  expect(typeof bodies[1]!.system).toBe('string')
+  expect(JSON.stringify(bodies[1])).not.toContain('cache_control')
+})
+
+it('reads the board a few items side by side and keeps the answers in order', async () => {
+  let active = 0
+  let peak = 0
+  const reads: string[] = []
+  const reader: BoardReader = {
+    ...fakeBoard().reader,
+    items: async (keys) => {
+      active += 1
+      peak = Math.max(peak, active)
+      await new Promise((resolve) => setTimeout(resolve, 15))
+      active -= 1
+      reads.push(...keys)
+      return { items: [item], unavailable: [] }
+    },
+  }
+  const ids = ['toolu_1', 'toolu_2', 'toolu_3', 'toolu_4', 'toolu_5']
+  const { agent, bodies } = model('https://api.anthropic.com', '/v1/messages', [
+    anthropicRead(ids),
+    { content: [{ type: 'text', text: 'All five wait for design.' }] },
+  ])
+  const ask = await serve('anthropic', agent, reader)
+  const answer = await ask({ allowJiraForConversation: true })
+  expect(answer.message).toBe('All five wait for design.')
+  expect(reads).toHaveLength(5)
+  expect(peak).toBe(3)
+  const results = (
+    bodies[1]!.messages as Array<{
+      content: Array<{ tool_use_id?: string }>
+    }>
+  ).at(-1)!.content
+  expect(results.map((result) => result.tool_use_id)).toEqual(ids)
+})
+
+it('runs tasks a few at a time and returns them in the order given', async () => {
+  let active = 0
+  let peak = 0
+  const doubled = await inParallel([5, 1, 4, 2, 3], 2, async (value) => {
+    active += 1
+    peak = Math.max(peak, active)
+    await new Promise((resolve) => setTimeout(resolve, value))
+    active -= 1
+    return value * 2
+  })
+  expect(doubled).toEqual([10, 2, 8, 4, 6])
+  expect(peak).toBe(2)
+  expect(
+    await inParallel([], 3, (value: number) => Promise.resolve(value)),
+  ).toEqual([])
+})
+
+it('asks a busy provider again after a wait, and says so in the counts', async () => {
+  AI_RETRY.waits = [0, 0]
+  const board = fakeBoard()
+  const { agent, bodies } = model('https://api.anthropic.com', '/v1/messages', [
+    { status: 529, body: { error: { message: 'Overloaded' } } },
+    { status: 429, body: { error: { message: 'Rate limit reached' } } },
+    { content: [{ type: 'text', text: 'Four items finished.' }] },
+  ])
+  const ask = await serve('anthropic', agent, board.reader)
+  const answer = await ask({
+    allowJiraForConversation: true,
+    messages: [{ role: 'user', content: 'How many items finished?' }],
+  })
+  expect(answer.message).toBe('Four items finished.')
+  expect(bodies).toHaveLength(3)
+  expect(answer.stats).toMatchObject({ modelCalls: 1, retries: 2 })
+})
+
+it('does not wait on a key that has run out of quota', async () => {
+  AI_RETRY.waits = [0, 0]
+  const board = fakeBoard()
+  const { agent, bodies } = model(
+    'https://api.openai.com',
+    '/v1/chat/completions',
+    [
+      {
+        status: 429,
+        body: {
+          error: {
+            message: 'You exceeded your current quota, please check your plan.',
+          },
+        },
+      },
+    ],
+  )
+  const ask = await serve('openai', agent, board.reader)
+  const answer = await ask({
+    allowJiraForConversation: true,
+    messages: [{ role: 'user', content: 'How many items finished?' }],
+  })
+  expect(String(answer.error)).toContain('exceeded your current quota')
+  expect(bodies).toHaveLength(1)
 })
