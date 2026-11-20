@@ -12,6 +12,7 @@ import {
   codeTool,
   runCodeTool,
 } from './agent-tools'
+import { looksLikeCard } from './answer-card'
 import type { BoardReader } from './board-reader'
 import {
   AiUpstreamError,
@@ -84,6 +85,29 @@ const diagnosisPattern =
 /** Sent once when the model answers a why question without reading the board. */
 const CHECK_FIRST =
   'Before you answer, check it on the board: search the stage where work piles up to see whose items they are, and read its oldest three to five items with detail. Then answer in the same shape, with what you found.'
+
+/** The same push, for an answer that already names its items. */
+const checkThese = (keys: string[]) =>
+  `Before you answer, check it on the board: read ${keys.join(', ')} with detail, and any other item your answer rests on. Then answer in the same shape, with what you found.`
+
+/** Most items one push names; the model reads the rest it needs itself. */
+const KEYS_IN_PUSH = 5
+
+/**
+ * A first answer that needs the board behind it: plain words about a cause,
+ * or a card that names items nobody has read. A card about numbers alone
+ * (the last sprints, a trend, the forecast) rests on the briefing: sending it
+ * to read old items adds reads, not evidence.
+ */
+function unreadClaim(
+  reader: BoardReader,
+  question: string,
+  draft: string,
+): { push: string } | null {
+  const named = askedKeys(reader, `${question} ${draft}`)
+  if (named.length) return { push: checkThese(named.slice(0, KEYS_IN_PUSH)) }
+  return looksLikeCard(draft) ? null : { push: CHECK_FIRST }
+}
 
 /** A gateway that does not take tool definitions, as opposed to any other failure. */
 export function rejectsTools(caught: unknown): boolean {
@@ -222,11 +246,15 @@ export async function runAgent(
     if (!step.toolCalls.length) {
       // Models skip the prompt's "check first" often enough that it is
       // enforced: one nudge when a why question got an answer without reads.
-      if (!nudged && !checked.size && diagnosisPattern.test(question)) {
+      const unread =
+        !nudged && !checked.size && diagnosisPattern.test(question)
+          ? unreadClaim(reader, question, step.text)
+          : null
+      if (unread) {
         nudged = true
         if (step.text)
           transcript.push({ role: 'assistant', content: step.text })
-        transcript.push({ role: 'user', content: CHECK_FIRST })
+        transcript.push({ role: 'user', content: unread.push })
         continue
       }
       return answer(step.text)
@@ -330,7 +358,11 @@ export function firstSentence(text: string): string {
 
 /** Item keys the question names, in this board's form. */
 export function askedKeys(reader: BoardReader, question: string): string[] {
-  const keys = (question.match(/\b[A-Za-z][A-Za-z0-9]*-\d+\b/g) ?? [])
+  // "WEB-12" everywhere, and "#12" where a board numbers its items (not
+  // the "#12" of a pull request, which follows its repository).
+  const keys = (
+    question.match(/\b[A-Za-z][A-Za-z0-9]*-\d+\b|(?<![\w/])#\d+\b/g) ?? []
+  )
     .map((raw) => reader.normaliseKey(raw))
     .filter((key): key is string => Boolean(key))
   return [...new Set(keys)]

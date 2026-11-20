@@ -183,12 +183,12 @@ function scrumAiSetup(now: Date) {
     },
     {
       label: 'What to descope',
-      question: sprintDescopePrompt(active, sprint.unit),
+      question: sprintDescopePrompt(active),
       starter: true,
     },
     {
       label: 'What do the last sprints tell us?',
-      question: sprintHistoryPrompt(sprint.history, sprint.unit),
+      question: sprintHistoryPrompt(sprint.history),
       starter: true,
     },
     ...(sprint.planning && sprint.planning.planned > sprint.planning.high

@@ -714,3 +714,69 @@ it('does not wait on a key that has run out of quota', async () => {
   expect(String(answer.error)).toContain('exceeded your current quota')
   expect(bodies).toHaveLength(1)
 })
+
+const openAiCard = (fields: object) => openAiText(JSON.stringify(fields))
+
+it('lets an answer about numbers stand, without sending it to read items', async () => {
+  const board = fakeBoard()
+  const { agent, bodies } = model(
+    'https://api.openai.com',
+    '/v1/chat/completions',
+    [
+      openAiCard({
+        verdict: '**Half of each plan gets finished** across the last sprints.',
+        next: 'The team plans the next sprint to what it finished before.',
+        reasons: [
+          {
+            kind: 'supports',
+            source: 'Board',
+            keys: ['Fictional Sprint 7'],
+            fact: 'Fictional Sprint 7 finished 17 of 34 planned items.',
+          },
+        ],
+      }),
+    ],
+  )
+  const ask = await serve('openai', agent, board.reader)
+  const answer = await ask({
+    allowJiraForConversation: true,
+    messages: [
+      { role: 'user', content: 'What pattern do the last sprints show?' },
+    ],
+  })
+  expect(bodies).toHaveLength(1)
+  expect(board.reads).toEqual([])
+  expect(answer.card).toMatchObject({ reasons: [{ source: 'Board' }] })
+  expect(answer.stats).toMatchObject({ nudged: false, modelCalls: 1 })
+})
+
+it('sends an answer that names unread items back to read those items', async () => {
+  const board = fakeBoard()
+  const { agent, bodies } = model(
+    'https://api.openai.com',
+    '/v1/chat/completions',
+    [
+      openAiCard({
+        verdict: '**DEMO-36 waits for a decision.**',
+        next: 'Ask the owner of DEMO-36.',
+        reasons: [
+          {
+            kind: 'supports',
+            source: 'Jira',
+            keys: ['DEMO-36'],
+            fact: 'A comment asks for a design decision.',
+          },
+        ],
+      }),
+      openAiToolCall({ keys: ['DEMO-36'], detail: true }),
+      openAiText('DEMO-36 waits for a design decision.'),
+    ],
+  )
+  const ask = await serve('openai', agent, board.reader)
+  const answer = await ask({ allowJiraForConversation: true })
+  expect(answer.message).toBe('DEMO-36 waits for a design decision.')
+  const push = (bodies[1]!.messages as Array<Record<string, unknown>>).at(-1)!
+  expect(String(push.content)).toContain('read DEMO-36 with detail')
+  expect(String(push.content)).not.toContain('piles up')
+  expect(answer.stats).toMatchObject({ nudged: true })
+})

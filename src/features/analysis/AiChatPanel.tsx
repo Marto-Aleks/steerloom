@@ -451,6 +451,14 @@ export function AiChatPanel({
       return
     }
     if (!content || !configured || sending) return
+    // Typing stops at the limit; a question a button wrote must respect it too.
+    if (content.length > AI_USER_MESSAGE_CHAR_LIMIT) {
+      setDraft(content)
+      setError(
+        `This question is ${content.length.toLocaleString()} characters; the most is ${AI_USER_MESSAGE_CHAR_LIMIT.toLocaleString()}. Shorten it and send again.`,
+      )
+      return
+    }
     const userMessage: AiConversationMessage = { role: 'user', content }
     const nextMessages: AiConversationMessage[] = [
       ...messages,

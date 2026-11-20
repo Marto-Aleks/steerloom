@@ -20,6 +20,19 @@ const stateWord: Record<SprintItemState, AiSprintItemState> = {
 
 const round = (value: number) => Math.round(value * 10) / 10
 
+/*
+ * Jira lets a team write a long goal, sprint name or status; the server
+ * accepts them up to these lengths. Longer ones are shortened here, so free
+ * text can never turn a question into an invalid request.
+ */
+const GOAL_CHARS = 300
+const NAME_CHARS = 80
+const STATUS_CHARS = 120
+const within = (value: string, max: number) => {
+  const text = value.trim()
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
+}
+
 export function toAiSprintContext(
   briefing: SprintBriefing,
 ): AiSprintContext | undefined {
@@ -31,8 +44,10 @@ export function toAiSprintContext(
     ...(active
       ? {
           running: {
-            name: active.sprint.name,
-            ...(active.sprint.goal ? { goal: active.sprint.goal } : {}),
+            name: within(active.sprint.name, NAME_CHARS),
+            ...(active.sprint.goal?.trim()
+              ? { goal: within(active.sprint.goal, GOAL_CHARS) }
+              : {}),
             day: active.day,
             days: active.days,
             // Whole days, as the Sprint tab shows them.
@@ -53,7 +68,7 @@ export function toAiSprintContext(
             items: active.items.slice(0, ITEM_LIMIT).map((item) => ({
               key: item.key,
               state: stateWord[item.state],
-              status: item.status,
+              status: within(item.status, STATUS_CHARS),
               ...(item.chance !== undefined
                 ? { chancePercent: Math.round(item.chance * 100) }
                 : {}),
@@ -72,7 +87,7 @@ export function toAiSprintContext(
     ...(planning
       ? {
           planning: {
-            sprint: planning.sprint.name,
+            sprint: within(planning.sprint.name, NAME_CHARS),
             items: planning.items.slice(0, ITEM_LIMIT).map((item) => ({
               key: item.key,
               ...(item.points !== undefined ? { points: item.points } : {}),
@@ -98,8 +113,10 @@ export function toAiSprintContext(
         }
       : {}),
     lastSprints: history.map((view) => ({
-      name: view.sprint.name,
-      ...(view.sprint.goal ? { goal: view.sprint.goal } : {}),
+      name: within(view.sprint.name, NAME_CHARS),
+      ...(view.sprint.goal?.trim()
+        ? { goal: within(view.sprint.goal, GOAL_CHARS) }
+        : {}),
       planned: view.planned.length,
       finishedPlanned: view.finishedPlanned,
       added: view.added.length,

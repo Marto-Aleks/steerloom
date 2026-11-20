@@ -23,6 +23,12 @@ const GENERIC =
   /\b(hold a retro|run a retrospective|improve (team )?communication|align with stakeholders|best practices?|foster|synerg)/i
 
 const KEY = /\b[A-Z][A-Z0-9]*-\d+\b/g
+/**
+ * What an item key looks like on any board: "WEB-12", or "#12" and "12" on
+ * Azure DevOps. A model also writes sprint and stage names where keys go;
+ * those say what a fact is about, they are not items to look up.
+ */
+const ITEM_KEY = /^(?:[A-Z][A-Z0-9_]*-\d+|#?\d+)$/
 /** A pull request named by its repository: "acme/web#12". */
 const PULL_REQUEST_REF = /\b[\w.-]+\/[\w.-]+#\d+\b/
 
@@ -51,8 +57,22 @@ function knownKeys(context: AiReportContext) {
     ...(context.jiraEvidence?.issues ?? []).map((issue) => issue.key),
     ...(context.sprint?.running?.items ?? []).map((item) => item.key),
     ...(context.sprint?.running?.scopeChange.removed ?? []),
+    ...(context.sprint?.planning?.items ?? []).map((item) => item.key),
   ])
   return { code, board }
+}
+
+/** The sprints this briefing shows, by name, as a model may write them. */
+function sprintNames(context: AiReportContext): string[] {
+  const sprint = context.sprint
+  if (!sprint) return []
+  return [
+    sprint.running?.name,
+    sprint.planning?.sprint,
+    ...sprint.lastSprints.map((closed) => closed.name),
+  ]
+    .filter((name): name is string => Boolean(name))
+    .map((name) => name.toUpperCase())
 }
 
 const text = (value: unknown): string =>
@@ -109,7 +129,11 @@ export function checkAnswerCard(
   const known = knownKeys(context)
   const isKnown = (key: string) =>
     known.board.has(key) || evidence.checked.has(key)
-  const removed: string[] = []
+  const sprints = sprintNames(context)
+  const isSprint = (name: string) =>
+    sprints.some((sprint) => sprint === name || sprint.endsWith(` ${name}`))
+  /** Each removal is said once, however often the model repeated it. */
+  const removed = new Set<string>()
 
   const reasons: AnswerReason[] = []
   for (const item of Array.isArray(raw.reasons) ? raw.reasons : []) {
@@ -117,19 +141,24 @@ export function checkAnswerCard(
     const entry = item as Record<string, unknown>
     const fact = text(entry.fact)
     if (!fact) continue
-    const named = keyList(entry.keys)
+    const listed = keyList(entry.keys)
+    // A fact about sprints, a stage or a number names no item: it stays.
+    const named = listed.filter((key) => ITEM_KEY.test(key))
     const keys = named.filter(isKnown)
     // Every item it is about is unknown here: drop it rather than show it.
     if (named.length && !keys.length) {
-      removed.push(`a reason about ${named.join(', ')}: not on this board`)
+      removed.add(`a reason about ${named.join(', ')}: not on this board`)
       continue
     }
     const kind = entry.kind === 'rules-out' ? 'rules-out' : 'supports'
-    // A fact that names a pull request came from the code, whatever the
-    // model called its source; the confidence depends on getting it right.
+    // A fact that names a pull request came from the code, and one about
+    // the briefing's sprints from the board, whatever the model called its
+    // source; the confidence depends on getting it right.
     const from: AnswerSource = PULL_REQUEST_REF.test(fact)
       ? 'GitHub'
-      : source(entry.source)
+      : !keys.length && listed.some(isSprint)
+        ? 'Board'
+        : source(entry.source)
     // A claim from a source about an item that source was not read for.
     const unread =
       (from === 'Jira' && keys.some((key) => !evidence.checked.has(key))) ||
@@ -158,12 +187,18 @@ export function checkAnswerCard(
     if (!what) return
     const keys = keyList(entry.keys).filter(isKnown)
     const mentions = `${what} ${checkpoint}`
+    // A way forward is tied to this board: to an item, a pull request, or,
+    // for a change to how the team plans, a sprint and the number that
+    // should move in it.
     const namesItem =
       keys.length > 0 ||
       (mentions.match(KEY) ?? []).some(isKnown) ||
-      PULL_REQUEST.test(mentions)
+      PULL_REQUEST.test(mentions) ||
+      (Boolean(context.sprint) &&
+        /\bsprint\b/i.test(mentions) &&
+        /\d/.test(checkpoint))
     if (!checkpoint || !namesItem || GENERIC.test(mentions)) {
-      removed.push(
+      removed.add(
         `option “${what}”: ${GENERIC.test(mentions) ? 'generic advice' : !checkpoint ? 'no checkpoint' : 'no item named'}`,
       )
       return
@@ -184,7 +219,14 @@ export function checkAnswerCard(
       const entry = item as Record<string, unknown>
       const line = text(entry.text)
       return line
-        ? [{ keys: keyList(entry.keys).filter(isKnown), text: line }]
+        ? [
+            {
+              keys: keyList(entry.keys).filter(
+                (key) => ITEM_KEY.test(key) && isKnown(key),
+              ),
+              text: line,
+            },
+          ]
         : []
     })
     .slice(0, LIMIT.list)
@@ -222,7 +264,7 @@ export function checkAnswerCard(
     next,
     ...(checkpoint ? { checkpoint } : {}),
     ...(question ? { question } : {}),
-    ...(removed.length ? { removed } : {}),
+    ...(removed.size ? { removed: [...removed] } : {}),
   }
 }
 

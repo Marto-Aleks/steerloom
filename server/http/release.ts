@@ -7,8 +7,13 @@
  * when a change is worth installing, and say what is new in plain words.
  */
 export const RELEASE = {
-  version: '2026.11.20',
+  version: '2026.11.20.2',
   notes: [
+    'Sprint tab: “What to descope” no longer fails with “Enter a valid AI chat request” on a large sprint or a long goal. The questions the Sprint tab asks Steerloom AI are now one sentence; the sprint’s facts travel with the briefing',
+    'Steerloom AI: an answer about the last sprints keeps its reasons. They were being removed because they named sprints instead of items, which left a thin answer',
+    'Steerloom AI offers changes to the next planning as options you can weigh, each with the number that should move in the next sprint',
+    'Steerloom AI is no longer sent to read old items when its answer rests on the sprint numbers alone. When an answer names items it has not read, it is sent to read exactly those',
+    'A long sprint goal, sprint name or status can no longer make AI questions on that board fail',
     'Steerloom AI costs less per question with a Claude key: the briefing and the conversation so far are kept by the provider between steps and read back at a fraction of the price',
     'Steerloom AI gives Claude and Gemini models more room to think, so a long investigation no longer runs out and starts over',
     'Steerloom AI reads several items from the board side by side: the same reads, a shorter wait',

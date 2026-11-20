@@ -2,6 +2,7 @@
 import { expect, it } from 'vitest'
 import { checkAnswerCard, finishAnswer } from './answer-card'
 import { EVAL_CONTEXT } from './eval/board'
+import type { AiReportContext } from '../../src/lib/ai/report-context'
 
 /*
  * What Steerloom checks before a card is drawn, on the fictional test board:
@@ -275,4 +276,140 @@ it('takes a fact naming a pull request as GitHub, and cleans field names', () =>
     fact: 'the board and the code disagree; PR acme/web#305 approved; state misaligned.',
   })
   expect(result?.confidence).toBe('likely')
+})
+
+/*
+ * A board with sprints, asked what its last sprints say. The model names the
+ * sprints where item keys go; the facts are the briefing's own numbers.
+ */
+const SPRINTS: AiReportContext = {
+  ...EVAL_CONTEXT,
+  sprint: {
+    unit: 'points',
+    planning: {
+      sprint: 'Shop Sprint 25',
+      items: [{ key: 'EVAL-171', points: 5 }],
+      planned: 40,
+      unestimatedItems: 0,
+      lastSprints: 2,
+      low: 21,
+      high: 37,
+      usual: 30,
+    },
+    lastSprints: [
+      {
+        name: 'Shop Sprint 23',
+        planned: 30,
+        finishedPlanned: 14,
+        added: 5,
+        removed: 16,
+        finishedPoints: 21,
+      },
+      {
+        name: 'Shop Sprint 24',
+        planned: 34,
+        finishedPlanned: 17,
+        added: 4,
+        removed: 17,
+        finishedPoints: 37,
+      },
+    ],
+  },
+}
+
+const sprintCard = JSON.stringify({
+  verdict: '**Half of each plan gets finished**: 31 of 64 planned items.',
+  next: 'The team plans Shop Sprint 25 to what it finished before.',
+  checkpoint: 'Shop Sprint 25 finishes at least 70% of its plan.',
+  reasons: [
+    {
+      kind: 'supports',
+      source: 'Jira',
+      keys: ['Shop Sprint 23', 'Shop Sprint 24'],
+      fact: 'Shop Sprint 23 finished 14 of 30 planned items, Shop Sprint 24 17 of 34.',
+    },
+    {
+      kind: 'supports',
+      source: 'Jira',
+      keys: ['SPRINT 24'],
+      fact: '17 planned items left Shop Sprint 24 before its end.',
+    },
+    {
+      kind: 'supports',
+      source: 'Jira',
+      keys: ['Shop Sprint 23', 'Shop Sprint 24'],
+      fact: 'Shop Sprint 23 finished 14 of 30 planned items, Shop Sprint 24 17 of 34.',
+    },
+    {
+      kind: 'supports',
+      source: 'Jira',
+      keys: ['EVAL-171'],
+      fact: 'Planned for the next sprint at 5 points.',
+    },
+    {
+      kind: 'supports',
+      source: 'Jira',
+      keys: ['WEB-999'],
+      fact: 'An item this board does not hold.',
+    },
+    {
+      kind: 'supports',
+      source: 'Jira',
+      keys: ['WEB-999'],
+      fact: 'The same unknown item, said twice.',
+    },
+  ],
+  options: [
+    {
+      what: 'Plan the next sprint to 30 points, what the team usually finishes',
+      tradeOff: 'Ten points wait a sprint.',
+      checkpoint: 'Shop Sprint 25 finishes at least 70% of its plan.',
+      keys: [],
+    },
+    {
+      what: 'Lock the scope after day 3 of the sprint',
+      tradeOff: 'Urgent work needs a swap, not an add.',
+      checkpoint: 'Fewer items are added.',
+      keys: [],
+    },
+  ],
+  recommended: ['A'],
+  why: 'it needs no new rule',
+})
+
+it('keeps facts about sprints: a sprint named where keys go is not a missing item', () => {
+  const result = checkAnswerCard(sprintCard, SPRINTS, { checked: new Set() })!
+  // The sprint facts stay, as the board's own numbers, with no item chips.
+  expect(result.reasons.slice(0, 3)).toEqual([
+    expect.objectContaining({ kind: 'supports', source: 'Board', keys: [] }),
+    expect.objectContaining({ kind: 'supports', source: 'Board', keys: [] }),
+    expect.objectContaining({ kind: 'supports', source: 'Board', keys: [] }),
+  ])
+  // An item in the next sprint's plan is on this board; Jira was not read
+  // for it, so the claim says so.
+  expect(result.reasons[3]).toMatchObject({
+    kind: 'unchecked',
+    keys: ['EVAL-171'],
+  })
+  // A real unknown item is still dropped, and said once.
+  expect(result.reasons).toHaveLength(4)
+  expect(result.removed).toEqual([
+    'a reason about WEB-999: not on this board',
+    'option “Lock the scope after day 3 of the sprint”: no item named',
+  ])
+  expect(result.sources).toEqual(['Board'])
+})
+
+it('accepts a change to planning that names a sprint and the number to move', () => {
+  const result = checkAnswerCard(sprintCard, SPRINTS, { checked: new Set() })!
+  expect(result.options).toEqual([
+    expect.objectContaining({
+      what: 'Plan the next sprint to 30 points, what the team usually finishes',
+      recommended: true,
+    }),
+  ])
+  // Without sprints on the board, an option still has to name an item.
+  expect(
+    checkAnswerCard(sprintCard, EVAL_CONTEXT, { checked: new Set() })!.options,
+  ).toBeUndefined()
 })

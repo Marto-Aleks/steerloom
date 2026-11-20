@@ -88,3 +88,35 @@ describe('the Sprint tab for Steerloom AI', () => {
     expect(prompt).toContain('"Sprint 24"')
   })
 })
+
+describe('free text a team wrote in Jira', () => {
+  it('is shortened to what the server accepts, so no question is refused', () => {
+    const briefing = buildSprintBriefing(snapshot)!
+    const long = 'Reliable test reports and running tests. '.repeat(40)
+    const built = toAiSprintContext({
+      ...briefing,
+      active: {
+        ...briefing.active!,
+        sprint: {
+          ...briefing.active!.sprint,
+          name: `Shop team ${'very long sprint name '.repeat(10)}`,
+          goal: long,
+        },
+        items: briefing.active!.items.map((item) => ({
+          ...item,
+          status: `${item.status} ${'and a long note '.repeat(20)}`,
+        })),
+      },
+      history: briefing.history.map((view) => ({
+        ...view,
+        sprint: { ...view.sprint, goal: long },
+      })),
+    })!
+    expect(built.running!.goal!.length).toBeLessThanOrEqual(300)
+    expect(built.running!.goal).toMatch(/^Reliable test reports.*…$/)
+    expect(built.running!.name.length).toBeLessThanOrEqual(80)
+    expect(built.lastSprints[0]!.goal!.length).toBeLessThanOrEqual(300)
+    // The server takes it as built.
+    expect(parseSprintContext(built)).toEqual(built)
+  })
+})

@@ -3,6 +3,7 @@ import type { FlowBoardSnapshot, SprintItemRecord } from '../../types'
 import { readSprintData } from '../data-source/sprint-data'
 import { scrumDemoSnapshot } from '../workspace/demo-scrum'
 import { demoSnapshot } from '../workspace/demo'
+import { AI_USER_MESSAGE_CHAR_LIMIT } from '../ai/conversation'
 import {
   buildSprintBriefing,
   chanceNotStarted,
@@ -13,6 +14,10 @@ import {
   spearman,
   sprintsAt,
   sprintDay,
+  sprintDescopePrompt,
+  sprintGoalPrompt,
+  sprintHistoryPrompt,
+  sprintTodayPrompt,
 } from './sprint'
 
 const NOW = new Date('2026-11-18T12:00:00.000Z') // a Wednesday
@@ -379,5 +384,39 @@ describe('boards without sprints', () => {
         { issueId: '9', sprintIds: ['1'], sprintChanges: [], pointChanges: [] },
       ],
     })
+  })
+})
+
+describe('questions for Steerloom AI', () => {
+  it('stay a sentence long, whatever the sprint holds or its goal says', () => {
+    const sprint = buildSprintBriefing(scrumDemoSnapshot(NOW))!
+    // A real team's goal can be paragraphs, and its sprint dozens of items.
+    const active = {
+      ...sprint.active!,
+      sprint: {
+        ...sprint.active!.sprint,
+        goal: `Have reliable test reports.\n${'Get straight to the point. '.repeat(120)}`,
+      },
+      items: Array.from({ length: 60 }, () => sprint.active!.items[0]!),
+    }
+    const questions = [
+      sprintDescopePrompt(active),
+      sprintGoalPrompt(active),
+      sprintTodayPrompt(active),
+      sprintHistoryPrompt(sprint.history),
+    ]
+    for (const question of questions) {
+      expect(question.length).toBeLessThan(700)
+      expect(question.length).toBeLessThan(AI_USER_MESSAGE_CHAR_LIMIT)
+    }
+    // The facts travel with the briefing data, not in the question.
+    expect(sprintDescopePrompt(active)).not.toMatch(/SHOP-\d+/)
+    expect(sprintHistoryPrompt(sprint.history)).toBe(
+      'What do the last 5 sprints tell us for the next planning?',
+    )
+    expect(sprintDescopePrompt(active)).toContain(
+      'Have reliable test reports. Get',
+    )
+    expect(sprintDescopePrompt(active)).toContain('…')
   })
 })

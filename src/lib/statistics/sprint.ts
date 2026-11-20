@@ -778,18 +778,25 @@ const asTicket = (ref: SprintRef) => ({
  * Questions for Steerloom AI.
  * ------------------------------------------------------------------------- */
 
-export function sprintDescopePrompt(
-  active: ActiveSprintView,
-  unit: 'points' | 'items',
-): string {
-  const open = active.items.filter(
-    (item) => item.state === 'risk' || item.state === 'todo',
-  )
-  const lines = open.map(
-    (item) =>
-      `- ${item.key}: ${item.status}${item.chance !== undefined ? `, ${Math.round(item.chance * 100)}% likely by the sprint's end` : ''}${unit === 'points' ? `, ${item.points !== undefined ? `${item.points} points` : 'no estimate'}` : ''}`,
-  )
-  return `${active.sprint.name} is on day ${active.day} of ${active.days}${active.sprint.goal ? `; its goal: "${active.sprint.goal}"` : ''}. ${active.likely} of ${active.items.length} items are likely done by the end. These are unlikely to finish:\n${lines.join('\n')}\n\nHelp me decide what to descope, swarm or finish first now, not at the review. Check each item's history, comments and code, say which protects the sprint goal best, and end with a checkpoint for tomorrow. Never blame anyone.`
+/*
+ * A question is what the person would ask, in a sentence. The sprint's facts
+ * travel with the briefing data and how to answer lives with the assistant,
+ * so a question stays short however large the sprint is.
+ */
+
+/** A sprint goal is free text: quoted in a question up to this length. */
+const GOAL_IN_QUESTION = 240
+
+function quotedGoal(goal: string | undefined): string {
+  const text = (goal ?? '').replace(/\s+/g, ' ').trim()
+  return text.length > GOAL_IN_QUESTION
+    ? `${text.slice(0, GOAL_IN_QUESTION - 1).trimEnd()}…`
+    : text
+}
+
+export function sprintDescopePrompt(active: ActiveSprintView): string {
+  const goal = quotedGoal(active.sprint.goal)
+  return `What should we descope, swarm or finish first in ${active.sprint.name}, now and not at the review?${goal ? ` Its goal: "${goal}".` : ''}`
 }
 
 /** What needs raising today in the running sprint. No meeting assumed. */
@@ -799,19 +806,12 @@ export function sprintTodayPrompt(active: ActiveSprintView): string {
 
 /** The sprint goal, judged from the items that serve it. */
 export function sprintGoalPrompt(active: ActiveSprintView): string {
-  return `Will ${active.sprint.name} meet its goal: "${active.sprint.goal ?? ''}"? Read the sprint's items to decide which ones serve the goal, then say whether it is likely met, partly met or not met by the end, which items decide it, and what would change the outcome.`
+  return `Will ${active.sprint.name} meet its goal: "${quotedGoal(active.sprint.goal)}"? Read the sprint's items to decide which ones serve the goal, then say whether it is likely met, partly met or not met by the end, which items decide it, and what would change the outcome.`
 }
 
 /** What the last sprints say, for the next planning. */
-export function sprintHistoryPrompt(
-  history: ClosedSprintView[],
-  unit: 'points' | 'items',
-): string {
-  const lines = history.map(
-    (view) =>
-      `- ${view.sprint.name}: ${view.finishedPlanned} of ${view.planned.length} planned items finished, ${view.added.length} added mid-sprint, ${view.removed.length} removed${unit === 'points' ? `, ${view.finishedPoints} points finished` : ''}`,
-  )
-  return `What do the last ${history.length} sprints tell us?\n${lines.join('\n')}\n\nName the one pattern that matters most for the next planning, such as committing more than the team finishes, work added mid-sprint or items that keep rolling over, with its numbers, and the one change that would address it. The numbers describe the team's planning, never anyone's performance.`
+export function sprintHistoryPrompt(history: ClosedSprintView[]): string {
+  return `What do the last ${history.length} sprints tell us for the next planning?`
 }
 
 export function sprintPlanningPrompt(

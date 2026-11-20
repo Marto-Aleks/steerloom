@@ -143,7 +143,7 @@ export function SprintView({
                 <button
                   type="button"
                   className="briefing-link"
-                  onClick={() => onAsk(sprintHistoryPrompt(history, unit))}
+                  onClick={() => onAsk(sprintHistoryPrompt(history))}
                 >
                   <AskAiTag /> · What do the last sprints tell us?{' '}
                   <span aria-hidden="true">→</span>
@@ -340,7 +340,7 @@ function SprintHero({
             <button
               type="button"
               className="briefing-link"
-              onClick={() => onAsk(sprintDescopePrompt(active, unit))}
+              onClick={() => onAsk(sprintDescopePrompt(active))}
             >
               What to descope <span aria-hidden="true">→</span>
             </button>
